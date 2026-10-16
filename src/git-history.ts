@@ -53,7 +53,7 @@ export interface Commit {
 
 /** Repository containing a folder (repositoryOf looks at a file's folder). */
 export const repositoryOfFolder = (folder: vscode.Uri): Promise<string | undefined> =>
-  repositoryOf(vscode.Uri.joinPath(folder, '.wiki-studio-probe'));
+  repositoryOf(vscode.Uri.joinPath(folder, '.notespace-probe'));
 export async function repositoryOf(file: vscode.Uri): Promise<string | undefined> {
   if (file.scheme !== 'file') return undefined;
   try {
@@ -168,7 +168,7 @@ export async function showPageHistory(file: vscode.Uri, title: string): Promise<
   if (!history.commits.length) throw new Error('This page has no committed history yet.');
   if (!panel) {
     panel = vscode.window.createWebviewPanel(
-      'wikiStudio.history',
+      'notespace.history',
       'Page History',
       vscode.ViewColumn.Active,
       { enableScripts: true },

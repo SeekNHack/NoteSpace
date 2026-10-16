@@ -94,7 +94,7 @@ export class BoardService {
     const name = options.name.trim().slice(0, 120);
     if (!name) throw new Error('A board needs a name.');
     const folder = vscode.workspace
-      .getConfiguration('wikiStudio', root.folder.uri)
+      .getConfiguration('notespace', root.folder.uri)
       .get<string>('boards.folder', 'boards');
     const path = (options.path?.trim() || boardFileName(name, folder)).replace(/^\/+/, '');
     if (!/\.md$/i.test(path)) throw new Error('A board file must be a Markdown file (.md).');

@@ -248,7 +248,7 @@ export class PlannerPanel implements vscode.Disposable {
       );
     if (!this.panel) {
       this.panel = vscode.window.createWebviewPanel(
-        'wikiStudio.planner',
+        'notespace.planner',
         'NoteSpace',
         vscode.ViewColumn.Active,
         {
@@ -395,10 +395,10 @@ export class PlannerPanel implements vscode.Disposable {
         description: root.config?.wiki.description || '',
         homepage: pages.some((p) => p.path === homepage) ? homepage : undefined,
         boardsFolder: vscode.workspace
-          .getConfiguration('wikiStudio', root.folder.uri)
+          .getConfiguration('notespace', root.folder.uri)
           .get<string>('boards.folder', 'boards'),
         notesFolder: vscode.workspace
-          .getConfiguration('wikiStudio', root.folder.uri)
+          .getConfiguration('notespace', root.folder.uri)
           .get<string>('notes.folder', 'notes'),
       },
       tasks: tasks.map((t) => dto(t, boards, subtasks, nested)),
@@ -486,7 +486,7 @@ export class PlannerPanel implements vscode.Disposable {
           return;
         }
         const destination = vscode.workspace
-          .getConfiguration('wikiStudio', root.folder.uri)
+          .getConfiguration('notespace', root.folder.uri)
           .get<string>('tasks.captureTo', 'inbox');
         const target =
           typeof m.date === 'string' && m.target === 'daily'
@@ -677,7 +677,7 @@ export class PlannerPanel implements vscode.Disposable {
       case 'openPage': {
         const uri = str(m.uri, 2000);
         if (uri && this.workspace.index.byUri(uri))
-          await vscode.commands.executeCommand('wikiStudio.openPage', uri);
+          await vscode.commands.executeCommand('notespace.openPage', uri);
         return;
       }
       case 'openDaily':
@@ -685,10 +685,10 @@ export class PlannerPanel implements vscode.Disposable {
           await this.open(await this.planner.ensureDaily(root, m.date));
         return;
       case 'openWiki':
-        await vscode.commands.executeCommand('wikiStudio.openWikiHome', root?.id);
+        await vscode.commands.executeCommand('notespace.openWikiHome', root?.id);
         return;
       case 'search':
-        await vscode.commands.executeCommand('wikiStudio.advancedSearch', str(m.query, 500) || '');
+        await vscode.commands.executeCommand('notespace.advancedSearch', str(m.query, 500) || '');
         return;
       case 'command': {
         // Quick Create and other actions that already exist as commands.
@@ -705,7 +705,7 @@ export class PlannerPanel implements vscode.Disposable {
         ];
         const name = str(m.name, 40);
         if (name && allowed.includes(name))
-          await vscode.commands.executeCommand(`wikiStudio.${name}`);
+          await vscode.commands.executeCommand(`notespace.${name}`);
         return;
       }
       case 'boardFileExists': {

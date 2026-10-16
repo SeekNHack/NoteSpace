@@ -77,7 +77,7 @@ export class WikiTree
   }
   setFilter(value: string): void {
     this.filter = value.trim().toLocaleLowerCase();
-    void vscode.commands.executeCommand('setContext', 'wikiStudio.filtered', !!this.filter);
+    void vscode.commands.executeCommand('setContext', 'notespace.filtered', !!this.filter);
     this.emitter.fire(undefined);
   }
   getFilter(): string {
@@ -143,7 +143,7 @@ export class WikiTree
       item.command = {
         command: 'vscode.openWith',
         title: 'Open Canvas',
-        arguments: [node.uri, 'wikiStudio.canvas'],
+        arguments: [node.uri, 'notespace.canvas'],
       };
       return item;
     }
@@ -160,7 +160,7 @@ export class WikiTree
         posix.dirname(node.detail || '') === '.' ? '' : posix.dirname(node.detail || '');
       item.tooltip = `${node.detail}\nOpens in the notebook editor`;
       item.command = {
-        command: 'wikiStudio.openNotebook',
+        command: 'notespace.openNotebook',
         title: 'Open Notebook',
         arguments: [node],
       };
@@ -174,7 +174,7 @@ export class WikiTree
     if (node.kind === 'property') {
       item.description = node.detail;
       item.iconPath = new vscode.ThemeIcon(node.icon || 'symbol-property');
-      item.command = { command: 'wikiStudio.pageProperties', title: 'Edit Page Properties' };
+      item.command = { command: 'notespace.pageProperties', title: 'Edit Page Properties' };
       item.tooltip = 'Edit page properties';
       return item;
     }
@@ -196,7 +196,7 @@ export class WikiTree
         item.tooltip = node.broken ? `Broken link: ${node.broken}` : page.path;
         if (node.broken) {
           item.command = {
-            command: 'wikiStudio.openPage',
+            command: 'notespace.openPage',
             title: 'Show Link',
             arguments: [page.uri, node.offset],
           };
@@ -225,7 +225,7 @@ export class WikiTree
         item.tooltip = md;
       }
       item.command = {
-        command: 'wikiStudio.openPage',
+        command: 'notespace.openPage',
         title: 'Open Page',
         arguments: [page.uri, node.offset],
       };
@@ -292,7 +292,7 @@ export class WikiTree
   private pageLabel(page: Page): string {
     if (!page.titleFromFile) return page.title;
     const folder = this.workspace.roots.find((r) => r.id === page.root)?.folder.uri;
-    const settings = vscode.workspace.getConfiguration('wikiStudio.explorer', folder);
+    const settings = vscode.workspace.getConfiguration('notespace.explorer', folder);
     return settings.get<boolean>('humanizeNames', true)
       ? humanize(page.title, settings.get<string[]>('acronyms', defaultAcronyms))
       : page.title;
@@ -402,7 +402,7 @@ export class WikiTree
     const pages = this.workspace.index.all(root).filter((p) => this.matches(p)),
       byPath = new Map(pages.map((p) => [p.path, p]));
     const folder = this.workspace.roots.find((r) => r.id === root)?.folder.uri;
-    const settings = vscode.workspace.getConfiguration('wikiStudio.explorer', folder);
+    const settings = vscode.workspace.getConfiguration('notespace.explorer', folder);
     const readable = settings.get<boolean>('humanizeNames', true);
     const acronyms = settings.get<string[]>('acronyms', defaultAcronyms);
     const directorySort = settings.get<DirectorySort>('directorySort', 'folders-first');
@@ -733,7 +733,7 @@ export function registerLanguageFeatures(workspace: WikiWorkspace): vscode.Dispo
   const pageAt = (doc: vscode.TextDocument) => index.byUri(doc.uri.toString());
   const linkAt = (doc: vscode.TextDocument, pos: vscode.Position) =>
     pageAt(doc)?.links.find((l) => doc.offsetAt(pos) >= l.start && doc.offsetAt(pos) <= l.end);
-  const diagnostics = vscode.languages.createDiagnosticCollection('wikiStudio');
+  const diagnostics = vscode.languages.createDiagnosticCollection('notespace');
   const issuesOf = (page: Page, sameScope: Page[]): QualityIssue[] => {
     const config = workspace.rootFor(page).config;
     return pageQuality(
@@ -756,7 +756,7 @@ export function registerLanguageFeatures(workspace: WikiWorkspace): vscode.Dispo
     for (const page of index.all()) {
       if (
         !vscode.workspace
-          .getConfiguration('wikiStudio', vscode.Uri.parse(page.uri))
+          .getConfiguration('notespace', vscode.Uri.parse(page.uri))
           .get('diagnostics', true)
       )
         continue;
@@ -1012,7 +1012,7 @@ export function registerLanguageFeatures(workspace: WikiWorkspace): vscode.Dispo
                 );
                 action.diagnostics = [d];
                 action.command = {
-                  command: 'wikiStudio.newPage',
+                  command: 'notespace.newPage',
                   title: 'Create Page',
                   arguments: [name, page.root],
                 };

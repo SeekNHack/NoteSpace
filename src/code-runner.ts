@@ -46,13 +46,13 @@ export class CodeRunner {
   enabled(): boolean {
     return (
       vscode.workspace.isTrusted &&
-      vscode.workspace.getConfiguration('wikiStudio').get<boolean>('codeRunner.enabled', false)
+      vscode.workspace.getConfiguration('notespace').get<boolean>('codeRunner.enabled', false)
     );
   }
   async run(language: string, code: string, cwd: string): Promise<RunResult | undefined> {
     if (!vscode.workspace.isTrusted) throw new Error('Running code requires a trusted workspace.');
     if (!this.enabled())
-      throw new Error('Enable “wikiStudio.codeRunner.enabled” to run code blocks.');
+      throw new Error('Enable “notespace.codeRunner.enabled” to run code blocks.');
     const runtime = runtimes()[language.toLowerCase()];
     if (!runtime) throw new Error(`No runtime is available for “${language}”.`);
     if (code.length > 100_000) throw new Error('The code block is too large to run.');
@@ -72,7 +72,7 @@ export class CodeRunner {
       Math.min(
         Math.max(
           vscode.workspace
-            .getConfiguration('wikiStudio')
+            .getConfiguration('notespace')
             .get<number>('codeRunner.timeoutSeconds', 20),
           1,
         ),

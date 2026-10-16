@@ -75,7 +75,7 @@ export async function run(): Promise<void> {
       'insertLink',
       'openPage',
     ])
-      assert.ok(commands.includes(`wikiStudio.${name}`), name);
+      assert.ok(commands.includes(`notespace.${name}`), name);
   });
   const root = ws.roots[0],
     other = ws.roots[1];
@@ -228,7 +228,7 @@ export async function run(): Promise<void> {
     await waitFor(() => !ws.index.byUri(uri.toString()), 'external delete');
   });
   await test('opens real webview panels and navigates via the public command', async () => {
-    await vscode.commands.executeCommand('wikiStudio.openPage', target.toString());
+    await vscode.commands.executeCommand('notespace.openPage', target.toString());
     await waitFor(
       () =>
         vscode.window.tabGroups.all
@@ -236,18 +236,18 @@ export async function run(): Promise<void> {
           .some(
             (tab) =>
               tab.input instanceof vscode.TabInputCustom &&
-              tab.input.viewType === 'wikiStudio.visual' &&
+              tab.input.viewType === 'notespace.visual' &&
               tab.input.uri.toString() === target.toString(),
           ),
       'supported Markdown opens in Studio',
     );
     // Wiki links round-trip in Studio, so a page that only uses them opens visually too.
-    await vscode.commands.executeCommand('wikiStudio.openPage', home.toString());
+    await vscode.commands.executeCommand('notespace.openPage', home.toString());
     await waitFor(() => {
       const input = vscode.window.tabGroups.activeTabGroup.activeTab?.input;
       return input instanceof vscode.TabInputCustom && input.uri.toString() === home.toString();
     }, 'wiki-link page opens in Studio');
-    await vscode.commands.executeCommand('wikiStudio.preview');
+    await vscode.commands.executeCommand('notespace.preview');
     api.panels.openGraph(root.id);
     await api.panels.refresh();
     await waitFor(() => {
@@ -270,7 +270,7 @@ export async function run(): Promise<void> {
           )
           .map((tab) => ({ tab, group: group.viewColumn })),
       );
-    await vscode.commands.executeCommand('wikiStudio.openPage', home.toString());
+    await vscode.commands.executeCommand('notespace.openPage', home.toString());
     await waitFor(
       () => tabsFor(home).some((t) => t.tab.input instanceof vscode.TabInputCustom),
       'Studio tab',
@@ -281,21 +281,21 @@ export async function run(): Promise<void> {
     edit.insert(home, doc.positionAt(original.length), '\nUnsaved mode-switch line\n');
     assert.ok(await vscode.workspace.applyEdit(edit));
     assert.ok(doc.isDirty);
-    await vscode.commands.executeCommand('wikiStudio.source');
+    await vscode.commands.executeCommand('notespace.source');
     await waitFor(
       () => tabsFor(home).length === 1 && tabsFor(home)[0].tab.input instanceof vscode.TabInputText,
       'Code mode replaces the Studio tab',
     );
     assert.ok(doc.isDirty);
     assert.match(doc.getText(), /Unsaved mode-switch line/);
-    await vscode.commands.executeCommand('wikiStudio.visual');
+    await vscode.commands.executeCommand('notespace.visual');
     await waitFor(
       () =>
         tabsFor(home).length === 1 && tabsFor(home)[0].tab.input instanceof vscode.TabInputCustom,
       'Studio replaces the Code tab',
     );
     assert.match(doc.getText(), /Unsaved mode-switch line/);
-    await vscode.commands.executeCommand('wikiStudio.split');
+    await vscode.commands.executeCommand('notespace.split');
     await waitFor(() => {
       const tabs = tabsFor(home);
       return (
@@ -308,7 +308,7 @@ export async function run(): Promise<void> {
     assert.match(doc.getText(), /Unsaved mode-switch line/);
     assert.ok(doc.isDirty, 'Split keeps unsaved edits');
     // Closing the native companion while Studio stays open must not discard the edits.
-    await vscode.commands.executeCommand('wikiStudio.split');
+    await vscode.commands.executeCommand('notespace.split');
     await waitFor(
       () =>
         tabsFor(home).length === 1 && tabsFor(home)[0].tab.input instanceof vscode.TabInputCustom,
@@ -389,14 +389,14 @@ export async function run(): Promise<void> {
     const trashed = await ws.trashPage(ws.index.byUri(uri.toString())!);
     assert.equal(ws.index.byUri(uri.toString()), undefined);
     assert.equal((await ws.deletedPages(root)).length, 1);
-    const config = vscode.workspace.getConfiguration('wikiStudio', root.folder.uri);
+    const config = vscode.workspace.getConfiguration('notespace', root.folder.uri);
     await config.update(
       'exclude',
       '**/node_modules/**',
       vscode.ConfigurationTarget.WorkspaceFolder,
     );
     await ws.refresh();
-    assert.ok(ws.index.all(root.id).every((p) => !p.path.includes('.wiki-studio-trash')));
+    assert.ok(ws.index.all(root.id).every((p) => !p.path.includes('.notespace-trash')));
     await config.update('exclude', undefined, vscode.ConfigurationTarget.WorkspaceFolder);
     assert.match(
       Buffer.from(await vscode.workspace.fs.readFile(trashed)).toString(),
@@ -412,7 +412,7 @@ export async function run(): Promise<void> {
     await ws.refresh();
   });
   await test('size budgets skip oversized input with actionable warnings', async () => {
-    const config = vscode.workspace.getConfiguration('wikiStudio');
+    const config = vscode.workspace.getConfiguration('notespace');
     const large = vscode.Uri.joinPath(root.uri, 'Large.md');
     await vscode.workspace.fs.writeFile(large, Buffer.alloc(2048, 120));
     await config.update('maxFileSizeKB', 1, vscode.ConfigurationTarget.Workspace);
@@ -434,7 +434,7 @@ export async function run(): Promise<void> {
   });
   await test('configuration changes rebuild the index without leaking previous diagnostics', async () => {
     await vscode.workspace
-      .getConfiguration('wikiStudio')
+      .getConfiguration('notespace')
       .update('diagnostics', false, vscode.ConfigurationTarget.Workspace);
     await waitFor(
       () =>
@@ -444,7 +444,7 @@ export async function run(): Promise<void> {
       'diagnostics disabled',
     );
     await vscode.workspace
-      .getConfiguration('wikiStudio', other.folder.uri)
+      .getConfiguration('notespace', other.folder.uri)
       .update('root', 'notes', vscode.ConfigurationTarget.WorkspaceFolder);
     await waitFor(() => !ws.index.all(other.id).length, 'root changed');
     assert.equal(ws.index.all(root.id).length, 2);
@@ -709,7 +709,7 @@ export async function run(): Promise<void> {
       '.templates/Day.md',
       '# {{title}}\n\n{{weekday}} · [[/journal/{{yesterday}}|Yesterday]]\n\n## Tasks\n',
     );
-    const settings = vscode.workspace.getConfiguration('wikiStudio', root.folder.uri);
+    const settings = vscode.workspace.getConfiguration('notespace', root.folder.uri);
     await settings.update(
       'dailyNotes.folder',
       'journal',
@@ -729,8 +729,8 @@ export async function run(): Promise<void> {
       );
       await planner.ensureDaily(root, '2026-10-10');
       await waitFor(() => planner.dailyNotes(root).size === 2, 'daily notes indexed');
-      await vscode.commands.executeCommand('wikiStudio.openPage', uri.toString());
-      await vscode.commands.executeCommand('wikiStudio.dailyNotePrevious');
+      await vscode.commands.executeCommand('notespace.openPage', uri.toString());
+      await vscode.commands.executeCommand('notespace.dailyNotePrevious');
       await waitFor(() => {
         const input = vscode.window.tabGroups.activeTabGroup.activeTab?.input as
           { uri?: vscode.Uri } | undefined;
@@ -792,6 +792,13 @@ export async function run(): Promise<void> {
     try {
       await ws.refresh();
       const current = ws.roots[0];
+      // Refreshing rebuilds the index in the background; export once the journal and tasks are back.
+      await waitFor(
+        () =>
+          ws.index.all(current.id).some((p) => p.path.endsWith('2026-10-13.md')) &&
+          planner.tasks(current.id).some((t) => t.title.startsWith('Call Bob')),
+        'index rebuilt after enabling planner export',
+      );
       const shared = await api.exportWiki(ws, current, parent, undefined, { planner });
       assert.ok((await files(vscode.Uri.joinPath(shared.uri, 'pages'))).includes('daily'));
       const snapshot = new TextDecoder().decode(
@@ -851,7 +858,7 @@ export async function run(): Promise<void> {
     assert.match(again.path, /Analysis-1\.ipynb$/, 'import never overwrites');
     await vscode.workspace.fs.delete(again);
     // VS Code's built-in notebook editor opens it; no kernel is needed to view saved outputs.
-    await vscode.commands.executeCommand('wikiStudio.openNotebook', { uri: imported });
+    await vscode.commands.executeCommand('notespace.openNotebook', { uri: imported });
     await waitFor(
       () => vscode.window.activeNotebookEditor?.notebook.uri.toString() === imported.toString(),
       'notebook editor',
@@ -1070,7 +1077,7 @@ export async function run(): Promise<void> {
       'nothing runs on open',
     );
     await vscode.commands.executeCommand('notebook.selectKernel', {
-      id: 'wiki-studio-python',
+      id: 'notespace-python',
       extension: 'notespace.notespace',
     });
     await vscode.commands.executeCommand('notebook.execute');
@@ -1101,7 +1108,7 @@ export async function run(): Promise<void> {
   });
   await test('code blocks never run unless the setting is enabled', async () => {
     const runner = new CodeRunner();
-    assert.equal(vscode.workspace.getConfiguration('wikiStudio').get('codeRunner.enabled'), false);
+    assert.equal(vscode.workspace.getConfiguration('notespace').get('codeRunner.enabled'), false);
     assert.deepEqual(runner.available(), {});
     await assert.rejects(
       runner.run('javascript', 'console.log(1)', process.env.WIKI_TEST_DIR!),
@@ -1425,7 +1432,7 @@ export async function run(): Promise<void> {
         /does not name a commit|unknown revision|fatal/,
       );
       // Comparing a page opens VS Code's diff editor against the tag.
-      await vscode.commands.executeCommand('wikiStudio.compareWithGitVersion', guide, 'v1.0');
+      await vscode.commands.executeCommand('notespace.compareWithGitVersion', guide, 'v1.0');
       await waitFor(
         () =>
           vscode.window.tabGroups.activeTabGroup.activeTab?.input instanceof
@@ -1467,7 +1474,7 @@ export async function run(): Promise<void> {
     const file = api.review.reviewUri(page());
     assert.match(file.path, /\/\.reviews\/reviewed\/Page\.md\.json$/);
     const stored = JSON.parse(new TextDecoder().decode(await vscode.workspace.fs.readFile(file)));
-    assert.equal(stored.schema, 'wiki-studio.review/1');
+    assert.equal(stored.schema, 'notespace.review/1');
     assert.deepEqual(stored.threads[0].anchor, { line: 4, quote: 'Second paragraph.' });
     await api.review.comment(uri, 4, 'Yes, checked.', thread);
     await api.review.setStatus(uri, thread, 'resolved');
@@ -1556,7 +1563,7 @@ export async function run(): Promise<void> {
     await ws.refresh();
   });
   await test('AI and semantic search use only an explicitly configured endpoint and propose before changing files', async () => {
-    const config = vscode.workspace.getConfiguration('wikiStudio');
+    const config = vscode.workspace.getConfiguration('notespace');
     await assert.rejects(chooseProvider(api.context), /No language model is available/);
     const requests: Array<{ url?: string; body: Record<string, unknown> }> = [];
     const vector = (text: string) =>
@@ -1718,7 +1725,7 @@ export async function run(): Promise<void> {
       'publish/Details',
       '# Second chapter\n\n| A | B |\n|---|---|\n| 1 | 2 |\n\n- [x] Done task\n',
     );
-    const config = vscode.workspace.getConfiguration('wikiStudio');
+    const config = vscode.workspace.getConfiguration('notespace');
     const out = vscode.Uri.file(path.join(process.env.WIKI_TEST_DIR!, 'exports'));
     try {
       assert.ok(
@@ -1742,7 +1749,7 @@ export async function run(): Promise<void> {
       assert.equal(pdf.pages, 2);
       const bytes = Buffer.from(await vscode.workspace.fs.readFile(pdfUri));
       assert.equal(bytes.subarray(0, 5).toString(), '%PDF-');
-      const python = path.join(tools, 'venv', 'bin', 'python');
+      const python = process.env.WIKI_PYTHON || path.join(tools, 'venv', 'bin', 'python');
       assert.ok(existsSync(python), 'pypdf tool installed');
       const text = execFileSync(python, [
         '-c',
@@ -1972,7 +1979,7 @@ export async function run(): Promise<void> {
       'valid references raise nothing',
     );
     const page = ws.index.byUri(uri.toString())!;
-    await vscode.commands.executeCommand('wikiStudio.openCodeRef', page.uri, `${rel}#chargeCard`);
+    await vscode.commands.executeCommand('notespace.openCodeRef', page.uri, `${rel}#chargeCard`);
     await waitFor(
       () => vscode.window.activeTextEditor?.document.uri.toString() === src.toString(),
       'source opened',
@@ -2012,7 +2019,7 @@ export async function run(): Promise<void> {
       new TextEncoder().encode(updateConfig(yaml, config)),
     );
     // An earlier test turns diagnostics off for the workspace.
-    const settings = vscode.workspace.getConfiguration('wikiStudio');
+    const settings = vscode.workspace.getConfiguration('notespace');
     const before = settings.inspect<boolean>('diagnostics')?.workspaceValue;
     await settings.update('diagnostics', true, vscode.ConfigurationTarget.Workspace);
     try {
@@ -2182,9 +2189,9 @@ export async function run(): Promise<void> {
     const write = (uri: vscode.Uri, text: string) =>
       vscode.workspace.fs.writeFile(uri, new TextEncoder().encode(text));
     const wikiRel = path.posix.relative(folderOf(primary).path, primary.uri.path);
-    const settings = vscode.workspace.getConfiguration('wikiStudio', folderOf(primary));
+    const settings = vscode.workspace.getConfiguration('notespace', folderOf(primary));
     const explorerSettings = vscode.workspace.getConfiguration(
-      'wikiStudio.explorer',
+      'notespace.explorer',
       folderOf(primary),
     );
     const nav = vscode.Uri.joinPath(primary.uri, 'nav');
@@ -2562,7 +2569,7 @@ export async function run(): Promise<void> {
     window.showInputBox = async () => typed;
     try {
       // Remove: the wiki leaves NoteSpace, its files stay, and it can be restored.
-      await vscode.commands.executeCommand('wikiStudio.removeWiki', {
+      await vscode.commands.executeCommand('notespace.removeWiki', {
         label: 'Throwaway',
         root: find()!.id,
         prefix: '',
@@ -2579,21 +2586,21 @@ export async function run(): Promise<void> {
       const originalPick = picks.showQuickPick;
       picks.showQuickPick = async (items: unknown) => items as unknown[];
       try {
-        await vscode.commands.executeCommand('wikiStudio.restoreWikis');
+        await vscode.commands.executeCommand('notespace.restoreWikis');
       } finally {
         picks.showQuickPick = originalPick;
       }
       await waitFor(() => !!find(), 'wiki restored');
       // Delete: nothing happens unless the exact name is typed.
       typed = 'throwaway';
-      await vscode.commands.executeCommand('wikiStudio.deleteWiki', {
+      await vscode.commands.executeCommand('notespace.deleteWiki', {
         label: 'Throwaway',
         root: find()!.id,
         prefix: '',
       });
       assert.ok(await vscode.workspace.fs.stat(project), 'a wrong name deletes nothing');
       typed = 'Throwaway';
-      await vscode.commands.executeCommand('wikiStudio.deleteWiki', {
+      await vscode.commands.executeCommand('notespace.deleteWiki', {
         label: 'Throwaway',
         root: find()!.id,
         prefix: '',
@@ -2614,7 +2621,7 @@ export async function run(): Promise<void> {
         await assert
           .rejects(
             Promise.resolve(
-              vscode.commands.executeCommand('wikiStudio.deleteWiki', {
+              vscode.commands.executeCommand('notespace.deleteWiki', {
                 label: whole.name,
                 root: whole.id,
                 prefix: '',
@@ -2629,7 +2636,7 @@ export async function run(): Promise<void> {
       window.showWarningMessage = original.warn;
       window.showInformationMessage = original.info;
       window.showInputBox = original.input;
-      await api.context.workspaceState.update('wikiStudio.removedWikis', []);
+      await api.context.workspaceState.update('notespace.removedWikis', []);
       ws.setHidden([]);
       await vscode.workspace.fs
         .delete(project, { recursive: true, useTrash: false })
@@ -2933,7 +2940,7 @@ export async function run(): Promise<void> {
         { origin: 'client', signal: controller.signal },
       );
       assert.match(cancelled.error!, /cancelled/);
-      const settings = vscode.workspace.getConfiguration('wikiStudio');
+      const settings = vscode.workspace.getConfiguration('notespace');
       await settings.update('api.maxResponseMB', 1, vscode.ConfigurationTarget.Global);
       const big = await store.send({ ...emptyRequest(), url: `${base}/big` }, { origin: 'client' });
       await settings.update('api.maxResponseMB', undefined, vscode.ConfigurationTarget.Global);
@@ -3222,7 +3229,7 @@ export async function run(): Promise<void> {
       let pdfMs: number | undefined;
       if (process.env.WIKI_CHROMIUM) {
         await vscode.workspace
-          .getConfiguration('wikiStudio')
+          .getConfiguration('notespace')
           .update(
             'export.browserPath',
             process.env.WIKI_CHROMIUM,
@@ -3240,7 +3247,7 @@ export async function run(): Promise<void> {
         pdfMs = performance.now() - pdfStart;
         assert.ok(pdf.pages >= 1000);
         await vscode.workspace
-          .getConfiguration('wikiStudio')
+          .getConfiguration('notespace')
           .update('export.browserPath', undefined, vscode.ConfigurationTarget.Global);
       }
       const report = {

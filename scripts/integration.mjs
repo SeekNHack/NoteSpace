@@ -3,7 +3,9 @@ import { build } from 'esbuild';
 import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-const temporary = await mkdtemp(path.join(os.tmpdir(), 'wiki-studio-test-'));
+import { ensureTestTools, pythonPath, toolsDir } from './test-tools.mjs';
+const temporary = await mkdtemp(path.join(os.tmpdir(), 'notespace-test-'));
+await ensureTestTools();
 try {
   for (const name of ['primary', 'secondary', 'exports', 'user', 'extensions'])
     await mkdir(path.join(temporary, name), { recursive: true });
@@ -39,7 +41,8 @@ try {
       WIKI_CHROMIUM: await import('playwright-core')
         .then((p) => p.chromium.executablePath())
         .catch(() => ''),
-      WIKI_TOOLS: path.join(os.homedir(), '.cache', 'wiki-studio-tools'),
+      WIKI_TOOLS: toolsDir,
+      WIKI_PYTHON: pythonPath,
       WIKI_BENCHMARK: process.env.WIKI_BENCHMARK || '',
       WIKI_BENCHMARK_REPORT: process.env.WIKI_BENCHMARK_REPORT || '',
     },

@@ -7,7 +7,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createServer } from 'node:http';
 import assert from 'node:assert/strict';
-const tmp = await mkdtemp(path.join(os.tmpdir(), 'wiki-studio-ui-'));
+const tmp = await mkdtemp(path.join(os.tmpdir(), 'notespace-ui-'));
 let app, browser, page;
 const codeServer = process.argv.includes('--code-server');
 const extensionPackage = JSON.parse(

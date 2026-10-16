@@ -74,7 +74,7 @@ export async function exportWiki(
   const scopeOfPage = (p: Page) => workspace.index.scope?.(p) ?? '';
   const directory = vscode.Uri.joinPath(
     parent,
-    `wiki-studio-${new Date().toISOString().replace(/[:.]/g, '-')}-${randomBytes(4).toString('hex')}`,
+    `notespace-${new Date().toISOString().replace(/[:.]/g, '-')}-${randomBytes(4).toString('hex')}`,
   );
   const warnings: string[] = [];
   const write = async (path: string, bytes: Uint8Array) => {
@@ -300,7 +300,7 @@ export async function exportWiki(
     const notebookLinks: string[] = [];
     for (const uri of await vscode.workspace.findFiles(
       new vscode.RelativePattern(root.uri, '**/*.ipynb'),
-      '**/{node_modules,.git,.wiki-studio-trash,.ipynb_checkpoints}/**',
+      '**/{node_modules,.git,.notespace-trash,.ipynb_checkpoints}/**',
       2000,
     )) {
       if (token?.isCancellationRequested) throw new vscode.CancellationError();
@@ -476,7 +476,7 @@ export async function exportWiki(
           ),
         ),
       );
-    await write('.wiki-studio-build', new TextEncoder().encode('NoteSpace generated site\n'));
+    await write('.notespace-build', new TextEncoder().encode('NoteSpace generated site\n'));
     await write(
       'export-report.json',
       new TextEncoder().encode(JSON.stringify({ pages: pages.length, warnings }, null, 2)),

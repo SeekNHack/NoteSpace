@@ -28,7 +28,8 @@ export function parseBoard(pageText: string): BoardConfig | undefined {
   } catch {
     return undefined;
   }
-  const ws = obj(obj(data).wiki_studio);
+  // `wiki_studio:` is the key written under the project's earlier name; it is migrated on save.
+  const ws = obj(obj(data).notespace ?? obj(data).wiki_studio);
   if (ws.type !== 'board') return undefined;
   const id = typeof ws.id === 'string' && idPattern.test(ws.id) ? ws.id : undefined;
   if (!id) return undefined;
@@ -89,14 +90,14 @@ const toYaml = (config: BoardConfig): Record<string, unknown> => ({
 });
 
 /**
- * Returns `pageText` with the board settings replaced. Only the `wiki_studio` key of the front
+ * Returns `pageText` with the board settings replaced. Only the `notespace` key of the front
  * matter changes; other keys, comments and the body are kept as written.
  */
 export function writeBoardConfig(pageText: string, config: BoardConfig): string {
   checkBoard(config);
   const fm = FM.exec(pageText);
   const eol = pageText.includes('\r\n') ? '\r\n' : '\n';
-  const block = stringify({ wiki_studio: toYaml(config) }, { lineWidth: 0 })
+  const block = stringify({ notespace: toYaml(config) }, { lineWidth: 0 })
     .trimEnd()
     .split('\n');
   if (!fm) return `---${eol}${block.join(eol)}${eol}---${eol}${pageText}`;
@@ -104,9 +105,9 @@ export function writeBoardConfig(pageText: string, config: BoardConfig): string 
   if (doc.errors.length)
     throw new Error(`The front matter cannot be read: ${doc.errors[0].message}`);
   if (!isMap(doc.contents)) throw new Error('The front matter is not a mapping.');
-  // Replace the `wiki_studio:` block textually so every other line stays byte-identical.
+  // Replace the `notespace:` (or legacy `wiki_studio:`) block textually so every other line stays byte-identical.
   const lines = fm[2].split(/\r?\n/);
-  const at = lines.findIndex((l) => /^wiki_studio\s*:/.test(l));
+  const at = lines.findIndex((l) => /^(?:notespace|wiki_studio)\s*:/.test(l));
   if (at < 0) lines.push(...block);
   else {
     let end = at + 1;

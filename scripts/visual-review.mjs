@@ -58,7 +58,7 @@ Press ++Ctrl+K++ to search. Status {badge:Beta}, formula $E = mc^2$ and ==highli
 
 :::tabs "Install"
 :::tab "Linux"
-Use \`apt install wiki-studio\`.
+Use \`apt install notespace\`.
 :::
 :::tab "macOS"
 Use Homebrew.

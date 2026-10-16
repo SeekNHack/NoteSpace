@@ -52,7 +52,7 @@ export class NotebookCatalog implements vscode.Disposable {
     for (const root of this.workspace.roots) {
       const found = await vscode.workspace.findFiles(
         new vscode.RelativePattern(root.uri, this.glob),
-        '**/{node_modules,.git,.wiki-studio-trash,.ipynb_checkpoints}/**',
+        '**/{node_modules,.git,.notespace-trash,.ipynb_checkpoints}/**',
         2000,
       );
       for (const uri of found)
@@ -157,7 +157,7 @@ export async function showNotebookPreview(
   const title = posix.basename(uri.path);
   if (!preview) {
     preview = vscode.window.createWebviewPanel(
-      'wikiStudio.notebookPreview',
+      'notespace.notebookPreview',
       title,
       vscode.ViewColumn.Beside,
       {

@@ -1,7 +1,7 @@
 import { idPattern, Task, TaskChange, TaskStatus } from './tasks';
 
 /**
- * Kanban boards. A board is an ordinary Markdown page whose front matter holds a `wiki_studio`
+ * Kanban boards. A board is an ordinary Markdown page whose front matter holds a `notespace`
  * block of `type: board` (see docs/workspace-redesign.md). Columns and boards have stable ids;
  * tasks join a board with `board:<id>` or by living in the board's file, and sit in a column
  * with `col:<id>`.

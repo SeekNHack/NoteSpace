@@ -14,7 +14,7 @@ import { posix } from './core/paths';
  * the host replaces the document text (VS Code keeps undo, dirty state and Save).
  */
 export class CanvasEditorProvider implements vscode.CustomTextEditorProvider {
-  static readonly viewType = 'wikiStudio.canvas';
+  static readonly viewType = 'notespace.canvas';
   constructor(
     private readonly workspace: WikiWorkspace,
     private readonly extensionUri: vscode.Uri,

@@ -16,7 +16,7 @@ export interface WikiRoot {
   config?: WikiConfig;
 }
 export class WikiWorkspace implements vscode.Disposable {
-  /** `.gitignore` rules per workspace folder, when `wikiStudio.respectGitignore` is on. */
+  /** `.gitignore` rules per workspace folder, when `notespace.respectGitignore` is on. */
   private ignoreRules = new Map<string, GitignoreMatcher>();
   readonly index = new WikiIndex();
   private readonly emitter = new vscode.EventEmitter<void>();
@@ -73,7 +73,7 @@ export class WikiWorkspace implements vscode.Disposable {
       watcher.onDidChange((uri) => this.scheduleFile(uri, 'upsert')),
       vscode.workspace.onDidChangeWorkspaceFolders(() => this.schedule()),
       vscode.workspace.onDidChangeConfiguration((e) => {
-        if (e.affectsConfiguration('wikiStudio')) this.schedule();
+        if (e.affectsConfiguration('notespace')) this.schedule();
       }),
       vscode.workspace.onDidChangeTextDocument((e) => {
         if (this.updateDocument(e.document)) this.notify();
@@ -110,7 +110,7 @@ export class WikiWorkspace implements vscode.Disposable {
           for (const [key, event] of events) await this.updateFile(vscode.Uri.parse(key), event);
           await vscode.commands.executeCommand(
             'setContext',
-            'wikiStudio.hasPages',
+            'notespace.hasPages',
             this.index.pages.size > 0,
           );
           this.notify();
@@ -123,7 +123,7 @@ export class WikiWorkspace implements vscode.Disposable {
     for (const folder of new Set(roots.map((r) => r.folder))) {
       if (
         !vscode.workspace
-          .getConfiguration('wikiStudio', folder.uri)
+          .getConfiguration('notespace', folder.uri)
           .get<boolean>('respectGitignore', false)
       )
         continue;
@@ -170,10 +170,10 @@ export class WikiWorkspace implements vscode.Disposable {
     if (
       relative
         .split('/')
-        .some((part) => ['.wiki-studio-trash', '.templates', 'node_modules', '.git'].includes(part))
+        .some((part) => ['.notespace-trash', '.templates', 'node_modules', '.git'].includes(part))
     )
       return;
-    const config = vscode.workspace.getConfiguration('wikiStudio', root.folder.uri);
+    const config = vscode.workspace.getConfiguration('notespace', root.folder.uri);
     const old = this.index.byUri(uri.toString());
     if (!old) {
       const matches = await vscode.workspace.findFiles(
@@ -271,7 +271,7 @@ export class WikiWorkspace implements vscode.Disposable {
           try {
             const configs = await vscode.workspace.findFiles(
               new vscode.RelativePattern(folder, '**/wiki.yaml'),
-              '**/{node_modules,.git,dist,.wiki-studio-export}/**',
+              '**/{node_modules,.git,dist,.notespace-export}/**',
               21,
             );
             for (const configUri of configs) {
@@ -299,7 +299,7 @@ export class WikiWorkspace implements vscode.Disposable {
             if (configs.length) continue;
             const relative = safeRelative(
               vscode.workspace
-                .getConfiguration('wikiStudio', folder.uri)
+                .getConfiguration('notespace', folder.uri)
                 .get<string>('root', 'wiki'),
               true,
             );
@@ -318,7 +318,7 @@ export class WikiWorkspace implements vscode.Disposable {
         roots.splice(0, roots.length, ...roots.filter((r) => !this.hidden.has(r.id)));
         await this.loadIgnoreRules(roots);
         for (const root of roots) {
-          const config = vscode.workspace.getConfiguration('wikiStudio', root.folder.uri);
+          const config = vscode.workspace.getConfiguration('notespace', root.folder.uri);
           const max = config.get<number>('maxPages', 10000),
             limit = config.get<number>('maxFileSizeKB', 1024) * 1024;
           try {
@@ -335,7 +335,7 @@ export class WikiWorkspace implements vscode.Disposable {
             }
             if (uris.length > max)
               issues.push(
-                `${root.name}: index limited to ${max} pages. Raise wikiStudio.maxPages to include more.`,
+                `${root.name}: index limited to ${max} pages. Raise notespace.maxPages to include more.`,
               );
             let cursor = 0,
               totalBytes = 0;
@@ -345,10 +345,7 @@ export class WikiWorkspace implements vscode.Disposable {
                 while (cursor < Math.min(uris.length, max)) {
                   const uri = uris[cursor++];
                   if (
-                    posix
-                      .relative(root.uri.path, uri.path)
-                      .split('/')
-                      .includes('.wiki-studio-trash')
+                    posix.relative(root.uri.path, uri.path).split('/').includes('.notespace-trash')
                   )
                     continue;
                   try {
@@ -399,7 +396,7 @@ export class WikiWorkspace implements vscode.Disposable {
         if (issues.join('\n') !== this.issues.join('\n'))
           for (const issue of issues) this.log.appendLine(issue);
         this.issues = issues;
-        await vscode.commands.executeCommand('setContext', 'wikiStudio.hasPages', pages.length > 0);
+        await vscode.commands.executeCommand('setContext', 'notespace.hasPages', pages.length > 0);
         this.notify();
       });
     return this.pending;
@@ -536,7 +533,7 @@ export class WikiWorkspace implements vscode.Disposable {
   ): Promise<{ uri: vscode.Uri; warnings: string[] }> {
     const from = safeRelative(oldPrefix.replace(/\/$/, ''));
     const to = safeRelative(name);
-    if (to.split('/').includes('.wiki-studio-trash')) throw new Error('Wiki Trash is reserved.');
+    if (to.split('/').includes('.notespace-trash')) throw new Error('Wiki Trash is reserved.');
     if (to === from || to.startsWith(`${from}/`))
       throw new Error('Choose a different destination outside the section.');
     const pages = this.index.all(root.id).filter((p) => p.path.startsWith(`${from}/`));
@@ -626,7 +623,7 @@ export class WikiWorkspace implements vscode.Disposable {
     }
     const to = vscode.Uri.joinPath(
       root.uri,
-      '.wiki-studio-trash',
+      '.notespace-trash',
       `${Date.now()}-${randomUUID()}`,
       section,
     );
@@ -648,7 +645,7 @@ export class WikiWorkspace implements vscode.Disposable {
       throw new Error('Save the page before moving it to Wiki Trash.');
     const uri = vscode.Uri.joinPath(
       root.uri,
-      '.wiki-studio-trash',
+      '.notespace-trash',
       `${Date.now()}-${randomUUID()}`,
       page.path,
     );
@@ -663,9 +660,9 @@ export class WikiWorkspace implements vscode.Disposable {
     return uri;
   }
   async deletedPages(root: WikiRoot): Promise<{ path: string; uri: vscode.Uri }[]> {
-    await this.assertNoSymlink(root, vscode.Uri.joinPath(root.uri, '.wiki-studio-trash'));
+    await this.assertNoSymlink(root, vscode.Uri.joinPath(root.uri, '.notespace-trash'));
     const uris = await vscode.workspace.findFiles(
-      new vscode.RelativePattern(root.uri, '.wiki-studio-trash/**/*.[mM][dD]'),
+      new vscode.RelativePattern(root.uri, '.notespace-trash/**/*.[mM][dD]'),
       null,
     );
     return uris
@@ -708,7 +705,7 @@ export class WikiWorkspace implements vscode.Disposable {
       // Every 30 s also look for pages that appeared or vanished without a watcher event.
       if (++this.reconcileTicks % 6 === 0)
         for (const root of this.roots) {
-          const config = vscode.workspace.getConfiguration('wikiStudio', root.folder.uri);
+          const config = vscode.workspace.getConfiguration('notespace', root.folder.uri);
           const found = await vscode.workspace.findFiles(
             new vscode.RelativePattern(root.uri, '**/*.[mM][dD]'),
             config.get<string>('exclude', '') || undefined,

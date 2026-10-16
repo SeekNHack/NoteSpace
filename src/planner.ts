@@ -43,8 +43,8 @@ export class PlannerService implements vscode.Disposable {
       workspace.onDidChange(() => this.emitter.fire()),
       vscode.workspace.onDidChangeConfiguration((event) => {
         if (
-          event.affectsConfiguration('wikiStudio.dailyNotes') ||
-          event.affectsConfiguration('wikiStudio.planner')
+          event.affectsConfiguration('notespace.dailyNotes') ||
+          event.affectsConfiguration('notespace.planner')
         )
           this.emitter.fire();
       }),
@@ -52,7 +52,7 @@ export class PlannerService implements vscode.Disposable {
   }
 
   config(root?: WikiRoot): PlannerConfig {
-    const settings = vscode.workspace.getConfiguration('wikiStudio', root?.folder.uri);
+    const settings = vscode.workspace.getConfiguration('notespace', root?.folder.uri);
     const zone = settings.get<string>('planner.timeZone', '').trim();
     const folder =
       settings

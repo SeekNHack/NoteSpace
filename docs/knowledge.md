@@ -56,7 +56,7 @@ Search is an incremental full-text index over **page sections** (the text betwee
 
 The panel adds pickers for tags, folders, types, code languages and front matter fields (each adds the filter to the query text, so what you see is what is searched), shows matched words highlighted in each preview, the number of results and the time taken, warns about unknown filters, and keeps the last 15 searches per workspace (_Clear recent searches_ removes them). Arrow keys move through results and Enter opens one. On the test machine a query over 1,000 pages takes a few milliseconds and over 10,000 pages under 50 ms (`docs/benchmark-search.json`, `src/test/unit/search-query.test.ts`).
 
-**Semantic Search (Local Model)** is optional. Set `wikiStudio.semanticSearch.model` to an embedding model you already run behind an OpenAI-compatible endpoint (`wikiStudio.ai.endpoint`, default `http://127.0.0.1:11434/v1`, the address of a local Ollama). The first run asks before sending page text (and warns if the endpoint is not on this machine); drafts and archived versions are skipped and credential-like values are redacted. Vectors are cached in VS Code's workspace storage — not in the wiki — and only changed sections are embedded again. NoteSpace never downloads models.
+**Semantic Search (Local Model)** is optional. Set `notespace.semanticSearch.model` to an embedding model you already run behind an OpenAI-compatible endpoint (`notespace.ai.endpoint`, default `http://127.0.0.1:11434/v1`, the address of a local Ollama). The first run asks before sending page text (and warns if the endpoint is not on this machine); drafts and archived versions are skipped and credential-like values are redacted. Vectors are cached in VS Code's workspace storage — not in the wiki — and only changed sections are embedded again. NoteSpace never downloads models.
 
 ## Knowledge graph
 
@@ -100,7 +100,7 @@ A link to a source file (by extension) with `#Symbol`, `#Class.member` or `#L10-
 
 ## Review comments
 
-In Code mode, add review comments with VS Code's comment UI (the **+** in the gutter). Threads can be replied to, resolved, reopened and deleted. They are stored as portable JSON next to the wiki, one file per page: `<content root>/.reviews/<page path>.json` (`schema: wiki-studio.review/1`, author from `git config user.name` or the OS user, ISO dates, the commented line and its text). After a save, threads follow their quoted line when it moved; if the text is gone the thread stays at the old line and says so. Reviews are shared like any other file (Git, copy); there is no server and no real-time sync. They are never exported.
+In Code mode, add review comments with VS Code's comment UI (the **+** in the gutter). Threads can be replied to, resolved, reopened and deleted. They are stored as portable JSON next to the wiki, one file per page: `<content root>/.reviews/<page path>.json` (`schema: notespace.review/1`, author from `git config user.name` or the OS user, ISO dates, the commented line and its text). After a save, threads follow their quoted line when it moved; if the text is gone the thread stays at the old line and says so. Reviews are shared like any other file (Git, copy); there is no server and no real-time sync. They are never exported.
 
 ## Importing an Obsidian vault
 
@@ -124,7 +124,7 @@ Images, PDFs, CSV/JSON, canvases and notebooks are copied; other files are liste
 
 ## AI assistance
 
-Optional, through either VS Code's language models (for example from a chat extension) or an OpenAI-compatible endpoint you configure (`wikiStudio.ai.provider: endpoint`, `wikiStudio.ai.endpoint`, `wikiStudio.ai.model`; an API key, if needed, is kept in VS Code's secret storage via **AI: Set Endpoint API Key**). `wikiStudio.ai.provider: off` disables it.
+Optional, through either VS Code's language models (for example from a chat extension) or an OpenAI-compatible endpoint you configure (`notespace.ai.provider: endpoint`, `notespace.ai.endpoint`, `notespace.ai.model`; an API key, if needed, is kept in VS Code's secret storage via **AI: Set Endpoint API Key**). `notespace.ai.provider: off` disables it.
 
 - **AI: Improve Page or Selection**, **AI: Translate Page** (into a translation page, with `translated_from` set), **AI: Draft Documentation from Code** (from the active source file into a new page), **AI: Review Page Quality** (suggestions only, nothing changes).
 - Before each request a dialog names the model or endpoint and the size of the text; only that text is sent. Credential-like values (private keys, cloud and GitHub tokens, `password: …`, bearer tokens, passwords in URLs) are replaced with `[REDACTED]` first, and the dialog says how many.

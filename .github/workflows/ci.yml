@@ -30,6 +30,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      # The PDF export test prints with a real Chromium.
+      - name: Install Chromium for the PDF export test
+        run: npx playwright-core install${{ runner.os == 'Linux' && ' --with-deps' || '' }} chromium
       - run: npm audit
       - name: Extension host tests (Linux)
         if: runner.os == 'Linux'

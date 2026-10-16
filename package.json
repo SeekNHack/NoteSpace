@@ -43,647 +43,647 @@
   "contributes": {
     "commands": [
       {
-        "command": "wikiStudio.initialize",
+        "command": "notespace.initialize",
         "title": "Initialize Wiki",
         "category": "NoteSpace",
         "icon": "$(book)"
       },
       {
-        "command": "wikiStudio.newPage",
+        "command": "notespace.newPage",
         "title": "New Page",
         "category": "NoteSpace",
         "icon": "$(new-file)"
       },
       {
-        "command": "wikiStudio.dailyNote",
+        "command": "notespace.dailyNote",
         "title": "Open Today's Daily Note",
         "category": "NoteSpace",
         "icon": "$(calendar)"
       },
       {
-        "command": "wikiStudio.search",
+        "command": "notespace.search",
         "title": "Search Pages",
         "category": "NoteSpace",
         "icon": "$(search)"
       },
       {
-        "command": "wikiStudio.advancedSearch",
+        "command": "notespace.advancedSearch",
         "title": "Advanced Search",
         "category": "NoteSpace",
         "icon": "$(filter)"
       },
       {
-        "command": "wikiStudio.preview",
+        "command": "notespace.preview",
         "title": "Open Reader Preview",
         "category": "NoteSpace",
         "icon": "$(open-preview)"
       },
       {
-        "command": "wikiStudio.graph",
+        "command": "notespace.graph",
         "title": "Explore Link Graph",
         "category": "NoteSpace",
         "icon": "$(type-hierarchy)"
       },
       {
-        "command": "wikiStudio.renamePage",
+        "command": "notespace.renamePage",
         "title": "Rename Page and Update Links",
         "category": "NoteSpace",
         "icon": "$(edit)"
       },
       {
-        "command": "wikiStudio.deletePage",
+        "command": "notespace.deletePage",
         "title": "Delete Page",
         "category": "NoteSpace",
         "icon": "$(trash)"
       },
       {
-        "command": "wikiStudio.export",
+        "command": "notespace.export",
         "title": "Export Wiki to HTML",
         "category": "NoteSpace",
         "icon": "$(export)"
       },
       {
-        "command": "wikiStudio.refresh",
+        "command": "notespace.refresh",
         "title": "Refresh Index",
         "category": "NoteSpace",
         "icon": "$(refresh)"
       },
       {
-        "command": "wikiStudio.insertLink",
+        "command": "notespace.insertLink",
         "title": "Insert Wiki Link",
         "category": "NoteSpace",
         "icon": "$(link)"
       },
       {
-        "command": "wikiStudio.openPage",
+        "command": "notespace.openPage",
         "title": "Open Page",
         "category": "NoteSpace"
       },
       {
-        "command": "wikiStudio.restorePage",
+        "command": "notespace.restorePage",
         "title": "Restore Deleted Page",
         "category": "NoteSpace",
         "icon": "$(history)"
       },
       {
-        "command": "wikiStudio.createWiki",
+        "command": "notespace.createWiki",
         "title": "Create Wiki",
         "category": "NoteSpace",
         "icon": "$(add)"
       },
       {
-        "command": "wikiStudio.openWiki",
+        "command": "notespace.openWiki",
         "title": "Open Wiki Index Page",
         "category": "NoteSpace",
         "icon": "$(book)"
       },
       {
-        "command": "wikiStudio.importProject",
+        "command": "notespace.importProject",
         "title": "Import Markdown or MkDocs Project",
         "category": "NoteSpace",
         "icon": "$(cloud-download)"
       },
       {
-        "command": "wikiStudio.newSection",
+        "command": "notespace.newSection",
         "title": "New Folder",
         "category": "NoteSpace",
         "icon": "$(new-folder)"
       },
       {
-        "command": "wikiStudio.visual",
+        "command": "notespace.visual",
         "title": "Open in Studio",
         "category": "NoteSpace",
         "icon": "$(edit)"
       },
       {
-        "command": "wikiStudio.source",
+        "command": "notespace.source",
         "title": "Open in Code (Markdown Source)",
         "category": "NoteSpace",
         "icon": "$(code)"
       },
       {
-        "command": "wikiStudio.split",
+        "command": "notespace.split",
         "title": "Open Split View",
         "category": "NoteSpace",
         "icon": "$(split-horizontal)"
       },
       {
-        "command": "wikiStudio.duplicatePage",
+        "command": "notespace.duplicatePage",
         "title": "Duplicate Page",
         "category": "NoteSpace",
         "icon": "$(files)"
       },
       {
-        "command": "wikiStudio.copyLink",
+        "command": "notespace.copyLink",
         "title": "Copy Wiki Link",
         "category": "NoteSpace",
         "icon": "$(link)"
       },
       {
-        "command": "wikiStudio.settings",
+        "command": "notespace.settings",
         "title": "Open Wiki Settings",
         "category": "NoteSpace",
         "icon": "$(settings-gear)"
       },
       {
-        "command": "wikiStudio.movePage",
+        "command": "notespace.movePage",
         "title": "Move Page",
         "category": "NoteSpace",
         "icon": "$(move)"
       },
       {
-        "command": "wikiStudio.buildWiki",
+        "command": "notespace.buildWiki",
         "title": "Build Wiki",
         "category": "NoteSpace",
         "icon": "$(package)"
       },
       {
-        "command": "wikiStudio.importImage",
+        "command": "notespace.importImage",
         "title": "Import Image",
         "category": "NoteSpace",
         "icon": "$(file-media)"
       },
       {
-        "command": "wikiStudio.pageProperties",
+        "command": "notespace.pageProperties",
         "title": "Edit Page Properties and Order",
         "category": "NoteSpace",
         "icon": "$(settings-gear)"
       },
       {
-        "command": "wikiStudio.validate",
+        "command": "notespace.validate",
         "title": "Validate Wiki",
         "category": "NoteSpace",
         "icon": "$(check-all)"
       },
       {
-        "command": "wikiStudio.renameSection",
+        "command": "notespace.renameSection",
         "title": "Rename or Move Section",
         "category": "NoteSpace",
         "icon": "$(edit)"
       },
       {
-        "command": "wikiStudio.deleteSection",
+        "command": "notespace.deleteSection",
         "title": "Delete Section",
         "category": "NoteSpace",
         "icon": "$(trash)"
       },
       {
-        "command": "wikiStudio.browseImages",
+        "command": "notespace.browseImages",
         "title": "Browse Wiki Images",
         "category": "NoteSpace",
         "icon": "$(symbol-color)"
       },
       {
-        "command": "wikiStudio.importAttachment",
+        "command": "notespace.importAttachment",
         "title": "Import Attachment",
         "category": "NoteSpace",
         "icon": "$(file-binary)"
       },
       {
-        "command": "wikiStudio.newFromTemplate",
+        "command": "notespace.newFromTemplate",
         "title": "New Page from Template",
         "category": "NoteSpace",
         "icon": "$(file-add)"
       },
       {
-        "command": "wikiStudio.toggleFavorite",
+        "command": "notespace.toggleFavorite",
         "title": "Toggle Favorite",
         "category": "NoteSpace",
         "icon": "$(star)"
       },
       {
-        "command": "wikiStudio.filterPages",
+        "command": "notespace.filterPages",
         "title": "Filter Wiki Explorer",
         "category": "NoteSpace",
         "icon": "$(filter)"
       },
       {
-        "command": "wikiStudio.home",
+        "command": "notespace.home",
         "title": "Open Home",
         "category": "NoteSpace",
         "icon": "$(home)"
       },
       {
-        "command": "wikiStudio.focusContext",
+        "command": "notespace.focusContext",
         "title": "Show Page Outline and Backlinks",
         "category": "NoteSpace",
         "icon": "$(list-tree)"
       },
       {
-        "command": "wikiStudio.revealSection",
+        "command": "notespace.revealSection",
         "title": "Reveal Section in Wiki Explorer",
         "category": "NoteSpace",
         "icon": "$(folder)"
       },
       {
-        "command": "wikiStudio.revealInExplorer",
+        "command": "notespace.revealInExplorer",
         "title": "Reveal in File Explorer",
         "category": "NoteSpace",
         "icon": "$(files)"
       },
       {
-        "command": "wikiStudio.openToSide",
+        "command": "notespace.openToSide",
         "title": "Open to the Side",
         "category": "NoteSpace",
         "icon": "$(split-horizontal)"
       },
       {
-        "command": "wikiStudio.addFavorite",
+        "command": "notespace.addFavorite",
         "title": "Add to Favorites",
         "category": "NoteSpace",
         "icon": "$(star-empty)"
       },
       {
-        "command": "wikiStudio.removeFavorite",
+        "command": "notespace.removeFavorite",
         "title": "Remove from Favorites",
         "category": "NoteSpace",
         "icon": "$(star-full)"
       },
       {
-        "command": "wikiStudio.importMedia",
+        "command": "notespace.importMedia",
         "title": "Import Audio or Video",
         "category": "NoteSpace",
         "icon": "$(device-camera-video)"
       },
       {
-        "command": "wikiStudio.planner",
+        "command": "notespace.planner",
         "title": "Open Planner",
         "category": "NoteSpace",
         "icon": "$(checklist)"
       },
       {
-        "command": "wikiStudio.addTask",
+        "command": "notespace.addTask",
         "title": "Add Task",
         "category": "NoteSpace",
         "icon": "$(add)"
       },
       {
-        "command": "wikiStudio.dailyNotePrevious",
+        "command": "notespace.dailyNotePrevious",
         "title": "Previous Daily Note",
         "category": "NoteSpace",
         "icon": "$(arrow-left)"
       },
       {
-        "command": "wikiStudio.dailyNoteNext",
+        "command": "notespace.dailyNoteNext",
         "title": "Next Daily Note",
         "category": "NoteSpace",
         "icon": "$(arrow-right)"
       },
       {
-        "command": "wikiStudio.dailyNoteForDate",
+        "command": "notespace.dailyNoteForDate",
         "title": "Open Daily Note for Date…",
         "category": "NoteSpace",
         "icon": "$(calendar)"
       },
       {
-        "command": "wikiStudio.openNotebook",
+        "command": "notespace.openNotebook",
         "title": "Open Notebook",
         "category": "NoteSpace",
         "icon": "$(notebook)"
       },
       {
-        "command": "wikiStudio.notebookPreview",
+        "command": "notespace.notebookPreview",
         "title": "Preview Notebook (Saved Outputs)",
         "category": "NoteSpace",
         "icon": "$(open-preview)"
       },
       {
-        "command": "wikiStudio.notebookToMarkdown",
+        "command": "notespace.notebookToMarkdown",
         "title": "Convert Notebook to Markdown Page",
         "category": "NoteSpace",
         "icon": "$(markdown)"
       },
       {
-        "command": "wikiStudio.importNotebook",
+        "command": "notespace.importNotebook",
         "title": "Import Jupyter Notebook",
         "category": "NoteSpace",
         "icon": "$(notebook)"
       },
       {
-        "command": "wikiStudio.newCanvas",
+        "command": "notespace.newCanvas",
         "title": "New Canvas",
         "category": "NoteSpace",
         "icon": "$(symbol-structure)"
       },
       {
-        "command": "wikiStudio.openApiPlayground",
+        "command": "notespace.openApiPlayground",
         "title": "Open API Playground",
         "category": "NoteSpace",
         "icon": "$(debug-alt)"
       },
       {
-        "command": "wikiStudio.generateApiReference",
+        "command": "notespace.generateApiReference",
         "title": "Generate API Reference Pages",
         "category": "NoteSpace",
         "icon": "$(references)"
       },
       {
-        "command": "wikiStudio.contentHealth",
+        "command": "notespace.contentHealth",
         "title": "Open Content Health Report",
         "category": "NoteSpace",
         "icon": "$(pulse)"
       },
       {
-        "command": "wikiStudio.addLanguage",
+        "command": "notespace.addLanguage",
         "title": "Add Language",
         "category": "NoteSpace",
         "icon": "$(globe)"
       },
       {
-        "command": "wikiStudio.createTranslation",
+        "command": "notespace.createTranslation",
         "title": "Create Translation",
         "category": "NoteSpace",
         "icon": "$(globe)"
       },
       {
-        "command": "wikiStudio.markTranslationCurrent",
+        "command": "notespace.markTranslationCurrent",
         "title": "Mark Translation as Up to Date",
         "category": "NoteSpace",
         "icon": "$(check)"
       },
       {
-        "command": "wikiStudio.archiveVersion",
+        "command": "notespace.archiveVersion",
         "title": "Archive Current Version",
         "category": "NoteSpace",
         "icon": "$(archive)"
       },
       {
-        "command": "wikiStudio.pageHistory",
+        "command": "notespace.pageHistory",
         "title": "Show Page History",
         "category": "NoteSpace",
         "icon": "$(history)"
       },
       {
-        "command": "wikiStudio.browseGitVersion",
+        "command": "notespace.browseGitVersion",
         "title": "Browse Wiki at Git Tag or Branch",
         "category": "NoteSpace",
         "icon": "$(tag)"
       },
       {
-        "command": "wikiStudio.compareWithGitVersion",
+        "command": "notespace.compareWithGitVersion",
         "title": "Compare Page with Git Tag or Branch",
         "category": "NoteSpace",
         "icon": "$(git-compare)"
       },
       {
-        "command": "wikiStudio.review.comment",
+        "command": "notespace.review.comment",
         "title": "Add Comment",
         "category": "NoteSpace",
         "icon": "$(comment)"
       },
       {
-        "command": "wikiStudio.review.resolve",
+        "command": "notespace.review.resolve",
         "title": "Resolve",
         "category": "NoteSpace",
         "icon": "$(check)"
       },
       {
-        "command": "wikiStudio.review.reopen",
+        "command": "notespace.review.reopen",
         "title": "Reopen",
         "category": "NoteSpace",
         "icon": "$(debug-restart)"
       },
       {
-        "command": "wikiStudio.review.delete",
+        "command": "notespace.review.delete",
         "title": "Delete Comment",
         "category": "NoteSpace",
         "icon": "$(trash)"
       },
       {
-        "command": "wikiStudio.importObsidian",
+        "command": "notespace.importObsidian",
         "title": "Import Obsidian Vault",
         "category": "NoteSpace",
         "icon": "$(cloud-download)"
       },
       {
-        "command": "wikiStudio.copyMcpConfig",
+        "command": "notespace.copyMcpConfig",
         "title": "Copy MCP Server Configuration",
         "category": "NoteSpace",
         "icon": "$(plug)"
       },
       {
-        "command": "wikiStudio.ai.improve",
+        "command": "notespace.ai.improve",
         "title": "AI: Improve Page or Selection",
         "category": "NoteSpace",
         "icon": "$(sparkle)"
       },
       {
-        "command": "wikiStudio.ai.translate",
+        "command": "notespace.ai.translate",
         "title": "AI: Translate Page",
         "category": "NoteSpace",
         "icon": "$(globe)"
       },
       {
-        "command": "wikiStudio.ai.docsFromCode",
+        "command": "notespace.ai.docsFromCode",
         "title": "AI: Draft Documentation from Code",
         "category": "NoteSpace",
         "icon": "$(sparkle)"
       },
       {
-        "command": "wikiStudio.ai.review",
+        "command": "notespace.ai.review",
         "title": "AI: Review Page Quality",
         "category": "NoteSpace",
         "icon": "$(checklist)"
       },
       {
-        "command": "wikiStudio.ai.apply",
+        "command": "notespace.ai.apply",
         "title": "Apply AI Proposal",
         "category": "NoteSpace",
         "icon": "$(check)"
       },
       {
-        "command": "wikiStudio.ai.discard",
+        "command": "notespace.ai.discard",
         "title": "Discard AI Proposal",
         "category": "NoteSpace",
         "icon": "$(close)"
       },
       {
-        "command": "wikiStudio.ai.setEndpointKey",
+        "command": "notespace.ai.setEndpointKey",
         "title": "AI: Set Endpoint API Key",
         "category": "NoteSpace",
         "icon": "$(key)"
       },
       {
-        "command": "wikiStudio.semanticSearch",
+        "command": "notespace.semanticSearch",
         "title": "Semantic Search (Local Model)",
         "category": "NoteSpace",
         "icon": "$(search-fuzzy)"
       },
       {
-        "command": "wikiStudio.exportPdf",
+        "command": "notespace.exportPdf",
         "title": "Export PDF (Page, Section or Wiki)",
         "category": "NoteSpace",
         "icon": "$(file-pdf)"
       },
       {
-        "command": "wikiStudio.exportEpub",
+        "command": "notespace.exportEpub",
         "title": "Export EPUB",
         "category": "NoteSpace",
         "icon": "$(book)"
       },
       {
-        "command": "wikiStudio.themeBuilder",
+        "command": "notespace.themeBuilder",
         "title": "Customize Site Theme",
         "category": "NoteSpace",
         "icon": "$(symbol-color)"
       },
       {
-        "command": "wikiStudio.kanban",
+        "command": "notespace.kanban",
         "title": "Open Kanban Board",
         "category": "NoteSpace",
         "icon": "$(project)"
       },
       {
-        "command": "wikiStudio.boards",
+        "command": "notespace.boards",
         "title": "Open Boards",
         "category": "NoteSpace",
         "icon": "$(project)"
       },
       {
-        "command": "wikiStudio.openBoard",
+        "command": "notespace.openBoard",
         "title": "Open Board…",
         "category": "NoteSpace",
         "icon": "$(project)"
       },
       {
-        "command": "wikiStudio.newBoard",
+        "command": "notespace.newBoard",
         "title": "New Board",
         "category": "NoteSpace",
         "icon": "$(add)"
       },
       {
-        "command": "wikiStudio.tasks",
+        "command": "notespace.tasks",
         "title": "Open Tasks",
         "category": "NoteSpace",
         "icon": "$(checklist)"
       },
       {
-        "command": "wikiStudio.calendar",
+        "command": "notespace.calendar",
         "title": "Open Calendar",
         "category": "NoteSpace",
         "icon": "$(calendar)"
       },
       {
-        "command": "wikiStudio.insights",
+        "command": "notespace.insights",
         "title": "Open Insights",
         "category": "NoteSpace",
         "icon": "$(graph)"
       },
       {
-        "command": "wikiStudio.openWikiHome",
+        "command": "notespace.openWikiHome",
         "title": "Open Wiki Homepage",
         "category": "NoteSpace",
         "icon": "$(book)"
       },
       {
-        "command": "wikiStudio.apiClient",
+        "command": "notespace.apiClient",
         "title": "Open API Client",
         "category": "NoteSpace",
         "icon": "$(globe)"
       },
       {
-        "command": "wikiStudio.apiNewRequest",
+        "command": "notespace.apiNewRequest",
         "title": "New API Request",
         "category": "NoteSpace",
         "icon": "$(add)"
       },
       {
-        "command": "wikiStudio.apiImportCurl",
+        "command": "notespace.apiImportCurl",
         "title": "Import curl Command",
         "category": "NoteSpace",
         "icon": "$(terminal)"
       },
       {
-        "command": "wikiStudio.apiImportOpenApi",
+        "command": "notespace.apiImportOpenApi",
         "title": "Import OpenAPI as API Collection",
         "category": "NoteSpace",
         "icon": "$(cloud-download)"
       },
       {
-        "command": "wikiStudio.removeWiki",
+        "command": "notespace.removeWiki",
         "title": "Remove Wiki from NoteSpace",
         "category": "NoteSpace",
         "icon": "$(close)"
       },
       {
-        "command": "wikiStudio.restoreWikis",
+        "command": "notespace.restoreWikis",
         "title": "Restore Removed Wikis",
         "category": "NoteSpace",
         "icon": "$(history)"
       },
       {
-        "command": "wikiStudio.renameWiki",
+        "command": "notespace.renameWiki",
         "title": "Rename Wiki…",
         "category": "NoteSpace",
         "icon": "$(edit)"
       },
       {
-        "command": "wikiStudio.editWikiDescription",
+        "command": "notespace.editWikiDescription",
         "title": "Edit Wiki Description…",
         "category": "NoteSpace",
         "icon": "$(note)"
       },
       {
-        "command": "wikiStudio.setWikiIcon",
+        "command": "notespace.setWikiIcon",
         "title": "Change Wiki Icon…",
         "category": "NoteSpace",
         "icon": "$(symbol-misc)"
       },
       {
-        "command": "wikiStudio.setWikiColor",
+        "command": "notespace.setWikiColor",
         "title": "Change Wiki Color…",
         "category": "NoteSpace",
         "icon": "$(symbol-color)"
       },
       {
-        "command": "wikiStudio.openWikiSettings",
+        "command": "notespace.openWikiSettings",
         "title": "Open Wiki Settings",
         "category": "NoteSpace",
         "icon": "$(settings-gear)"
       },
       {
-        "command": "wikiStudio.setDefaultWiki",
+        "command": "notespace.setDefaultWiki",
         "title": "Set as Default Wiki",
         "category": "NoteSpace",
         "icon": "$(star-full)"
       },
       {
-        "command": "wikiStudio.deleteWiki",
+        "command": "notespace.deleteWiki",
         "title": "Delete Wiki Files…",
         "category": "NoteSpace",
         "icon": "$(trash)"
       },
       {
-        "command": "wikiStudio.newNote",
+        "command": "notespace.newNote",
         "title": "New Note",
         "category": "NoteSpace",
         "icon": "$(note)"
       },
       {
-        "command": "wikiStudio.addTaskToBoard",
+        "command": "notespace.addTaskToBoard",
         "title": "Add Task to Board",
         "category": "NoteSpace",
         "icon": "$(project)"
       },
       {
-        "command": "wikiStudio.newDashboard",
+        "command": "notespace.newDashboard",
         "title": "New Dashboard",
         "category": "NoteSpace",
         "icon": "$(graph)"
       },
       {
-        "command": "wikiStudio.openCodeRef",
+        "command": "notespace.openCodeRef",
         "title": "Open Code Reference",
         "category": "NoteSpace"
       },
       {
-        "command": "wikiStudio.insertCodeReference",
+        "command": "notespace.insertCodeReference",
         "title": "Insert Code Reference",
         "category": "NoteSpace",
         "icon": "$(symbol-method)"
       },
       {
-        "command": "wikiStudio.showDocsForFile",
+        "command": "notespace.showDocsForFile",
         "title": "Show Documentation for This File",
         "category": "NoteSpace",
         "icon": "$(book)"
@@ -692,24 +692,24 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "wikiStudio",
+          "id": "notespace",
           "title": "NoteSpace",
           "icon": "media/wiki.svg"
         }
       ]
     },
     "views": {
-      "wikiStudio": [
+      "notespace": [
         {
-          "id": "wikiStudio.pages",
+          "id": "notespace.pages",
           "name": "Pages"
         },
         {
-          "id": "wikiStudio.planner",
+          "id": "notespace.planner",
           "name": "Workspace"
         },
         {
-          "id": "wikiStudio.context",
+          "id": "notespace.context",
           "name": "Page",
           "visibility": "collapsed"
         }
@@ -717,508 +717,508 @@
     },
     "viewsWelcome": [
       {
-        "view": "wikiStudio.pages",
-        "contents": "NoteSpace keeps documentation as local Markdown files.\n[Create Wiki](command:wikiStudio.createWiki)\n[Import Markdown or MkDocs Project](command:wikiStudio.importProject)\nAlready have Markdown in a folder named `wiki`? [New Page](command:wikiStudio.newPage) creates the first one.",
-        "when": "!wikiStudio.hasPages"
+        "view": "notespace.pages",
+        "contents": "NoteSpace keeps documentation as local Markdown files.\n[Create Wiki](command:notespace.createWiki)\n[Import Markdown or MkDocs Project](command:notespace.importProject)\nAlready have Markdown in a folder named `wiki`? [New Page](command:notespace.newPage) creates the first one.",
+        "when": "!notespace.hasPages"
       },
       {
-        "view": "wikiStudio.context",
+        "view": "notespace.context",
         "contents": "Open a wiki page to see its outline, backlinks, links and properties here.\nTip: drag this view to the Secondary Side Bar to keep it beside your editor."
       },
       {
-        "view": "wikiStudio.planner",
-        "contents": "Home, tasks, boards and calendar for this wiki.\n[Open Home](command:wikiStudio.home)"
+        "view": "notespace.planner",
+        "contents": "Home, tasks, boards and calendar for this wiki.\n[Open Home](command:notespace.home)"
       }
     ],
     "menus": {
       "view/title": [
         {
-          "command": "wikiStudio.newPage",
-          "when": "view == wikiStudio.pages",
+          "command": "notespace.newPage",
+          "when": "view == notespace.pages",
           "group": "navigation@1"
         },
         {
-          "command": "wikiStudio.newSection",
-          "when": "view == wikiStudio.pages",
+          "command": "notespace.newSection",
+          "when": "view == notespace.pages",
           "group": "navigation@2"
         },
         {
-          "command": "wikiStudio.filterPages",
-          "when": "view == wikiStudio.pages",
+          "command": "notespace.filterPages",
+          "when": "view == notespace.pages",
           "group": "navigation@4"
         },
         {
-          "command": "wikiStudio.home",
-          "when": "view == wikiStudio.pages",
+          "command": "notespace.home",
+          "when": "view == notespace.pages",
           "group": "navigation@5"
         },
         {
-          "command": "wikiStudio.search",
-          "when": "view == wikiStudio.pages",
+          "command": "notespace.search",
+          "when": "view == notespace.pages",
           "group": "navigation@3"
         },
         {
-          "command": "wikiStudio.advancedSearch",
-          "when": "view == wikiStudio.pages",
+          "command": "notespace.advancedSearch",
+          "when": "view == notespace.pages",
           "group": "navigation@3"
         },
         {
-          "command": "wikiStudio.newFromTemplate",
-          "when": "view == wikiStudio.pages",
+          "command": "notespace.newFromTemplate",
+          "when": "view == notespace.pages",
           "group": "2_create@1"
         },
         {
-          "command": "wikiStudio.dailyNote",
-          "when": "view == wikiStudio.pages",
+          "command": "notespace.dailyNote",
+          "when": "view == notespace.pages",
           "group": "2_create@2"
         },
         {
-          "command": "wikiStudio.graph",
-          "when": "view == wikiStudio.pages",
+          "command": "notespace.graph",
+          "when": "view == notespace.pages",
           "group": "3_wiki@1"
         },
         {
-          "command": "wikiStudio.validate",
-          "when": "view == wikiStudio.pages",
+          "command": "notespace.validate",
+          "when": "view == notespace.pages",
           "group": "3_wiki@2"
         },
         {
-          "command": "wikiStudio.restorePage",
-          "when": "view == wikiStudio.pages",
+          "command": "notespace.restorePage",
+          "when": "view == notespace.pages",
           "group": "3_wiki@3"
         },
         {
-          "command": "wikiStudio.settings",
-          "when": "view == wikiStudio.pages",
+          "command": "notespace.settings",
+          "when": "view == notespace.pages",
           "group": "3_wiki@4"
         },
         {
-          "command": "wikiStudio.buildWiki",
-          "when": "view == wikiStudio.pages",
+          "command": "notespace.buildWiki",
+          "when": "view == notespace.pages",
           "group": "4_publish@1"
         },
         {
-          "command": "wikiStudio.export",
-          "when": "view == wikiStudio.pages",
+          "command": "notespace.export",
+          "when": "view == notespace.pages",
           "group": "4_publish@2"
         },
         {
-          "command": "wikiStudio.createWiki",
-          "when": "view == wikiStudio.pages",
+          "command": "notespace.createWiki",
+          "when": "view == notespace.pages",
           "group": "5_project@1"
         },
         {
-          "command": "wikiStudio.importProject",
-          "when": "view == wikiStudio.pages",
+          "command": "notespace.importProject",
+          "when": "view == notespace.pages",
           "group": "5_project@2"
         },
         {
-          "command": "wikiStudio.refresh",
-          "when": "view == wikiStudio.pages",
+          "command": "notespace.refresh",
+          "when": "view == notespace.pages",
           "group": "5_project@3"
         },
         {
-          "command": "wikiStudio.pageProperties",
-          "when": "view == wikiStudio.context",
+          "command": "notespace.pageProperties",
+          "when": "view == notespace.context",
           "group": "navigation"
         },
         {
-          "command": "wikiStudio.addTask",
-          "when": "view == wikiStudio.planner",
+          "command": "notespace.addTask",
+          "when": "view == notespace.planner",
           "group": "navigation@1"
         },
         {
-          "command": "wikiStudio.planner",
-          "when": "view == wikiStudio.planner",
+          "command": "notespace.planner",
+          "when": "view == notespace.planner",
           "group": "navigation@2"
         },
         {
-          "command": "wikiStudio.dailyNoteForDate",
-          "when": "view == wikiStudio.planner",
+          "command": "notespace.dailyNoteForDate",
+          "when": "view == notespace.planner",
           "group": "navigation@3"
         },
         {
-          "command": "wikiStudio.importNotebook",
-          "when": "view == wikiStudio.pages",
+          "command": "notespace.importNotebook",
+          "when": "view == notespace.pages",
           "group": "5_project@4"
         },
         {
-          "command": "wikiStudio.newCanvas",
-          "when": "view == wikiStudio.pages",
+          "command": "notespace.newCanvas",
+          "when": "view == notespace.pages",
           "group": "2_create@3"
         }
       ],
       "view/item/context": [
         {
-          "command": "wikiStudio.addFavorite",
-          "when": "view == wikiStudio.pages && viewItem == wikiPage",
+          "command": "notespace.addFavorite",
+          "when": "view == notespace.pages && viewItem == wikiPage",
           "group": "inline"
         },
         {
-          "command": "wikiStudio.removeFavorite",
-          "when": "view == wikiStudio.pages && viewItem == wikiFavoritePage",
+          "command": "notespace.removeFavorite",
+          "when": "view == notespace.pages && viewItem == wikiFavoritePage",
           "group": "inline"
         },
         {
-          "command": "wikiStudio.newPage",
-          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Folder|Root)$/",
+          "command": "notespace.newPage",
+          "when": "view == notespace.pages && viewItem =~ /^wiki(Folder|Root)$/",
           "group": "inline@1"
         },
         {
-          "command": "wikiStudio.newSection",
-          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Folder|Root)$/",
+          "command": "notespace.newSection",
+          "when": "view == notespace.pages && viewItem =~ /^wiki(Folder|Root)$/",
           "group": "inline@2"
         },
         {
-          "command": "wikiStudio.visual",
-          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "command": "notespace.visual",
+          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
           "group": "1_open@1"
         },
         {
-          "command": "wikiStudio.source",
-          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "command": "notespace.source",
+          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
           "group": "1_open@2"
         },
         {
-          "command": "wikiStudio.openToSide",
-          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "command": "notespace.openToSide",
+          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
           "group": "1_open@3"
         },
         {
-          "command": "wikiStudio.preview",
-          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "command": "notespace.preview",
+          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
           "group": "1_open@4"
         },
         {
-          "command": "wikiStudio.renamePage",
-          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "command": "notespace.renamePage",
+          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
           "group": "2_edit@1"
         },
         {
-          "command": "wikiStudio.movePage",
-          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "command": "notespace.movePage",
+          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
           "group": "2_edit@2"
         },
         {
-          "command": "wikiStudio.duplicatePage",
-          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "command": "notespace.duplicatePage",
+          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
           "group": "2_edit@3"
         },
         {
-          "command": "wikiStudio.pageProperties",
-          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "command": "notespace.pageProperties",
+          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
           "group": "2_edit@4"
         },
         {
-          "command": "wikiStudio.copyLink",
-          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "command": "notespace.copyLink",
+          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
           "group": "3_link@1"
         },
         {
-          "command": "wikiStudio.addFavorite",
-          "when": "view == wikiStudio.pages && viewItem == wikiPage",
+          "command": "notespace.addFavorite",
+          "when": "view == notespace.pages && viewItem == wikiPage",
           "group": "3_link@2"
         },
         {
-          "command": "wikiStudio.removeFavorite",
-          "when": "view == wikiStudio.pages && viewItem == wikiFavoritePage",
+          "command": "notespace.removeFavorite",
+          "when": "view == notespace.pages && viewItem == wikiFavoritePage",
           "group": "3_link@2"
         },
         {
-          "command": "wikiStudio.importImage",
-          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "command": "notespace.importImage",
+          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
           "group": "4_assets@1"
         },
         {
-          "command": "wikiStudio.browseImages",
-          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "command": "notespace.browseImages",
+          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
           "group": "4_assets@2"
         },
         {
-          "command": "wikiStudio.importAttachment",
-          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "command": "notespace.importAttachment",
+          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
           "group": "4_assets@3"
         },
         {
-          "command": "wikiStudio.importMedia",
-          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "command": "notespace.importMedia",
+          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
           "group": "4_assets@4"
         },
         {
-          "command": "wikiStudio.revealInExplorer",
-          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "command": "notespace.revealInExplorer",
+          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
           "group": "8_reveal@1"
         },
         {
-          "command": "wikiStudio.deletePage",
-          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "command": "notespace.deletePage",
+          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
           "group": "9_delete@1"
         },
         {
-          "command": "wikiStudio.newPage",
-          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Folder|Root)$/",
+          "command": "notespace.newPage",
+          "when": "view == notespace.pages && viewItem =~ /^wiki(Folder|Root)$/",
           "group": "1_create@1"
         },
         {
-          "command": "wikiStudio.newFromTemplate",
-          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Folder|Root)$/",
+          "command": "notespace.newFromTemplate",
+          "when": "view == notespace.pages && viewItem =~ /^wiki(Folder|Root)$/",
           "group": "1_create@2"
         },
         {
-          "command": "wikiStudio.newSection",
-          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Folder|Root)$/",
+          "command": "notespace.newSection",
+          "when": "view == notespace.pages && viewItem =~ /^wiki(Folder|Root)$/",
           "group": "1_create@3"
         },
         {
-          "command": "wikiStudio.renameSection",
-          "when": "view == wikiStudio.pages && viewItem == wikiFolder",
+          "command": "notespace.renameSection",
+          "when": "view == notespace.pages && viewItem == wikiFolder",
           "group": "2_edit@1"
         },
         {
-          "command": "wikiStudio.revealInExplorer",
-          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Folder|Root)$/",
+          "command": "notespace.revealInExplorer",
+          "when": "view == notespace.pages && viewItem =~ /^wiki(Folder|Root)$/",
           "group": "8_reveal@1"
         },
         {
-          "command": "wikiStudio.deleteSection",
-          "when": "view == wikiStudio.pages && viewItem == wikiFolder",
+          "command": "notespace.deleteSection",
+          "when": "view == notespace.pages && viewItem == wikiFolder",
           "group": "9_delete@1"
         },
         {
-          "command": "wikiStudio.renameWiki",
-          "when": "view == wikiStudio.pages && viewItem == wikiRoot",
+          "command": "notespace.renameWiki",
+          "when": "view == notespace.pages && viewItem == wikiRoot",
           "group": "2_edit@1"
         },
         {
-          "command": "wikiStudio.editWikiDescription",
-          "when": "view == wikiStudio.pages && viewItem == wikiRoot",
+          "command": "notespace.editWikiDescription",
+          "when": "view == notespace.pages && viewItem == wikiRoot",
           "group": "2_edit@2"
         },
         {
-          "command": "wikiStudio.setWikiIcon",
-          "when": "view == wikiStudio.pages && viewItem == wikiRoot",
+          "command": "notespace.setWikiIcon",
+          "when": "view == notespace.pages && viewItem == wikiRoot",
           "group": "2_edit@3"
         },
         {
-          "command": "wikiStudio.setWikiColor",
-          "when": "view == wikiStudio.pages && viewItem == wikiRoot",
+          "command": "notespace.setWikiColor",
+          "when": "view == notespace.pages && viewItem == wikiRoot",
           "group": "2_edit@4"
         },
         {
-          "command": "wikiStudio.setDefaultWiki",
-          "when": "view == wikiStudio.pages && viewItem == wikiRoot",
+          "command": "notespace.setDefaultWiki",
+          "when": "view == notespace.pages && viewItem == wikiRoot",
           "group": "3_wiki@1"
         },
         {
-          "command": "wikiStudio.openWikiSettings",
-          "when": "view == wikiStudio.pages && viewItem == wikiRoot",
+          "command": "notespace.openWikiSettings",
+          "when": "view == notespace.pages && viewItem == wikiRoot",
           "group": "3_wiki@2"
         },
         {
-          "command": "wikiStudio.removeWiki",
-          "when": "view == wikiStudio.pages && viewItem == wikiRoot",
+          "command": "notespace.removeWiki",
+          "when": "view == notespace.pages && viewItem == wikiRoot",
           "group": "9_delete@1"
         },
         {
-          "command": "wikiStudio.deleteWiki",
-          "when": "view == wikiStudio.pages && viewItem == wikiRoot",
+          "command": "notespace.deleteWiki",
+          "when": "view == notespace.pages && viewItem == wikiRoot",
           "group": "9_delete@2"
         },
         {
-          "command": "wikiStudio.openNotebook",
-          "when": "view == wikiStudio.pages && viewItem == wikiNotebook",
+          "command": "notespace.openNotebook",
+          "when": "view == notespace.pages && viewItem == wikiNotebook",
           "group": "1_open@1"
         },
         {
-          "command": "wikiStudio.notebookPreview",
-          "when": "view == wikiStudio.pages && viewItem == wikiNotebook",
+          "command": "notespace.notebookPreview",
+          "when": "view == notespace.pages && viewItem == wikiNotebook",
           "group": "1_open@2"
         },
         {
-          "command": "wikiStudio.notebookToMarkdown",
-          "when": "view == wikiStudio.pages && viewItem == wikiNotebook",
+          "command": "notespace.notebookToMarkdown",
+          "when": "view == notespace.pages && viewItem == wikiNotebook",
           "group": "2_edit@1"
         },
         {
-          "command": "wikiStudio.revealInExplorer",
-          "when": "view == wikiStudio.pages && viewItem == wikiNotebook",
+          "command": "notespace.revealInExplorer",
+          "when": "view == notespace.pages && viewItem == wikiNotebook",
           "group": "8_reveal@1"
         },
         {
-          "command": "wikiStudio.revealInExplorer",
-          "when": "view == wikiStudio.pages && viewItem == wikiCanvas",
+          "command": "notespace.revealInExplorer",
+          "when": "view == notespace.pages && viewItem == wikiCanvas",
           "group": "8_reveal@1"
         },
         {
-          "command": "wikiStudio.createTranslation",
-          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "command": "notespace.createTranslation",
+          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
           "group": "2_edit@9"
         },
         {
-          "command": "wikiStudio.pageHistory",
-          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "command": "notespace.pageHistory",
+          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
           "group": "1_open@5"
         },
         {
-          "command": "wikiStudio.compareWithGitVersion",
-          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "command": "notespace.compareWithGitVersion",
+          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
           "group": "1_open@6"
         },
         {
-          "command": "wikiStudio.exportPdf",
-          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "command": "notespace.exportPdf",
+          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
           "group": "7_export@1"
         }
       ],
       "editor/title": [
         {
-          "command": "wikiStudio.visual",
-          "when": "wikiStudio.activeIsWikiPage && editorLangId == markdown && !activeCustomEditorId",
+          "command": "notespace.visual",
+          "when": "notespace.activeIsWikiPage && editorLangId == markdown && !activeCustomEditorId",
           "group": "navigation@1"
         },
         {
-          "command": "wikiStudio.source",
-          "when": "activeCustomEditorId == wikiStudio.visual",
+          "command": "notespace.source",
+          "when": "activeCustomEditorId == notespace.visual",
           "group": "navigation@1"
         },
         {
-          "command": "wikiStudio.split",
-          "when": "activeCustomEditorId == wikiStudio.visual",
+          "command": "notespace.split",
+          "when": "activeCustomEditorId == notespace.visual",
           "group": "navigation@2"
         },
         {
-          "command": "wikiStudio.preview",
-          "when": "activeCustomEditorId == wikiStudio.visual || wikiStudio.activeIsWikiPage && editorLangId == markdown && !activeCustomEditorId",
+          "command": "notespace.preview",
+          "when": "activeCustomEditorId == notespace.visual || notespace.activeIsWikiPage && editorLangId == markdown && !activeCustomEditorId",
           "group": "navigation@3"
         },
         {
-          "command": "wikiStudio.dailyNotePrevious",
-          "when": "wikiStudio.activeIsJournal",
+          "command": "notespace.dailyNotePrevious",
+          "when": "notespace.activeIsJournal",
           "group": "navigation@0"
         },
         {
-          "command": "wikiStudio.dailyNoteNext",
-          "when": "wikiStudio.activeIsJournal",
+          "command": "notespace.dailyNoteNext",
+          "when": "notespace.activeIsJournal",
           "group": "navigation@0"
         },
         {
-          "command": "wikiStudio.notebookPreview",
+          "command": "notespace.notebookPreview",
           "when": "resourceExtname == .ipynb && activeEditor == workbench.editor.notebook",
           "group": "navigation@5"
         },
         {
-          "command": "wikiStudio.openApiPlayground",
-          "when": "resourceExtname =~ /^\\.(ya?ml|json)$/ && wikiStudio.activeIsOpenApi",
+          "command": "notespace.openApiPlayground",
+          "when": "resourceExtname =~ /^\\.(ya?ml|json)$/ && notespace.activeIsOpenApi",
           "group": "navigation@5"
         },
         {
-          "command": "wikiStudio.ai.apply",
+          "command": "notespace.ai.apply",
           "when": "resourceScheme == wiki-ai",
           "group": "navigation@1"
         },
         {
-          "command": "wikiStudio.ai.discard",
+          "command": "notespace.ai.discard",
           "when": "resourceScheme == wiki-ai",
           "group": "navigation@2"
         }
       ],
       "commandPalette": [
         {
-          "command": "wikiStudio.openPage",
+          "command": "notespace.openPage",
           "when": "false"
         },
         {
-          "command": "wikiStudio.revealSection",
+          "command": "notespace.revealSection",
           "when": "false"
         },
         {
-          "command": "wikiStudio.addFavorite",
-          "when": "wikiStudio.activeIsWikiPage"
+          "command": "notespace.addFavorite",
+          "when": "notespace.activeIsWikiPage"
         },
         {
-          "command": "wikiStudio.removeFavorite",
-          "when": "wikiStudio.activeIsWikiPage"
+          "command": "notespace.removeFavorite",
+          "when": "notespace.activeIsWikiPage"
         },
         {
-          "command": "wikiStudio.review.comment",
+          "command": "notespace.review.comment",
           "when": "false"
         },
         {
-          "command": "wikiStudio.review.resolve",
+          "command": "notespace.review.resolve",
           "when": "false"
         },
         {
-          "command": "wikiStudio.review.reopen",
+          "command": "notespace.review.reopen",
           "when": "false"
         },
         {
-          "command": "wikiStudio.review.delete",
+          "command": "notespace.review.delete",
           "when": "false"
         },
         {
-          "command": "wikiStudio.ai.apply",
+          "command": "notespace.ai.apply",
           "when": "resourceScheme == wiki-ai"
         },
         {
-          "command": "wikiStudio.ai.discard",
+          "command": "notespace.ai.discard",
           "when": "resourceScheme == wiki-ai"
         },
         {
-          "command": "wikiStudio.openCodeRef",
+          "command": "notespace.openCodeRef",
           "when": "false"
         }
       ],
       "explorer/context": [
         {
-          "command": "wikiStudio.openApiPlayground",
+          "command": "notespace.openApiPlayground",
           "when": "resourceExtname =~ /^\\.(ya?ml|json)$/",
           "group": "navigation@9"
         },
         {
-          "command": "wikiStudio.generateApiReference",
+          "command": "notespace.generateApiReference",
           "when": "resourceExtname =~ /^\\.(ya?ml|json)$/",
           "group": "navigation@9"
         },
         {
-          "command": "wikiStudio.apiImportOpenApi",
+          "command": "notespace.apiImportOpenApi",
           "when": "resourceExtname =~ /^\\.(ya?ml|json)$/",
           "group": "navigation@9"
         },
         {
-          "command": "wikiStudio.newDashboard",
+          "command": "notespace.newDashboard",
           "when": "resourceExtname =~ /^\\.(csv|tsv|xlsx|json|jsonl|ndjson)$/",
           "group": "navigation@10"
         }
       ],
       "comments/commentThread/context": [
         {
-          "command": "wikiStudio.review.comment",
+          "command": "notespace.review.comment",
           "group": "inline",
-          "when": "commentController == wikiStudio.review"
+          "when": "commentController == notespace.review"
         }
       ],
       "comments/commentThread/title": [
         {
-          "command": "wikiStudio.review.resolve",
+          "command": "notespace.review.resolve",
           "group": "inline",
-          "when": "commentController == wikiStudio.review && commentThread == reviewOpen"
+          "when": "commentController == notespace.review && commentThread == reviewOpen"
         },
         {
-          "command": "wikiStudio.review.reopen",
+          "command": "notespace.review.reopen",
           "group": "inline",
-          "when": "commentController == wikiStudio.review && commentThread == reviewResolved"
+          "when": "commentController == notespace.review && commentThread == reviewResolved"
         }
       ],
       "comments/comment/title": [
         {
-          "command": "wikiStudio.review.delete",
+          "command": "notespace.review.delete",
           "group": "inline",
-          "when": "commentController == wikiStudio.review && comment == reviewComment"
+          "when": "commentController == notespace.review && comment == reviewComment"
         }
       ],
       "editor/context": [
         {
-          "command": "wikiStudio.showDocsForFile",
+          "command": "notespace.showDocsForFile",
           "when": "resourceScheme == file && resourceLangId != markdown",
           "group": "navigation@90"
         }
@@ -1226,44 +1226,44 @@
     },
     "keybindings": [
       {
-        "command": "wikiStudio.search",
+        "command": "notespace.search",
         "key": "ctrl+alt+w",
         "mac": "cmd+alt+w"
       },
       {
-        "command": "wikiStudio.advancedSearch",
+        "command": "notespace.advancedSearch",
         "key": "ctrl+alt+shift+f",
         "mac": "cmd+alt+shift+f"
       },
       {
-        "command": "wikiStudio.home",
+        "command": "notespace.home",
         "key": "ctrl+alt+h",
         "mac": "cmd+alt+h"
       },
       {
-        "command": "wikiStudio.source",
+        "command": "notespace.source",
         "key": "ctrl+alt+e",
         "mac": "cmd+alt+e",
-        "when": "activeCustomEditorId == wikiStudio.visual"
+        "when": "activeCustomEditorId == notespace.visual"
       },
       {
-        "command": "wikiStudio.visual",
+        "command": "notespace.visual",
         "key": "ctrl+alt+e",
         "mac": "cmd+alt+e",
-        "when": "wikiStudio.activeIsWikiPage && editorLangId == markdown && !activeCustomEditorId"
+        "when": "notespace.activeIsWikiPage && editorLangId == markdown && !activeCustomEditorId"
       },
       {
-        "command": "wikiStudio.dailyNote",
+        "command": "notespace.dailyNote",
         "key": "ctrl+alt+d",
         "mac": "cmd+alt+d"
       },
       {
-        "command": "wikiStudio.addTask",
+        "command": "notespace.addTask",
         "key": "ctrl+alt+t",
         "mac": "cmd+alt+t"
       },
       {
-        "command": "wikiStudio.planner",
+        "command": "notespace.planner",
         "key": "ctrl+alt+p",
         "mac": "cmd+alt+p"
       }
@@ -1271,25 +1271,25 @@
     "configuration": {
       "title": "NoteSpace",
       "properties": {
-        "wikiStudio.root": {
+        "notespace.root": {
           "type": "string",
           "default": "wiki",
           "scope": "resource",
           "description": "Wiki directory relative to each workspace folder. Use '.' to index the whole folder."
         },
-        "wikiStudio.exclude": {
+        "notespace.exclude": {
           "type": "string",
-          "default": "**/{node_modules,.git,.templates,.wiki-studio-trash,.wiki-studio-export}/**",
+          "default": "**/{node_modules,.git,.templates,.notespace-trash,.notespace-export}/**",
           "scope": "resource",
           "description": "Glob of files excluded from the wiki index."
         },
-        "wikiStudio.respectGitignore": {
+        "notespace.respectGitignore": {
           "type": "boolean",
           "default": false,
           "scope": "resource",
           "markdownDescription": "Leave out pages that Git ignores (`.gitignore` files of the workspace folder, including nested files and `!` negations). Off by default so private, ignored notes stay visible in your wiki."
         },
-        "wikiStudio.openPagesIn": {
+        "notespace.openPagesIn": {
           "type": "string",
           "enum": [
             "studio",
@@ -1305,13 +1305,13 @@
           "scope": "resource",
           "description": "Where pages open from the Pages view, search and links."
         },
-        "wikiStudio.explorer.humanizeNames": {
+        "notespace.explorer.humanizeNames": {
           "type": "boolean",
           "default": true,
           "scope": "resource",
           "markdownDescription": "Show readable labels in the Pages view for folders and for pages without a title (`getting-started.md` → Getting Started). Page titles from front matter or a `#` heading are shown as written; files are never renamed."
         },
-        "wikiStudio.explorer.acronyms": {
+        "notespace.explorer.acronyms": {
           "type": "array",
           "items": {
             "type": "string"
@@ -1343,7 +1343,7 @@
           "scope": "resource",
           "description": "Words kept in this exact casing in readable labels."
         },
-        "wikiStudio.explorer.directorySort": {
+        "notespace.explorer.directorySort": {
           "type": "string",
           "enum": [
             "folders-first",
@@ -1354,39 +1354,39 @@
           "scope": "resource",
           "markdownDescription": "Order of folders and pages in the Pages view. A folder's `index.md` or `README.md` is always listed first; within groups, `navigation.sort` in wiki.yaml applies."
         },
-        "wikiStudio.explorer.autoReveal": {
+        "notespace.explorer.autoReveal": {
           "type": "boolean",
           "default": true,
           "scope": "resource",
           "description": "Select the active page in the Pages view when you switch editors."
         },
-        "wikiStudio.diagnostics": {
+        "notespace.diagnostics": {
           "type": "boolean",
           "default": true,
           "description": "Report broken, ambiguous and missing-heading links."
         },
-        "wikiStudio.maxFileSizeKB": {
+        "notespace.maxFileSizeKB": {
           "type": "number",
           "default": 1024,
           "minimum": 1,
           "maximum": 16384,
           "description": "Maximum page size to index, in KiB."
         },
-        "wikiStudio.maxPages": {
+        "notespace.maxPages": {
           "type": "number",
           "default": 10000,
           "minimum": 1,
           "maximum": 100000,
           "description": "Maximum pages to index per workspace folder."
         },
-        "wikiStudio.maxIndexSizeMB": {
+        "notespace.maxIndexSizeMB": {
           "type": "number",
           "default": 64,
           "minimum": 1,
           "maximum": 512,
           "description": "Maximum total on-disk page content to index per wiki, in MiB."
         },
-        "wikiStudio.editor.width": {
+        "notespace.editor.width": {
           "type": "string",
           "enum": [
             "normal",
@@ -1402,82 +1402,82 @@
           "scope": "resource",
           "description": "Width of the Studio writing column."
         },
-        "wikiStudio.dailyNotes.folder": {
+        "notespace.dailyNotes.folder": {
           "type": "string",
           "default": "daily",
           "scope": "resource",
           "description": "Folder (relative to the wiki root) that holds one daily note per date, named YYYY-MM-DD.md."
         },
-        "wikiStudio.dailyNotes.template": {
+        "notespace.dailyNotes.template": {
           "type": "string",
           "default": "",
           "scope": "resource",
           "description": "Template page for new daily notes, relative to the wiki root (for example .templates/Daily.md). Supports {{title}}, {{date}}, {{weekday}}, {{yesterday}} and {{tomorrow}}. Empty uses the built-in template."
         },
-        "wikiStudio.api.folder": {
+        "notespace.api.folder": {
           "type": "string",
           "default": "api",
           "scope": "resource",
           "description": "Folder (relative to the first workspace folder) for API collections and environments."
         },
-        "wikiStudio.api.maxResponseMB": {
+        "notespace.api.maxResponseMB": {
           "type": "number",
           "default": 10,
           "minimum": 1,
           "maximum": 200,
           "description": "Responses larger than this are truncated (the rest is not downloaded)."
         },
-        "wikiStudio.api.historyLimit": {
+        "notespace.api.historyLimit": {
           "type": "number",
           "default": 200,
           "minimum": 0,
           "maximum": 5000,
           "description": "How many sent requests the API history keeps (0 keeps none). History stores method, redacted address, status, time and size; never bodies or credentials."
         },
-        "wikiStudio.home.openOnStartup": {
+        "notespace.home.openOnStartup": {
           "type": "boolean",
           "default": true,
           "description": "Open the NoteSpace Home when the NoteSpace sidebar opens and no editor is open."
         },
-        "wikiStudio.boards.folder": {
+        "notespace.boards.folder": {
           "type": "string",
           "default": "boards",
           "scope": "resource",
           "description": "Folder (in the wiki) suggested for new board files."
         },
-        "wikiStudio.notes.folder": {
+        "notespace.notes.folder": {
           "type": "string",
           "default": "notes",
           "scope": "resource",
           "description": "Folder (in the wiki) for New Note. Empty: the wiki root."
         },
-        "wikiStudio.tasks.captureTo": {
+        "notespace.tasks.captureTo": {
           "type": "string",
           "enum": [
             "inbox",
             "daily"
           ],
           "enumDescriptions": [
-            "The inbox page (wikiStudio.planner.inbox)",
+            "The inbox page (notespace.planner.inbox)",
             "Today's daily note"
           ],
           "default": "inbox",
           "scope": "resource",
           "markdownDescription": "Where global quick capture writes new tasks. Tasks created on a board go to the board's file; tasks typed in a page stay in that page."
         },
-        "wikiStudio.planner.timeZone": {
+        "notespace.planner.timeZone": {
           "type": "string",
           "default": "",
           "scope": "resource",
           "description": "IANA time zone used to decide which day is today (for example Europe/Rome). Empty uses this machine's zone."
         },
-        "wikiStudio.planner.inbox": {
+        "notespace.planner.inbox": {
           "type": "string",
           "default": "Inbox.md",
           "scope": "resource",
           "description": "Page (relative to the wiki root) where Quick Add and Add Task write new tasks."
         },
-        "wikiStudio.planner.upcomingDays": {
+        "notespace.planner.upcomingDays": {
           "type": "number",
           "default": 14,
           "minimum": 1,
@@ -1485,29 +1485,29 @@
           "scope": "resource",
           "description": "How many days ahead the Upcoming list shows."
         },
-        "wikiStudio.planner.reminders": {
+        "notespace.planner.reminders": {
           "type": "boolean",
           "default": false,
           "description": "Show one notification per day for tasks due today or overdue while VS Code is running. No reminders fire while VS Code or code-server is closed."
         },
-        "wikiStudio.notebooks.pythonKernel": {
+        "notespace.notebooks.pythonKernel": {
           "type": "boolean",
           "default": true,
           "description": "Offer the NoteSpace Python kernel in the notebook editor when python3 is available. Cells run only when you run them, and only in trusted workspaces."
         },
-        "wikiStudio.codeRunner.enabled": {
+        "notespace.codeRunner.enabled": {
           "type": "boolean",
           "default": false,
           "description": "Show a Run button on Python, JavaScript and Bash code blocks in Studio. Runs only on click, only in trusted workspaces, after a per-session confirmation for each runtime."
         },
-        "wikiStudio.codeRunner.timeoutSeconds": {
+        "notespace.codeRunner.timeoutSeconds": {
           "type": "number",
           "default": 20,
           "minimum": 1,
           "maximum": 300,
           "description": "Maximum run time for a code block before it is stopped."
         },
-        "wikiStudio.ai.provider": {
+        "notespace.ai.provider": {
           "type": "string",
           "enum": [
             "vscode",
@@ -1522,22 +1522,22 @@
           ],
           "markdownDescription": "Where AI commands send text. Every request asks for confirmation and results are proposals you review before applying."
         },
-        "wikiStudio.ai.endpoint": {
+        "notespace.ai.endpoint": {
           "type": "string",
           "default": "http://127.0.0.1:11434/v1",
-          "markdownDescription": "Base URL of an OpenAI-compatible API (`/chat/completions`, `/embeddings`). Used when `wikiStudio.ai.provider` is `endpoint` and by semantic search."
+          "markdownDescription": "Base URL of an OpenAI-compatible API (`/chat/completions`, `/embeddings`). Used when `notespace.ai.provider` is `endpoint` and by semantic search."
         },
-        "wikiStudio.ai.model": {
+        "notespace.ai.model": {
           "type": "string",
           "default": "",
           "markdownDescription": "Chat model name at the endpoint, for example `llama3.1`."
         },
-        "wikiStudio.semanticSearch.model": {
+        "notespace.semanticSearch.model": {
           "type": "string",
           "default": "",
-          "markdownDescription": "Embedding model at `wikiStudio.ai.endpoint` for **Semantic Search**, for example `nomic-embed-text`. Empty disables semantic search. NoteSpace never downloads models."
+          "markdownDescription": "Embedding model at `notespace.ai.endpoint` for **Semantic Search**, for example `nomic-embed-text`. Empty disables semantic search. NoteSpace never downloads models."
         },
-        "wikiStudio.export.browserPath": {
+        "notespace.export.browserPath": {
           "type": "string",
           "default": "",
           "markdownDescription": "Path to a Chromium-based browser (Chrome, Edge, Chromium, Brave) used in headless mode to create PDFs. Empty: detect an installed one. Without a browser, **Export PDF** saves a print-ready HTML page instead."
@@ -1546,7 +1546,7 @@
     },
     "customEditors": [
       {
-        "viewType": "wikiStudio.visual",
+        "viewType": "notespace.visual",
         "displayName": "NoteSpace Visual Editor",
         "selector": [
           {
@@ -1556,7 +1556,7 @@
         "priority": "option"
       },
       {
-        "viewType": "wikiStudio.canvas",
+        "viewType": "notespace.canvas",
         "displayName": "NoteSpace Canvas",
         "selector": [
           {
@@ -1566,7 +1566,7 @@
         "priority": "default"
       },
       {
-        "viewType": "wikiStudio.dashboard",
+        "viewType": "notespace.dashboard",
         "displayName": "NoteSpace Dashboard",
         "selector": [
           {

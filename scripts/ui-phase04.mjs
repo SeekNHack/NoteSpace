@@ -165,7 +165,7 @@ try {
   await poll(async () => (await studio.locator('.code-view .api-op').count()) === 2, 'api embed');
   // Code execution is off by default: no Run button on the JavaScript block.
   const runButtons = studio.locator('button.run:visible');
-  assert.equal(await runButtons.count(), 0, 'Run is hidden unless wikiStudio.codeRunner.enabled');
+  assert.equal(await runButtons.count(), 0, 'Run is hidden unless notespace.codeRunner.enabled');
   await page.screenshot({ path: `${shots}/studio-visuals.png` });
   await axe(studio, 'studio visuals');
   console.log(
@@ -177,7 +177,7 @@ try {
   // The settings search box is focused when the editor opens.
   await page.locator('.settings-editor .settings-header').waitFor();
   await page.waitForTimeout(500);
-  await page.keyboard.type('wikiStudio.codeRunner.enabled');
+  await page.keyboard.type('notespace.codeRunner.enabled');
   const row = page
     .locator('.settings-editor .setting-item-bool', { hasText: 'Code Runner' })
     .first();
@@ -190,7 +190,7 @@ try {
   );
   await poll(
     async () =>
-      /"wikiStudio.codeRunner.enabled": ?true/.test(
+      /"notespace.codeRunner.enabled": ?true/.test(
         await readFile(path.join(tmp, 'user/User/settings.json'), 'utf8'),
       ),
     'setting saved',

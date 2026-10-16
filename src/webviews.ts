@@ -242,7 +242,7 @@ export class WikiPanels implements vscode.Disposable {
     this.previewUri = page.uri;
     if (!this.preview) {
       this.preview = vscode.window.createWebviewPanel(
-        'wikiStudio.preview',
+        'notespace.preview',
         'Wiki Preview',
         vscode.ViewColumn.Beside,
         { enableScripts: true, localResourceRoots: this.roots() },
@@ -263,7 +263,7 @@ export class WikiPanels implements vscode.Disposable {
     this.graphRoot = root;
     if (!this.graph) {
       this.graph = vscode.window.createWebviewPanel(
-        'wikiStudio.graph',
+        'notespace.graph',
         'Wiki Link Graph',
         vscode.ViewColumn.Active,
         { enableScripts: true, localResourceRoots: [this.extensionUri] },
@@ -284,7 +284,7 @@ export class WikiPanels implements vscode.Disposable {
     if (root) this.healthRoot = root;
     if (!this.health) {
       this.health = vscode.window.createWebviewPanel(
-        'wikiStudio.health',
+        'notespace.health',
         'Content Health',
         vscode.ViewColumn.Active,
         { enableScripts: true, localResourceRoots: [this.extensionUri] },
@@ -306,7 +306,7 @@ export class WikiPanels implements vscode.Disposable {
     if (root) this.homeRoot = root;
     if (!this.home) {
       this.home = vscode.window.createWebviewPanel(
-        'wikiStudio.home',
+        'notespace.home',
         'NoteSpace',
         vscode.ViewColumn.Active,
         { enableScripts: true, localResourceRoots: [this.extensionUri] },
@@ -374,7 +374,7 @@ export class WikiPanels implements vscode.Disposable {
         'contentHealth',
       ].includes(String(m.name))
     ) {
-      await vscode.commands.executeCommand(`wikiStudio.${m.name}`);
+      await vscode.commands.executeCommand(`notespace.${m.name}`);
       return;
     }
     if (
@@ -386,7 +386,7 @@ export class WikiPanels implements vscode.Disposable {
       const page = this.workspace.index.pages.get(decodeURIComponent(m.page));
       if (page)
         await vscode.commands.executeCommand(
-          `wikiStudio.${m.name}`,
+          `notespace.${m.name}`,
           vscode.Uri.parse(page.uri),
           typeof m.value === 'string' ? m.value : undefined,
         );
@@ -398,7 +398,7 @@ export class WikiPanels implements vscode.Disposable {
       const home = root?.config?.content.homepage;
       if (root && home && !this.homepageOf(root))
         await vscode.commands.executeCommand(
-          'wikiStudio.newPage',
+          'notespace.newPage',
           home.replace(/\.md$/i, ''),
           root.id,
         );
@@ -415,7 +415,7 @@ export class WikiPanels implements vscode.Disposable {
       return;
     }
     if (m.type === 'revealSection' && typeof m.root === 'string' && typeof m.prefix === 'string') {
-      await vscode.commands.executeCommand('wikiStudio.revealSection', m.root, m.prefix);
+      await vscode.commands.executeCommand('notespace.revealSection', m.root, m.prefix);
       return;
     }
     if (m.type === 'favorite' && typeof m.id === 'string' && this.activity) {
@@ -496,11 +496,11 @@ export class WikiPanels implements vscode.Disposable {
           this.workspace.index.byUri(editor.document.uri.toString()),
         )?.viewColumn ?? vscode.ViewColumn.Active;
       if (heading) await showPage(page.uri, heading.offset, column);
-      else await vscode.commands.executeCommand('wikiStudio.openPage', page.uri);
+      else await vscode.commands.executeCommand('notespace.openPage', page.uri);
     }
     if (m.type === 'code' && typeof m.target === 'string' && this.previewUri) {
       const page = this.workspace.index.byUri(this.previewUri);
-      if (page) await vscode.commands.executeCommand('wikiStudio.openCodeRef', page.uri, m.target);
+      if (page) await vscode.commands.executeCommand('notespace.openCodeRef', page.uri, m.target);
       return;
     }
     if (m.type === 'external' && typeof m.href === 'string' && safeExternal(m.href))

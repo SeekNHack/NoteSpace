@@ -21,7 +21,7 @@ export const REQUEST_SUFFIX = '.request.json';
 
 export interface CollectionMeta {
   schemaVersion: number;
-  type: 'wiki-studio.collection';
+  type: 'notespace.collection';
   name: string;
   description?: string;
   variables: KeyValue[];
@@ -180,7 +180,7 @@ export function parseCollectionMeta(text: string): CollectionMeta {
     );
   return {
     schemaVersion: COLLECTION_SCHEMA,
-    type: 'wiki-studio.collection',
+    type: 'notespace.collection',
     name: str(raw.name, 200) || 'Collection',
     ...(typeof raw.description === 'string' ? { description: raw.description } : {}),
     variables: rows(raw.variables),
@@ -191,7 +191,7 @@ export function parseCollectionMeta(text: string): CollectionMeta {
   };
 }
 export const serializeCollectionMeta = (meta: CollectionMeta) =>
-  `${JSON.stringify({ ...meta, schemaVersion: COLLECTION_SCHEMA, type: 'wiki-studio.collection' }, null, 2)}\n`;
+  `${JSON.stringify({ ...meta, schemaVersion: COLLECTION_SCHEMA, type: 'notespace.collection' }, null, 2)}\n`;
 
 export function parseEnvironment(text: string, fallbackName: string): Environment {
   const raw = obj(JSON.parse(text));
@@ -220,7 +220,7 @@ export function buildCollection(id: string, files: Map<string, string>): Collect
     problems.push(`collection.json: ${e instanceof Error ? e.message : String(e)}`);
     meta = {
       schemaVersion: COLLECTION_SCHEMA,
-      type: 'wiki-studio.collection',
+      type: 'notespace.collection',
       name: id,
       variables: [],
       auth: { type: 'none' },
@@ -296,7 +296,7 @@ export function* walkRequests(items: CollectionItem[]): Generator<ApiRequest> {
 
 /** A single-file bundle for export/import. Secret values are never included. */
 export interface CollectionBundle {
-  format: 'wiki-studio.collection-bundle';
+  format: 'notespace.collection-bundle';
   schemaVersion: number;
   meta: CollectionMeta;
   files: Record<string, string>;
@@ -306,7 +306,7 @@ export function bundleCollection(
   files: Map<string, string>,
 ): CollectionBundle {
   return {
-    format: 'wiki-studio.collection-bundle',
+    format: 'notespace.collection-bundle',
     schemaVersion: COLLECTION_SCHEMA,
     meta,
     files: Object.fromEntries(
@@ -318,7 +318,11 @@ export function bundleCollection(
 }
 export function readBundle(text: string): CollectionBundle {
   const raw = obj(JSON.parse(text));
-  if (raw.format !== 'wiki-studio.collection-bundle')
+  // Exports made under the project's earlier name are still accepted.
+  if (
+    raw.format !== 'notespace.collection-bundle' &&
+    raw.format !== 'wiki-studio.collection-bundle'
+  )
     throw new Error('This is not a NoteSpace collection export.');
   const files = obj(raw.files);
   const safe: Record<string, string> = {};
@@ -334,7 +338,7 @@ export function readBundle(text: string): CollectionBundle {
     safe[path] = content;
   }
   return {
-    format: 'wiki-studio.collection-bundle',
+    format: 'notespace.collection-bundle',
     schemaVersion: COLLECTION_SCHEMA,
     meta: parseCollectionMeta(JSON.stringify(raw.meta || {})),
     files: safe,

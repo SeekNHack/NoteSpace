@@ -116,7 +116,7 @@ export function collectionFromOpenApi(spec: ApiSpec, name = spec.title): ImportP
   }
   const meta: CollectionMeta = {
     schemaVersion: COLLECTION_SCHEMA,
-    type: 'wiki-studio.collection',
+    type: 'notespace.collection',
     name,
     ...(spec.description ? { description: spec.description.slice(0, 2000) } : {}),
     variables: baseUrl ? [{ key: 'baseUrl', value: baseUrl }] : [{ key: 'baseUrl', value: '' }],

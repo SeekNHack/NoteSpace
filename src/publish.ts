@@ -22,7 +22,7 @@ async function render(
   include: (page: Page) => boolean,
   planner?: PlannerService,
 ): Promise<{ dir: string; entries: Entry[]; warnings: string[] }> {
-  const parent = await fs.mkdtemp(path.join(os.tmpdir(), 'wiki-studio-publish-'));
+  const parent = await fs.mkdtemp(path.join(os.tmpdir(), 'notespace-publish-'));
   const entries: Entry[] = [];
   try {
     const result = await exportWiki(workspace, root, vscode.Uri.file(parent), undefined, {
@@ -64,7 +64,7 @@ function rebase(body: string, output: string, anchors: Map<string, string>): str
 // ---------------------------------------------------------------------------------------------
 export function findBrowser(): string | undefined {
   const configured = vscode.workspace
-    .getConfiguration('wikiStudio')
+    .getConfiguration('notespace')
     .get<string>('export.browserPath', '');
   if (configured) return existsSync(configured) ? configured : undefined;
   const env = process.env;

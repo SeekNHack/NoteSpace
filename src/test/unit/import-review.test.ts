@@ -95,7 +95,7 @@ test('review files validate input and anchors follow moved lines', () => {
   assert.equal(parseReview(serializeReview(parsed), 'a.md').threads[0].comments[0].body, 'Fix?');
   assert.throws(
     () => parseReview('{"schema":"other","threads":[]}', 'a.md'),
-    /Not a wiki-studio.review\/1/,
+    /Not a notespace.review\/1/,
   );
   assert.throws(() => parseReview('nope', 'a.md'), /Invalid review file/);
   assert.deepEqual(

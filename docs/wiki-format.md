@@ -59,4 +59,4 @@ translated_from: 8c3f0a1b2d4e5f60 # set on translations by Create Translation
 # Installation
 ```
 
-`order` sorts pages when navigation sort is `order`; section order can be set on its `index.md` page. `draft: true` hides a page from static export. **Edit Page Properties and Order** offers guided inputs. Legacy folders configured with `wikiStudio.root` remain readable when no `wiki.yaml` is found.
+`order` sorts pages when navigation sort is `order`; section order can be set on its `index.md` page. `draft: true` hides a page from static export. **Edit Page Properties and Order** offers guided inputs. Legacy folders configured with `notespace.root` remain readable when no `wiki.yaml` is found.

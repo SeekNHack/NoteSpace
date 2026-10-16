@@ -150,7 +150,7 @@ Accept: application/json
 \`\`\`
 `,
   'docs/boards/development.md': `---
-wiki_studio:
+notespace:
   type: board
   id: b-dev001
   name: Development

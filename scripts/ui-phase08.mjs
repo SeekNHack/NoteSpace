@@ -56,8 +56,8 @@ try {
 
   // Follow .gitignore and list pages first.
   await setSettings({
-    'wikiStudio.respectGitignore': true,
-    'wikiStudio.explorer.directorySort': 'files-first',
+    'notespace.respectGitignore': true,
+    'notespace.explorer.directorySort': 'files-first',
   });
   await poll(
     async () => !(await rows()).some((r) => r.includes('Drafts')),
@@ -99,8 +99,8 @@ try {
   );
   // Turned off, the selection stays where it was.
   await setSettings({
-    'wikiStudio.respectGitignore': true,
-    'wikiStudio.explorer.autoReveal': false,
+    'notespace.respectGitignore': true,
+    'notespace.explorer.autoReveal': false,
   });
   await page.waitForTimeout(1500);
   await runCommand(page, 'Go to File...');
@@ -112,7 +112,7 @@ try {
   console.log('PASS phase08: the Pages view follows the active page unless autoReveal is off');
 
   // Where pages open from the Pages view.
-  await setSettings({ 'wikiStudio.openPagesIn': 'code' });
+  await setSettings({ 'notespace.openPagesIn': 'code' });
   await page.waitForTimeout(1500);
   await runCommand(page, 'View: Close All Editors');
   await pages.locator('.monaco-list-row', { hasText: 'Getting Started' }).click();
@@ -124,14 +124,14 @@ try {
     async () => (await page.locator('.monaco-editor .view-lines').count()) > 0,
     'text editor',
   );
-  await setSettings({ 'wikiStudio.openPagesIn': 'preview' });
+  await setSettings({ 'notespace.openPagesIn': 'preview' });
   await page.waitForTimeout(1500);
   await pages.locator('.monaco-list-row', { hasText: 'API Reference' }).click();
   await poll(
     async () => (await page.locator('.tab', { hasText: /Preview/ }).count()) > 0,
     'preview opened',
   );
-  console.log('PASS phase08: wikiStudio.openPagesIn opens pages in Code or the preview');
+  console.log('PASS phase08: notespace.openPagesIn opens pages in Code or the preview');
 
   await page.evaluate(axeSource);
   const violations = await page.evaluate(async () =>

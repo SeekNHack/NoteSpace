@@ -34,11 +34,11 @@ Charts are SVG with a `<title>`/`<desc>`, a legend, focusable data points with t
 - **Import Jupyter Notebook** copies a validated `.ipynb` into `notebooks/` (never overwriting). The **Pages** view lists notebooks; **Open Notebook** uses VS Code's notebook editor for cell editing, reordering and outputs. **Preview Notebook (Saved Outputs)** shows a read-only rendering beside it. **Convert Notebook to Markdown Page** writes a page with code, text outputs and images stored as wiki assets.
 - Reading never needs a kernel. Opening, previewing and exporting never execute a cell.
 - Saved outputs render as text, tables (sanitized HTML: no scripts, event handlers, iframes, forms or remote resources), PNG/JPEG/GIF images and ANSI-stripped errors.
-- **Running cells.** If the Jupyter extension is installed, its kernels appear as usual. Otherwise NoteSpace offers **NoteSpace Python** (setting `wikiStudio.notebooks.pythonKernel`, default on) when `python3` is found: one persistent process per notebook (variables persist between cells), stdout/stderr, rich `repr`/`_repr_html_`, matplotlib figures as PNG, errors with tracebacks. It runs only when you run a cell, only in a trusted workspace; interrupt stops the process. Outputs are saved in the `.ipynb` when you save the notebook. In code-server cells run on the server.
+- **Running cells.** If the Jupyter extension is installed, its kernels appear as usual. Otherwise NoteSpace offers **NoteSpace Python** (setting `notespace.notebooks.pythonKernel`, default on) when `python3` is found: one persistent process per notebook (variables persist between cells), stdout/stderr, rich `repr`/`_repr_html_`, matplotlib figures as PNG, errors with tracebacks. It runs only when you run a cell, only in a trusted workspace; interrupt stops the process. Outputs are saved in the `.ipynb` when you save the notebook. In code-server cells run on the server.
 
 ## Runnable code blocks
 
-Off by default. With `wikiStudio.codeRunner.enabled` in a trusted workspace, Studio shows **Run** on `python`, `javascript`/`js` (the VS Code Node runtime) and `bash`/`sh` blocks. The first run of each runtime per session asks for confirmation and states where it runs (this machine or the remote host). Output shows exit code, duration, stdout and stderr; **Insert output** adds it as a `text` block after the code. Runs stop after `wikiStudio.codeRunner.timeoutSeconds` (default 20) and keep at most 200 KB of output. The reader, preview and export never run code.
+Off by default. With `notespace.codeRunner.enabled` in a trusted workspace, Studio shows **Run** on `python`, `javascript`/`js` (the VS Code Node runtime) and `bash`/`sh` blocks. The first run of each runtime per session asks for confirmation and states where it runs (this machine or the remote host). Output shows exit code, duration, stdout and stderr; **Insert output** adds it as a `text` block after the code. Runs stop after `notespace.codeRunner.timeoutSeconds` (default 20) and keep at most 200 KB of output. The reader, preview and export never run code.
 
 ## Canvas
 
@@ -66,10 +66,10 @@ The reference shows **response models**: request bodies and responses that use `
 **Generate API Reference Pages** (command, or right-click a YAML/JSON file) writes ordinary wiki pages from a description into a folder you choose: `index.md` (servers, authentication, endpoint groups), one page per tag with parameters, models, examples and curl, and `schemas.md`. Generated pages are searchable, linkable and exportable like any page. The generated part of each page sits between markers:
 
 ```markdown
-<!-- wiki-studio:generated source="../../specs/shop.yaml" hash="…" -->
+<!-- notespace:generated source="../../specs/shop.yaml" hash="…" -->
 
 …
-<!-- /wiki-studio:generated -->
+<!-- /notespace:generated -->
 ```
 
 Write your own notes **outside** the markers; they are never touched. Regenerating replaces a generated part only if it is unchanged since it was generated. If you edited inside it, NoteSpace asks: **Replace Generated Section** (your edits there are lost), **Keep My Edits** (the page is left as is) or **Compare** (VS Code's diff editor, then the question again). A file with the same name but no markers is never replaced and is reported as skipped. When a description changes, NoteSpace tells you how many generated pages are out of date and offers _Regenerate…_; it does not regenerate on its own.

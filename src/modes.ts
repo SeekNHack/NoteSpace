@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-export const STUDIO_VIEW_TYPE = 'wikiStudio.visual';
+export const STUDIO_VIEW_TYPE = 'notespace.visual';
 export type EditorMode = 'studio' | 'code' | 'split';
 
 const same = (a: vscode.Uri, b: vscode.Uri) => a.toString() === b.toString();

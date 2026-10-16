@@ -44,7 +44,7 @@ export interface StudioHost {
 }
 
 export class VisualEditorProvider implements vscode.CustomTextEditorProvider {
-  static readonly viewType = 'wikiStudio.visual';
+  static readonly viewType = 'notespace.visual';
   private readonly panels = new Map<string, Set<vscode.WebviewPanel>>();
   private readonly emitter = new vscode.EventEmitter<void>();
   readonly onDidChangeState = this.emitter.event;
@@ -108,7 +108,7 @@ export class VisualEditorProvider implements vscode.CustomTextEditorProvider {
       vscode.Uri.joinPath(this.extensionUri, 'dist', 'visual.js'),
     );
     const width = vscode.workspace
-      .getConfiguration('wikiStudio', document.uri)
+      .getConfiguration('notespace', document.uri)
       .get<string>('editor.width', 'normal');
     panel.webview.html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${n}'; style-src 'unsafe-inline'; img-src ${panel.webview.cspSource} data:; font-src ${panel.webview.cspSource}; connect-src 'none'; base-uri 'none'; form-action 'none'"><title>${escapeHtml(initial.title)}</title><style>${visualShellCss}</style></head><body data-width="${escapeHtml(width)}"><div id="app"></div><script nonce="${n}" src="${script}"></script></body></html>`;
 
@@ -230,12 +230,12 @@ export class VisualEditorProvider implements vscode.CustomTextEditorProvider {
       ),
       vscode.workspace.onDidChangeConfiguration((event) => {
         // Enabling or disabling the code runner shows or hides Run buttons immediately.
-        if (event.affectsConfiguration('wikiStudio.codeRunner')) postContext();
-        if (event.affectsConfiguration('wikiStudio.editor.width', document.uri))
+        if (event.affectsConfiguration('notespace.codeRunner')) postContext();
+        if (event.affectsConfiguration('notespace.editor.width', document.uri))
           void panel.webview.postMessage({
             type: 'width',
             width: vscode.workspace
-              .getConfiguration('wikiStudio', document.uri)
+              .getConfiguration('notespace', document.uri)
               .get<string>('editor.width', 'normal'),
           });
       }),
@@ -465,7 +465,7 @@ export class VisualEditorProvider implements vscode.CustomTextEditorProvider {
           }
           const kind = m.kind === 'wiki' ? 'wiki' : 'markdown';
           if (kind === 'markdown' && parseCodeRef(href)) {
-            await vscode.commands.executeCommand('wikiStudio.openCodeRef', page.uri, href);
+            await vscode.commands.executeCommand('notespace.openCodeRef', page.uri, href);
             return;
           }
           const result = this.workspace.index.resolve(page, href, kind);
@@ -564,12 +564,12 @@ export class VisualEditorProvider implements vscode.CustomTextEditorProvider {
           if (
             typeof m.command === 'string' &&
             [
-              'wikiStudio.pageProperties',
-              'wikiStudio.toggleFavorite',
-              'wikiStudio.preview',
-              'wikiStudio.copyLink',
-              'wikiStudio.focusContext',
-              'wikiStudio.search',
+              'notespace.pageProperties',
+              'notespace.toggleFavorite',
+              'notespace.preview',
+              'notespace.copyLink',
+              'notespace.focusContext',
+              'notespace.search',
             ].includes(m.command)
           )
             await vscode.commands.executeCommand(m.command, {
@@ -775,7 +775,7 @@ export class VisualEditorProvider implements vscode.CustomTextEditorProvider {
           const base = m.language === 'dashboard' ? root.projectUri || root.uri : root.uri;
           let files = await vscode.workspace.findFiles(
             new vscode.RelativePattern(base, glob),
-            '**/{node_modules,.git,_versions,.ipynb_checkpoints,.wiki-studio-trash}/**',
+            '**/{node_modules,.git,_versions,.ipynb_checkpoints,.notespace-trash}/**',
             500,
           );
           if (m.language === 'openapi') {

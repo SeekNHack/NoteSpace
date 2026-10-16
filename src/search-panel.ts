@@ -6,7 +6,7 @@ import { escapeHtml } from './core/render';
 import { hasFilters, pageFeatures, parseQuery, searchTypes } from './core/query';
 import { posix } from './core/paths';
 
-const RECENT_KEY = 'wikiStudio.recentSearches';
+const RECENT_KEY = 'notespace.recentSearches';
 const MAX_RECENT = 15;
 
 let panel: vscode.WebviewPanel | undefined;
@@ -27,7 +27,7 @@ export function openSearchPanel(
     return;
   }
   const current = (panel = vscode.window.createWebviewPanel(
-    'wikiStudio.search',
+    'notespace.search',
     'Search Wiki',
     vscode.ViewColumn.Active,
     { enableScripts: true, retainContextWhenHidden: true },
@@ -108,7 +108,7 @@ export function openSearchPanel(
         }
         if (!workspace.index.byUri(m.uri)) return;
         await vscode.commands.executeCommand(
-          'wikiStudio.openPage',
+          'notespace.openPage',
           m.uri,
           typeof m.offset === 'number' ? m.offset : undefined,
         );

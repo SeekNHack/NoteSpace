@@ -1173,7 +1173,7 @@ function requestView(t: Tab): HTMLElement {
         h('span', {}),
         h('p', {
           class: 'muted small',
-          text: 'TLS certificates are always verified. Responses larger than wikiStudio.api.maxResponseMB are truncated.',
+          text: 'TLS certificates are always verified. Responses larger than notespace.api.maxResponseMB are truncated.',
         }),
       ),
     );

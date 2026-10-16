@@ -6,7 +6,7 @@ import { renderHttpBlock } from './core/http/render';
 import { ApiRequest } from './core/http/model';
 import { changesData } from './core/net-safety';
 
-const DOC_ORIGINS = 'wikiStudio.api.documentOrigins';
+const DOC_ORIGINS = 'notespace.api.documentOrigins';
 
 /**
  * Interactive ```http blocks in the reader and Studio. Opening a page never sends anything:

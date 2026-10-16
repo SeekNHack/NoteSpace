@@ -125,7 +125,7 @@ export function registerCodeReferences(
   context: vscode.ExtensionContext,
   workspace: WikiWorkspace,
 ): void {
-  const diagnostics = vscode.languages.createDiagnosticCollection('wikiStudio.code');
+  const diagnostics = vscode.languages.createDiagnosticCollection('notespace.code');
   let timer: ReturnType<typeof setTimeout> | undefined;
   let revision = 0;
   const validate = async () => {
@@ -196,7 +196,7 @@ export function registerCodeReferences(
                   document.positionAt(l.targetEnd),
                 ),
                 vscode.Uri.parse(
-                  `command:wikiStudio.openCodeRef?${encodeURIComponent(JSON.stringify([page.uri, l.target]))}`,
+                  `command:notespace.openCodeRef?${encodeURIComponent(JSON.stringify([page.uri, l.target]))}`,
                 ),
               );
               link.tooltip = 'Open the referenced source';

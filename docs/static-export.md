@@ -26,7 +26,7 @@ Off by default. With `analytics.provider: beacon` the site posts `{ "path", "lan
 
 ## PDF
 
-**Export PDF (Page, Section or Wiki)** prints one page, the current folder or the whole wiki (current version, default language; homepage first, then navigation order) with a cover and table of contents. It uses an installed Chrome, Edge, Chromium or Brave in headless mode (or `wikiStudio.export.browserPath`); nothing is downloaded. Collapsed callouts and details are expanded; tabs are shown one after another; links to other included pages become in-document links; external links print their URL. Without a supported browser the command saves a print-ready HTML page to open and print with _Save as PDF_.
+**Export PDF (Page, Section or Wiki)** prints one page, the current folder or the whole wiki (current version, default language; homepage first, then navigation order) with a cover and table of contents. It uses an installed Chrome, Edge, Chromium or Brave in headless mode (or `notespace.export.browserPath`); nothing is downloaded. Collapsed callouts and details are expanded; tabs are shown one after another; links to other included pages become in-document links; external links print their URL. Without a supported browser the command saves a print-ready HTML page to open and print with _Save as PDF_.
 
 ## EPUB
 

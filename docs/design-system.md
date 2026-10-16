@@ -27,7 +27,7 @@ Spacing uses a 4 px scale (`--ws-s1` 4 px … `--ws-s7` 48 px). Radii are 4, 6 a
 
 ## Document typography
 
-The `.doc` class styles Studio's ProseMirror root, the reader article, the read-only Studio fallback and the static export identically. Headings scale 1.85 / 1.4 / 1.15 / 1 em with weight 650 and tight letter spacing; paragraphs use 0.7 em vertical rhythm. The writing column is 760 px by default (`wikiStudio.editor.width`: `normal`, `wide` 960 px, `full`). Tables scroll horizontally instead of overflowing; code blocks scroll and never wrap.
+The `.doc` class styles Studio's ProseMirror root, the reader article, the read-only Studio fallback and the static export identically. Headings scale 1.85 / 1.4 / 1.15 / 1 em with weight 650 and tight letter spacing; paragraphs use 0.7 em vertical rhythm. The writing column is 760 px by default (`notespace.editor.width`: `normal`, `wide` 960 px, `full`). Tables scroll horizontally instead of overflowing; code blocks scroll and never wrap.
 
 ## Components
 

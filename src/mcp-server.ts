@@ -273,7 +273,7 @@ const tools: Array<{
         );
       await fs.mkdir(path.dirname(full), { recursive: true });
       await assertInside(path.dirname(full));
-      const temp = `${full}.wiki-studio-${process.pid}.tmp`;
+      const temp = `${full}.notespace-${process.pid}.tmp`;
       await fs.writeFile(temp, String(a.content), { flag: 'wx' });
       await fs.rename(temp, full);
       return { path: file, created: current === undefined, sha256: sha256(String(a.content)) };
@@ -304,7 +304,7 @@ async function handle(request: Request): Promise<void> {
             ? request.params.protocolVersion
             : '2024-11-05',
         capabilities: { tools: {} },
-        serverInfo: { name: 'wiki-studio', version: VERSION },
+        serverInfo: { name: 'notespace', version: VERSION },
         instructions: `Wiki “${wiki.title}”. Pages are Markdown files; paths are relative to the wiki.${allowWrite ? '' : ' This server is read-only.'}`,
       });
     case 'notifications/initialized':

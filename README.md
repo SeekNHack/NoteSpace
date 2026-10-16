@@ -159,7 +159,7 @@ More browser journeys: `test:workspace`, `test:planner`, `test:api`, `test:embed
 - Pages with constructs Studio cannot round-trip exactly (for example links inside formatted text, or nesting deeper than four levels) open in Code.
 - OAuth 2.0 in the API client supports client credentials and authorization code with PKCE; implicit, password and device flows, token refresh and client certificates are not supported. No proxy support or Postman collection import yet.
 - The Python kernel and code runner need Python or Node installed locally and are off until you enable them.
-- Settings and commands keep the `wikiStudio.*` ids from the project's working name, so existing workspaces keep working.
+- Settings from builds made before the rename (`wikiStudio.*`) are not migrated automatically; boards, collections and review files are.
 
 ## License
 

@@ -129,7 +129,7 @@ function probePython(): string | undefined {
 }
 
 export function registerPythonKernel(context: vscode.ExtensionContext): void {
-  if (!vscode.workspace.getConfiguration('wikiStudio').get<boolean>('notebooks.pythonKernel', true))
+  if (!vscode.workspace.getConfiguration('notespace').get<boolean>('notebooks.pythonKernel', true))
     return;
   // Untrusted workspaces never probe for or run Python; trusting the folder registers the kernel.
   if (!vscode.workspace.isTrusted) {
@@ -142,7 +142,7 @@ export function registerPythonKernel(context: vscode.ExtensionContext): void {
   if (!python) return;
   const sessions = new Map<string, Session>();
   const controller = vscode.notebooks.createNotebookController(
-    'wiki-studio-python',
+    'notespace-python',
     'jupyter-notebook',
     'NoteSpace Python',
   );

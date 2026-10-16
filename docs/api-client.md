@@ -21,7 +21,7 @@ A request tab has the method (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS), the
 
 **Ctrl/Cmd+Enter** sends, **Ctrl/Cmd+S** saves, **Esc** cancels a running request, **Enter** in the URL sends. Tabs show unsaved changes with a dot; **Delete** closes the focused tab.
 
-The response viewer shows status, time, size, headers, cookies and test results; the body pretty-printed (JSON and XML) or raw, HTML as source text (never rendered or run), images as images; search inside it, copy it or download it to a file you choose. Responses larger than `wikiStudio.api.maxResponseMB` (10 MB) are truncated and marked as such.
+The response viewer shows status, time, size, headers, cookies and test results; the body pretty-printed (JSON and XML) or raw, HTML as source text (never rendered or run), images as images; search inside it, copy it or download it to a file you choose. Responses larger than `notespace.api.maxResponseMB` (10 MB) are truncated and marked as such.
 
 ## Paste a curl command
 
@@ -31,7 +31,7 @@ Header values pasted this way (for example `Authorization: Bearer …`) are kept
 
 ## Collections
 
-A collection is a folder under `api/` (setting `wikiStudio.api.folder`) in the first workspace folder:
+A collection is a folder under `api/` (setting `notespace.api.folder`) in the first workspace folder:
 
 ```text
 api/
@@ -105,7 +105,7 @@ Because pages can come from other people, the first request from documentation t
 - Cloud metadata services (for example `169.254.169.254`) are always refused, including after DNS resolution and redirects.
 - Redirects (up to 10) are followed hop by hop; `Authorization`, `Proxy-Authorization` and `Cookie` are dropped when a redirect changes origin, and 303 (or 301/302 after POST) becomes GET.
 - Files for multipart and binary bodies must be inside the workspace and are refused if they are symlinks.
-- **History** (`wikiStudio.api.historyLimit`, 200 entries, 0 disables it) keeps method, redacted URL (credentials and token-like query parameters masked), status, time and size — never bodies or headers. **Clear history** removes it.
+- **History** (`notespace.api.historyLimit`, 200 entries, 0 disables it) keeps method, redacted URL (credentials and token-like query parameters masked), status, time and size — never bodies or headers. **Clear history** removes it.
 - OAuth 2.0 tokens are kept in memory for the session only.
 
 ## Limits

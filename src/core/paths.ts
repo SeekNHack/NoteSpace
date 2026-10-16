@@ -22,7 +22,7 @@ export function safeRelative(value: string, allowDot = false): string {
 }
 export function pagePath(value: string): string {
   const p = safeRelative(value);
-  if (p.split('/').includes('.wiki-studio-trash'))
+  if (p.split('/').includes('.notespace-trash'))
     throw new Error('Wiki Trash is reserved for deleted pages.');
   return /\.md$/i.test(p) ? p : `${p}.md`;
 }

@@ -15,7 +15,7 @@ const require = createRequire(import.meta.url);
 const axeSource = await readFile(require.resolve('axe-core/axe.min.js'), 'utf8');
 const shots = 'docs/screenshots/phase06';
 await mkdir(shots, { recursive: true });
-const tools = path.join(os.homedir(), '.cache', 'wiki-studio-tools');
+const tools = path.join(os.homedir(), '.cache', 'notespace-tools');
 
 // Receives analytics beacons; also serves the built site.
 const hits = [];
@@ -85,7 +85,7 @@ async function axe(target, label) {
 
 const { page, close, workspace, browser } = await launchCodeServer({
   files,
-  settings: { 'files.autoSave': 'off', 'wikiStudio.export.browserPath': chromium.executablePath() },
+  settings: { 'files.autoSave': 'off', 'notespace.export.browserPath': chromium.executablePath() },
 });
 const saveAs = async (file) => {
   const input = page.locator('.quick-input-widget input[type=text]');
@@ -134,7 +134,7 @@ try {
   await poll(
     async () =>
       (await stat(path.join(siteRoot, 'index.html')).catch(() => undefined)) &&
-      (await stat(path.join(siteRoot, '.wiki-studio-build')).catch(() => undefined)),
+      (await stat(path.join(siteRoot, '.notespace-build')).catch(() => undefined)),
     'site built',
   );
   const context = await browser.newContext({ viewport: { width: 1280, height: 860 } });

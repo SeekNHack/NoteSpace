@@ -57,13 +57,13 @@ export interface SendContext {
   signal?: AbortSignal;
 }
 
-const HISTORY_KEY = 'wikiStudio.api.history';
-const GLOBALS_KEY = 'wikiStudio.api.globals';
-const ENV_KEY = 'wikiStudio.api.environment';
+const HISTORY_KEY = 'notespace.api.history';
+const GLOBALS_KEY = 'notespace.api.globals';
+const ENV_KEY = 'notespace.api.environment';
 
 /**
  * Collections, environments, history and sending for the API client. Files live under
- * `<workspace folder>/<wikiStudio.api.folder>` (default `api/`); secret variable values and OAuth
+ * `<workspace folder>/<notespace.api.folder>` (default `api/`); secret variable values and OAuth
  * tokens live in VS Code SecretStorage or memory, never in files, logs or the history.
  */
 export class ApiStore implements vscode.Disposable {
@@ -93,11 +93,11 @@ export class ApiStore implements vscode.Disposable {
     if (!folder) throw new Error('Open a workspace folder to keep API collections.');
     const name =
       vscode.workspace
-        .getConfiguration('wikiStudio', folder.uri)
+        .getConfiguration('notespace', folder.uri)
         .get<string>('api.folder', 'api')
         .replace(/^\/+|\/+$/g, '') || 'api';
     if (name.split('/').includes('..'))
-      throw new Error('wikiStudio.api.folder must stay inside the workspace.');
+      throw new Error('notespace.api.folder must stay inside the workspace.');
     return vscode.Uri.joinPath(folder.uri, name);
   }
   private safeSegment(segment: string): string {
@@ -190,7 +190,7 @@ export class ApiStore implements vscode.Disposable {
     const id = await this.unique(root, slug(clean), '');
     const meta: CollectionMeta = {
       schemaVersion: COLLECTION_SCHEMA,
-      type: 'wiki-studio.collection',
+      type: 'notespace.collection',
       name: clean,
       ...(description ? { description } : {}),
       variables: [],
@@ -448,7 +448,7 @@ export class ApiStore implements vscode.Disposable {
     return out.sort((a, b) => a.name.localeCompare(b.name));
   }
   private secretKey(scope: string, name: string) {
-    return `wikiStudio.api.secret:${this.root().toString()}:${scope}:${name}`;
+    return `notespace.api.secret:${this.root().toString()}:${scope}:${name}`;
   }
   /** Saves an environment; secret values go to SecretStorage and are never written to disk. */
   async saveEnvironment(
@@ -705,7 +705,7 @@ export class ApiStore implements vscode.Disposable {
       ...(ctx.ref ? { ref: ctx.ref } : {}),
     };
     const maxMb = vscode.workspace
-      .getConfiguration('wikiStudio')
+      .getConfiguration('notespace')
       .get<number>('api.maxResponseMB', 10);
     try {
       const response = await send(resolved, {
@@ -759,7 +759,7 @@ export class ApiStore implements vscode.Disposable {
       0,
       Math.min(
         5000,
-        vscode.workspace.getConfiguration('wikiStudio').get<number>('api.historyLimit', 200),
+        vscode.workspace.getConfiguration('notespace').get<number>('api.historyLimit', 200),
       ),
     );
     await this.context.workspaceState.update(

@@ -37,29 +37,29 @@ Unknown words and invalid values (for example `due:tomorrow` typed into a page, 
 
 **Where new tasks are written**
 
-| Created from                                  | Written to                                                                                                                          |
-| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Quick capture (Home, Tasks, Add Task command) | the inbox page (`wikiStudio.planner.inbox`, default `Inbox.md`), or today's daily note when `wikiStudio.tasks.captureTo` is `daily` |
-| A board's column (“+ Add a card”)             | the **board's file**, with `col:<column>`                                                                                           |
-| The calendar (a day)                          | the inbox page, with `due:` or `start:` that day                                                                                    |
-| A page (typed in Studio or Code)              | that page                                                                                                                           |
-| The Status board                              | the inbox page, with the column's status (as before)                                                                                |
+| Created from                                  | Written to                                                                                                                        |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Quick capture (Home, Tasks, Add Task command) | the inbox page (`notespace.planner.inbox`, default `Inbox.md`), or today's daily note when `notespace.tasks.captureTo` is `daily` |
+| A board's column (“+ Add a card”)             | the **board's file**, with `col:<column>`                                                                                         |
+| The calendar (a day)                          | the inbox page, with `due:` or `start:` that day                                                                                  |
+| A page (typed in Studio or Code)              | that page                                                                                                                         |
+| The Status board                              | the inbox page, with the column's status (as before)                                                                              |
 
 Moving a card between columns changes only its `col:` word (and its checkbox for completed columns) — never its file. Adding a task to another board adds `board:<id>`; the line stays where it is. **Move into board file** (card or task menu) is the explicit way to move a task's line (with its notes and subtasks) into a board's file.
 
 ## Dates, time zones and recurrence
 
-Due and start dates are calendar dates without a time zone. Which day is _today_ is decided in `wikiStudio.planner.timeZone` (an IANA zone such as `Europe/Rome`), or in the machine's zone when empty; the Planner shows the zone it uses. Day boundaries follow that zone, including daylight-saving changes (`today follows the configured time zone across the day boundary` unit test).
+Due and start dates are calendar dates without a time zone. Which day is _today_ is decided in `notespace.planner.timeZone` (an IANA zone such as `Europe/Rome`), or in the machine's zone when empty; the Planner shows the zone it uses. Day boundaries follow that zone, including daylight-saving changes (`today follows the configured time zone across the day boundary` unit test).
 
 Completing a recurring task keeps the completed line (with `done:`) as history and inserts the next occurrence right after it, with the due date (and start date, keeping the same lead time) moved by the rule. Monthly and yearly rules clamp to the last day of shorter months (31 Jan → 28 Feb). Overdue recurring tasks advance from their due date, not from today.
 
 ## Daily notes
 
-One page per date in `wikiStudio.dailyNotes.folder` (default `daily`), named `YYYY-MM-DD.md`. New notes use `wikiStudio.dailyNotes.template` (a page relative to the wiki root) or the built-in template; placeholders: `{{title}}`, `{{date}}`, `{{weekday}}`, `{{yesterday}}`, `{{tomorrow}}`. Commands: **Open Today's Daily Note** (**Ctrl/Cmd+Alt+D**), **Previous/Next Daily Note** (to the nearest existing note, or the adjacent day; also in the editor title of a daily note), **Open Daily Note for Date…** (accepts dates and relative words). Daily notes are normal pages: Studio, Code and Split, links and backlinks all apply. Tasks in a daily note appear in Today on that date. The calendar marks days with notes; the journal streak and the 12-week activity strip count actual note files.
+One page per date in `notespace.dailyNotes.folder` (default `daily`), named `YYYY-MM-DD.md`. New notes use `notespace.dailyNotes.template` (a page relative to the wiki root) or the built-in template; placeholders: `{{title}}`, `{{date}}`, `{{weekday}}`, `{{yesterday}}`, `{{tomorrow}}`. Commands: **Open Today's Daily Note** (**Ctrl/Cmd+Alt+D**), **Previous/Next Daily Note** (to the nearest existing note, or the adjacent day; also in the editor title of a daily note), **Open Daily Note for Date…** (accepts dates and relative words). Daily notes are normal pages: Studio, Code and Split, links and backlinks all apply. Tasks in a daily note appear in Today on that date. The calendar marks days with notes; the journal streak and the 12-week activity strip count actual note files.
 
 ## The workspace panel
 
-**Open Home** (the **Workspace** view in the NoteSpace sidebar, the status bar, or the Command Palette) opens one editor tab with a compact navigation: **Home**, **Wiki**, **Tasks**, **Boards**, **Calendar**, **Insights** (**Alt+1…6** inside the panel). Switching destinations keeps the tab, filters and drafts. **Wiki** opens the wiki's real homepage (`content.homepage`, else `index.md`) in the editor; nothing is generated. The Home opens by itself the first time the NoteSpace sidebar is shown with no editor open (`wikiStudio.home.openOnStartup`). With several wikis, a selector in the navigation picks the wiki.
+**Open Home** (the **Workspace** view in the NoteSpace sidebar, the status bar, or the Command Palette) opens one editor tab with a compact navigation: **Home**, **Wiki**, **Tasks**, **Boards**, **Calendar**, **Insights** (**Alt+1…6** inside the panel). Switching destinations keeps the tab, filters and drafts. **Wiki** opens the wiki's real homepage (`content.homepage`, else `index.md`) in the editor; nothing is generated. The Home opens by itself the first time the NoteSpace sidebar is shown with no editor open (`notespace.home.openOnStartup`). With several wikis, a selector in the navigation picks the wiki.
 
 - **Home** — workspace name and description, search, **Create** (wiki page, note, folder, task, board, daily note, page from template), **Today** (overdue and due today, progress, quick add, inline completion), a **calendar preview** (dots for tasks and daily notes, the selected day's tasks, upcoming deadlines; double-click a day to open it), **Continue working** (recently edited pages with their folder and time, favorites) and **My boards** (pinned, then recently used).
 - **Tasks** — Today, Upcoming, Overdue, Inbox, All open and Completed as a list or a table, grouped by board, page, priority or project, filtered by text, board, label, project, assignee and priority. **Saved views** keep a list, layout, grouping and filters under a name.
@@ -71,11 +71,11 @@ Earlier **Open Planner**, **Open Kanban Board** and the list commands still work
 
 ## Boards
 
-A board is a Markdown page with a `wiki_studio` block in its front matter; the cards are its task lines (and tasks from other pages that carry `board:<id>`):
+A board is a Markdown page with a `notespace` block in its front matter; the cards are its task lines (and tasks from other pages that carry `board:<id>`):
 
 ```markdown
 ---
-wiki_studio:
+notespace:
   type: board
   id: b-k3x9q2
   name: Development
@@ -93,10 +93,10 @@ wiki_studio:
 - [ ] Add task filtering
 ```
 
-- **Create** a board from **Create → Kanban board**, **Boards → New board**, the board switcher or **New Board** (Command Palette): name, file (suggested as `boards/<name>.md`, folder `wikiStudio.boards.folder`), starting columns (To do/Doing/Done, Development, Personal, Content) and color. An existing file is never overwritten.
+- **Create** a board from **Create → Kanban board**, **Boards → New board**, the board switcher or **New Board** (Command Palette): name, file (suggested as `boards/<name>.md`, folder `notespace.boards.folder`), starting columns (To do/Doing/Done, Development, Personal, Content) and color. An existing file is never overwritten.
 - **Columns** are specific to each board: add, rename inline (click the title, or **F2**), recolor, choose an icon, set the default column for new cards, mark a column as _completed_, reorder by dragging the grip or **Alt+Shift+←/→**, delete. A column that still has cards is deleted only after you choose where its cards go; no task is ever deleted with a column.
 - **Cards**: click the title to edit it inline (**Enter** saves, **Escape** cancels); the checkbox completes it (moving it to the completed column); hover buttons change priority and due date; the **…** menu or right-click offers details, labels, priority, due date, move to column, add to another board, move into board file, duplicate, open the source page and delete. Drag cards between columns and within a column (a line shows where they will land), or use **Alt+←/→** and **Alt+↑/↓**. Changes appear at once and are undone if the file cannot be written. Cards show the description's first line, priority, due date, labels, assignee, the source page of linked tasks and subtask progress; **Compact cards** shows less. Tasks indented under another task are its checklist, not separate cards.
-- **Order**: manual (persisted with `order:`), by due date or by priority. Optional swimlanes by project or priority. Board settings (name, description, icon, color, density, order, archived) are written to the board's front matter; only the `wiki_studio` block changes — other front matter and the page body stay as written.
+- **Order**: manual (persisted with `order:`), by due date or by priority. Optional swimlanes by project or priority. Board settings (name, description, icon, color, density, order, archived) are written to the board's front matter; only the `notespace` block changes — other front matter and the page body stay as written.
 - **Delete** moves the board's file (with the tasks written in it) to Wiki Trash, where it can be restored; tasks of other pages keep their lines.
 
 **Add Task to Board** (Command Palette, with the cursor on a task line) and the task menus put a task from any note on a board with `board:<id>`.
@@ -135,7 +135,7 @@ By default, exports and builds leave out daily notes, the inbox page and task em
 
 ## Reminders
 
-`wikiStudio.planner.reminders` (off by default) shows at most one notification per day for tasks due today or overdue, checked every ten minutes while VS Code is running. Nothing is scheduled outside the extension host: no reminder fires while VS Code or code-server is closed, or while the browser tab of code-server is disconnected.
+`notespace.planner.reminders` (off by default) shows at most one notification per day for tasks due today or overdue, checked every ten minutes while VS Code is running. Nothing is scheduled outside the extension host: no reminder fires while VS Code or code-server is closed, or while the browser tab of code-server is disconnected.
 
 ## Compatibility
 

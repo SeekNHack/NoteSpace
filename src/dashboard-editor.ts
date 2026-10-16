@@ -25,7 +25,7 @@ const sourceTypeOf = (path: string): SourceType | undefined =>
  * work as usual). Data stays in the extension host; the webview gets computed results.
  */
 export class DashboardEditorProvider implements vscode.CustomTextEditorProvider {
-  static readonly viewType = 'wikiStudio.dashboard';
+  static readonly viewType = 'notespace.dashboard';
   constructor(
     private readonly extensionUri: vscode.Uri,
     private readonly service: DashboardService,

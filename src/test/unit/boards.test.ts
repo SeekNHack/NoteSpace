@@ -25,7 +25,7 @@ const config = {
 
 test('board files round-trip and keep other front matter and the body', () => {
   const text = newBoardText(config);
-  assert.match(text, /^---\nwiki_studio:\n {2}type: board\n {2}id: board-dev\n/);
+  assert.match(text, /^---\nnotespace:\n {2}type: board\n {2}id: board-dev\n/);
   assert.deepEqual(parseBoard(text), config);
   const edited = `---\ntitle: Dev work # keep this comment\ntags: [team]\n${text.slice(4)}\nNotes stay.\n`;
   const renamed = writeBoardConfig(edited, {
@@ -39,9 +39,9 @@ test('board files round-trip and keep other front matter and the body', () => {
   assert.equal(parseBoard(renamed)!.name, 'Dev');
   assert.equal(parseBoard(renamed)!.columns[0].id, 'released');
   assert.equal(parseBoard('# Not a board\n'), undefined);
-  assert.equal(parseBoard('---\nwiki_studio:\n  type: note\n---\n'), undefined);
+  assert.equal(parseBoard('---\nnotespace:\n  type: note\n---\n'), undefined);
   // CRLF files stay CRLF.
-  assert.match(writeBoardConfig(text.replace(/\n/g, '\r\n'), config), /^---\r\nwiki_studio:\r\n/);
+  assert.match(writeBoardConfig(text.replace(/\n/g, '\r\n'), config), /^---\r\nnotespace:\r\n/);
 });
 
 test('invalid configurations are refused; bad files fall back safely', () => {
@@ -52,7 +52,7 @@ test('invalid configurations are refused; bad files fall back safely', () => {
     /used twice/,
   );
   const loose = parseBoard(
-    '---\nwiki_studio:\n  type: board\n  id: b1\n  columns:\n    - {id: a, title: A, color: neon}\n    - {id: a, title: Again}\n    - {title: no id}\n---\n',
+    '---\nnotespace:\n  type: board\n  id: b1\n  columns:\n    - {id: a, title: A, color: neon}\n    - {id: a, title: Again}\n    - {title: no id}\n---\n',
   )!;
   assert.deepEqual(
     loose.columns,
@@ -130,4 +130,16 @@ test('subtasks are the checklist of their parent, not cards of their own', async
     tasks.filter((t) => keys.has(t.key)).map((t) => t.title),
     ['Child one', 'Child two', 'Grandchild', 'Linked child'],
   );
+});
+
+test('boards written with the legacy wiki_studio key are read and migrated on save', () => {
+  const legacy =
+    '---\ntitle: Old\nwiki_studio:\n  type: board\n  id: b-old\n  name: Old board\n  columns:\n    - {id: todo, title: To do}\n---\n\n# Old\n';
+  const config = parseBoard(legacy)!;
+  assert.equal(config.id, 'b-old');
+  const saved = writeBoardConfig(legacy, { ...config, name: 'Renamed' });
+  assert.doesNotMatch(saved, /wiki_studio/);
+  assert.match(saved, /^---\ntitle: Old\nnotespace:\n {2}type: board\n/);
+  assert.equal(parseBoard(saved)!.name, 'Renamed');
+  assert.ok(saved.endsWith('---\n\n# Old\n'));
 });

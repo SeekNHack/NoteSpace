@@ -62,7 +62,7 @@ export class ApiClientPanel implements vscode.Disposable {
   async show(open?: { collection?: string; path?: string; request?: ApiRequest }) {
     if (!this.panel) {
       this.panel = vscode.window.createWebviewPanel(
-        'wikiStudio.apiClient',
+        'notespace.apiClient',
         'API Client',
         vscode.ViewColumn.Active,
         {
@@ -140,7 +140,7 @@ export class ApiClientPanel implements vscode.Disposable {
       globals: this.store.globals(),
       runtime: Object.keys(this.store.runtime),
       history: this.store.history().slice(0, 200),
-      tabs: this.context.workspaceState.get('wikiStudio.api.tabs', null),
+      tabs: this.context.workspaceState.get('notespace.api.tabs', null),
       trusted: vscode.workspace.isTrusted,
     });
   }
@@ -174,7 +174,7 @@ export class ApiClientPanel implements vscode.Disposable {
         return this.postState();
       case 'tabs':
         // Open tabs and drafts survive reloads (requests hold no secret values).
-        return void this.context.workspaceState.update('wikiStudio.api.tabs', m.tabs ?? null);
+        return void this.context.workspaceState.update('notespace.api.tabs', m.tabs ?? null);
       case 'open': {
         if (!collection || !path) return;
         const request = await this.store.request(collection, path);
@@ -553,7 +553,7 @@ export class ApiClientPanel implements vscode.Disposable {
       )?.[0];
     if (!picked) return;
     const text = new TextDecoder().decode(await vscode.workspace.fs.readFile(picked));
-    if (/"format"\s*:\s*"wiki-studio\.collection-bundle"/.test(text)) {
+    if (/"format"\s*:\s*"(?:notespace|wiki-studio)\.collection-bundle"/.test(text)) {
       const id = await this.store.importBundle(text);
       void vscode.window.showInformationMessage(
         `Imported the collection into ${vscode.workspace.asRelativePath(vscode.Uri.joinPath(this.store.root(), id))}.`,

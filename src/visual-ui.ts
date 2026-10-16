@@ -2316,16 +2316,16 @@ function openPageMenu(anchor: HTMLElement) {
     run: () => vscode.postMessage({ type: 'command', command: commandId }),
   });
   const items = [
-    command('props', 'Page properties…', 'edit', 'wikiStudio.pageProperties'),
+    command('props', 'Page properties…', 'edit', 'notespace.pageProperties'),
     command(
       'context',
       `Outline and backlinks${context?.backlinks ? ` (${context.backlinks})` : ''}`,
       'preview',
-      'wikiStudio.focusContext',
+      'notespace.focusContext',
     ),
-    command('preview', 'Open reader preview', 'eye', 'wikiStudio.preview'),
-    command('copy', 'Copy page link', 'link', 'wikiStudio.copyLink'),
-    command('fav', 'Toggle favorite', 'star', 'wikiStudio.toggleFavorite'),
+    command('preview', 'Open reader preview', 'eye', 'notespace.preview'),
+    command('copy', 'Copy page link', 'link', 'notespace.copyLink'),
+    command('fav', 'Toggle favorite', 'star', 'notespace.toggleFavorite'),
   ];
   const wasBlocked = blocked;
   blocked = false;
@@ -2555,7 +2555,7 @@ function renderContext(next: Context) {
     }),
   );
   links.addEventListener('click', () =>
-    vscode.postMessage({ type: 'command', command: 'wikiStudio.focusContext' }),
+    vscode.postMessage({ type: 'command', command: 'notespace.focusContext' }),
   );
   crumbs.append(links);
   document.title = next.title;

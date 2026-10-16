@@ -91,10 +91,10 @@ const { page, close, workspace } = await launchCodeServer({
   files,
   settings: {
     'files.autoSave': 'off',
-    'wikiStudio.ai.provider': 'endpoint',
-    'wikiStudio.ai.endpoint': `http://127.0.0.1:${port}/v1`,
-    'wikiStudio.ai.model': 'local-test',
-    'wikiStudio.semanticSearch.model': 'embed-test',
+    'notespace.ai.provider': 'endpoint',
+    'notespace.ai.endpoint': `http://127.0.0.1:${port}/v1`,
+    'notespace.ai.model': 'local-test',
+    'notespace.semanticSearch.model': 'embed-test',
   },
 });
 const git = (...args) =>

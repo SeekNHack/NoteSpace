@@ -67,7 +67,7 @@ export function openThemeBuilder(workspace: WikiWorkspace, root: WikiRoot): void
       'Themes are stored in wiki.yaml; this wiki has none. Run Create Wiki or Import Project first.',
     );
   panel ??= vscode.window.createWebviewPanel(
-    'wikiStudio.theme',
+    'notespace.theme',
     'Site Theme',
     vscode.ViewColumn.Active,
     { enableScripts: true },

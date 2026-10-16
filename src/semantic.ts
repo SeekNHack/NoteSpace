@@ -8,7 +8,7 @@ import { redactSecrets } from './core/redact';
 
 /**
  * Optional semantic search with an embedding model the user runs and names (for example a
- * local Ollama model). Off until `wikiStudio.semanticSearch.model` is set; NoteSpace never
+ * local Ollama model). Off until `notespace.semanticSearch.model` is set; NoteSpace never
  * downloads a model. Vectors are cached in VS Code's workspace storage, not in the wiki.
  */
 interface Entry {
@@ -50,7 +50,7 @@ export class SemanticSearch {
   ) {}
 
   settings() {
-    const ai = vscode.workspace.getConfiguration('wikiStudio');
+    const ai = vscode.workspace.getConfiguration('notespace');
     return {
       endpoint: ai.get<string>('ai.endpoint', ''),
       model: ai.get<string>('semanticSearch.model', ''),
@@ -114,7 +114,7 @@ export class SemanticSearch {
     const { endpoint, model } = this.settings();
     if (!model)
       throw new Error(
-        'Semantic search is off. Set wikiStudio.semanticSearch.model to an embedding model you run (for example nomic-embed-text in Ollama).',
+        'Semantic search is off. Set notespace.semanticSearch.model to an embedding model you run (for example nomic-embed-text in Ollama).',
       );
     const key = `${endpoint}\0${model}`;
     if (this.context.workspaceState.get<string>('semantic.approved') === key) return true;

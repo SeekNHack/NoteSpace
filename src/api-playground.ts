@@ -237,7 +237,7 @@ export async function sendApiRequest(
 }
 
 export const secretKey = (specUri: vscode.Uri, scheme: string) =>
-  `wikiStudio.api:${specUri.toString()}:${scheme}`;
+  `notespace.api:${specUri.toString()}:${scheme}`;
 
 let panel: vscode.WebviewPanel | undefined;
 let panelSpec: { uri: vscode.Uri; reload: () => Promise<void> } | undefined;
@@ -252,7 +252,7 @@ export async function openApiPlayground(
   let spec = parseOpenApi(new TextDecoder().decode(await vscode.workspace.fs.readFile(specUri)));
   if (!panel) {
     panel = vscode.window.createWebviewPanel(
-      'wikiStudio.api',
+      'notespace.api',
       'API Playground',
       vscode.ViewColumn.Active,
       {

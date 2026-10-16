@@ -13,9 +13,9 @@ export type Provider = {
   label: string;
   send: (system: string, user: string, token: vscode.CancellationToken) => Promise<string>;
 };
-export const ENDPOINT_SECRET = 'wikiStudio.ai.endpointKey';
+export const ENDPOINT_SECRET = 'notespace.ai.endpointKey';
 
-const config = () => vscode.workspace.getConfiguration('wikiStudio.ai');
+const config = () => vscode.workspace.getConfiguration('notespace.ai');
 
 /** Base URL like http://127.0.0.1:11434/v1 → full URL for `path`. */
 export const endpointUrl = (base: string, path: string) => `${base.replace(/\/+$/, '')}/${path}`;
@@ -64,13 +64,13 @@ export async function postJson(
 
 export async function chooseProvider(context: vscode.ExtensionContext): Promise<Provider> {
   const provider = config().get<string>('provider', 'vscode');
-  if (provider === 'off') throw new Error('AI assistance is turned off (wikiStudio.ai.provider).');
+  if (provider === 'off') throw new Error('AI assistance is turned off (notespace.ai.provider).');
   if (provider === 'endpoint') {
     const base = config().get<string>('endpoint', '');
     const model = config().get<string>('model', '');
     if (!base || !model)
       throw new Error(
-        'Set wikiStudio.ai.endpoint and wikiStudio.ai.model to use an OpenAI-compatible endpoint.',
+        'Set notespace.ai.endpoint and notespace.ai.model to use an OpenAI-compatible endpoint.',
       );
     return {
       label: `${model} at ${new URL(base).host}`,
@@ -97,7 +97,7 @@ export async function chooseProvider(context: vscode.ExtensionContext): Promise<
   const models = await vscode.lm.selectChatModels();
   if (!models.length)
     throw new Error(
-      'No language model is available in VS Code. Install a chat extension that provides models, or configure an OpenAI-compatible endpoint (wikiStudio.ai.provider: endpoint).',
+      'No language model is available in VS Code. Install a chat extension that provides models, or configure an OpenAI-compatible endpoint (notespace.ai.provider: endpoint).',
     );
   const model =
     models.length === 1

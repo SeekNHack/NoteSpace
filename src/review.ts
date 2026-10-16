@@ -32,7 +32,7 @@ class Note implements vscode.Comment {
  */
 export class ReviewController implements vscode.Disposable {
   private readonly controller = vscode.comments.createCommentController(
-    'wikiStudio.review',
+    'notespace.review',
     'Wiki review',
   );
   private readonly threads = new Map<string, Thread[]>();

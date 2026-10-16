@@ -59,26 +59,26 @@ export class PlannerTree implements vscode.TreeDataProvider<Node>, vscode.Dispos
       arguments: args,
     });
     return [
-      { id: 'home', label: 'Home', icon: 'home', command: open('wikiStudio.home', 'Open Home') },
+      { id: 'home', label: 'Home', icon: 'home', command: open('notespace.home', 'Open Home') },
       {
         id: 'wiki',
         label: 'Wiki',
         icon: 'book',
         tooltip: 'Open the wiki homepage',
-        command: open('wikiStudio.openWikiHome', 'Open Wiki Homepage'),
+        command: open('notespace.openWikiHome', 'Open Wiki Homepage'),
       },
       {
         id: 'tasks',
         label: 'Tasks',
         icon: 'checklist',
         description: `${count('today')} today${overdue ? ` · ${overdue} overdue` : ''}`,
-        command: open('wikiStudio.planner', 'Open Tasks', ['today']),
+        command: open('notespace.planner', 'Open Tasks', ['today']),
       },
       {
         id: 'boards',
         label: 'Boards',
         icon: 'project',
-        command: open('wikiStudio.boards', 'Open Boards'),
+        command: open('notespace.boards', 'Open Boards'),
         children: () => {
           const service = this.boards?.();
           const boards = service ? service.boards().filter((b) => !b.archived) : [];
@@ -88,20 +88,20 @@ export class PlannerTree implements vscode.TreeDataProvider<Node>, vscode.Dispos
               label: b.name,
               icon: 'project',
               description: b.pagePath,
-              command: open('wikiStudio.openBoard', 'Open Board', [b.id]),
+              command: open('notespace.openBoard', 'Open Board', [b.id]),
             })),
             {
               id: 'board:status',
               label: 'Status board',
               icon: 'list-tree',
               description: 'all tasks',
-              command: open('wikiStudio.openBoard', 'Open Board', ['status']),
+              command: open('notespace.openBoard', 'Open Board', ['status']),
             },
             {
               id: 'board:new',
               label: 'New board…',
               icon: 'add',
-              command: open('wikiStudio.newBoard', 'New Board'),
+              command: open('notespace.newBoard', 'New Board'),
             },
           ];
         },
@@ -111,26 +111,26 @@ export class PlannerTree implements vscode.TreeDataProvider<Node>, vscode.Dispos
         label: 'Calendar',
         icon: 'calendar',
         description: `${count('upcoming')} upcoming`,
-        command: open('wikiStudio.calendar', 'Open Calendar'),
+        command: open('notespace.calendar', 'Open Calendar'),
       },
       {
         id: 'insights',
         label: 'Insights',
         icon: 'graph',
-        command: open('wikiStudio.insights', 'Open Insights'),
+        command: open('notespace.insights', 'Open Insights'),
       },
       {
         id: 'api',
         label: 'API Client',
         icon: 'globe',
-        command: open('wikiStudio.apiClient', 'Open API Client'),
+        command: open('notespace.apiClient', 'Open API Client'),
       },
       {
         id: 'daily',
         label: note ? "Today's note" : "Create today's note",
         icon: 'notebook',
         description: today,
-        command: open('wikiStudio.dailyNote', 'Open Daily Note'),
+        command: open('notespace.dailyNote', 'Open Daily Note'),
       },
     ];
   }

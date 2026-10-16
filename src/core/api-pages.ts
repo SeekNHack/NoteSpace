@@ -6,9 +6,9 @@ import { slug } from './paths';
  * Reference pages generated from an OpenAPI description. The generated part of each page sits
  * between markers that record its source and a hash of what was generated:
  *
- *   <!-- wiki-studio:generated source="../openapi.yaml" hash="…" -->
+ *   <!-- notespace:generated source="../openapi.yaml" hash="…" -->
  *   …
- *   <!-- /wiki-studio:generated -->
+ *   <!-- /notespace:generated -->
  *
  * Text outside the markers is never touched. Regenerating compares the current generated part
  * with the recorded hash: unchanged parts are replaced, edited parts are a conflict the user
@@ -21,8 +21,10 @@ export interface GeneratedPage {
   body: string;
 }
 
-const START = /<!-- wiki-studio:generated source="([^"]*)" hash="([0-9a-f]+)" -->\r?\n?/;
-const END = /\r?\n?<!-- \/wiki-studio:generated -->/;
+// Pages generated under the project's earlier name (`wiki-studio:generated`) are still recognized.
+const START =
+  /<!-- (?:notespace|wiki-studio):generated source="([^"]*)" hash="([0-9a-f]+)" -->\r?\n?/;
+const END = /\r?\n?<!-- \/(?:notespace|wiki-studio):generated -->/;
 
 const cell = (s: string) =>
   s
@@ -165,7 +167,7 @@ export function generateApiPages(spec: ApiSpec): GeneratedPage[] {
 
 export function wrapGenerated(source: string, body: string): string {
   const content = body.trim();
-  return `<!-- wiki-studio:generated source="${source.replace(/"/g, '%22')}" hash="${contentHash(content)}" -->\n${content}\n<!-- /wiki-studio:generated -->`;
+  return `<!-- notespace:generated source="${source.replace(/"/g, '%22')}" hash="${contentHash(content)}" -->\n${content}\n<!-- /notespace:generated -->`;
 }
 
 export interface GeneratedPart {

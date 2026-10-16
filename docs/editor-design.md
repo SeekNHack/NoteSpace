@@ -2,11 +2,11 @@
 
 ## Modes
 
-| Mode       | Surface                                                                            | Notes                                                                                                                    |
-| ---------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| **Studio** | `CustomTextEditorProvider` (`wikiStudio.visual`) with a Tiptap/ProseMirror webview | Default for pages whose syntax round-trips safely.                                                                       |
-| **Code**   | VS Code's own Markdown text editor                                                 | Syntax highlighting, diagnostics, code actions, completions, hovers and every Markdown extension the user has installed. |
-| **Split**  | Studio and the native text editor side by side                                     | Both edit the same `TextDocument`.                                                                                       |
+| Mode       | Surface                                                                           | Notes                                                                                                                    |
+| ---------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| **Studio** | `CustomTextEditorProvider` (`notespace.visual`) with a Tiptap/ProseMirror webview | Default for pages whose syntax round-trips safely.                                                                       |
+| **Code**   | VS Code's own Markdown text editor                                                | Syntax highlighting, diagnostics, code actions, completions, hovers and every Markdown extension the user has installed. |
+| **Split**  | Studio and the native text editor side by side                                    | Both edit the same `TextDocument`.                                                                                       |
 
 All three are views of one `TextDocument`; VS Code owns dirty state, Save and Auto Save. Switch modes with the segmented control in Studio's document bar, the editor-title actions, the status bar item, **Ctrl/Cmd+Alt+E** (Studio ↔ Code) or the commands _Open in Studio_, _Open in Code (Markdown Source)_ and _Open Split View_ (which toggles). Mode switches replace the tab in place. The Studio caret is carried to the matching source line and back (text-based mapping in `src/core/source-map.ts`); in Split mode the source editor follows the Studio caret and vice versa without stealing focus.
 

@@ -3,7 +3,9 @@
  * Plain JSON, one file per page, so reviews travel with the docs through Git or a copy.
  * There is no server and no real-time sync: whoever edits the file last wins, like any file.
  */
-export const REVIEW_SCHEMA = 'wiki-studio.review/1';
+export const REVIEW_SCHEMA = 'notespace.review/1';
+/** Review files written under the project's earlier name. */
+const LEGACY_REVIEW_SCHEMA = 'wiki-studio.review/1';
 export const REVIEW_DIR = '.reviews';
 
 export interface ReviewComment {
@@ -36,7 +38,11 @@ export function parseReview(text: string, page: string): ReviewFile {
     throw new Error(`Invalid review file: ${e instanceof Error ? e.message : String(e)}`);
   }
   const d = data as Partial<ReviewFile>;
-  if (!d || d.schema !== REVIEW_SCHEMA || !Array.isArray(d.threads))
+  if (
+    !d ||
+    (d.schema !== REVIEW_SCHEMA && d.schema !== LEGACY_REVIEW_SCHEMA) ||
+    !Array.isArray(d.threads)
+  )
     throw new Error(`Not a ${REVIEW_SCHEMA} file.`);
   const threads: ReviewThread[] = [];
   for (const t of d.threads as Partial<ReviewThread>[]) {

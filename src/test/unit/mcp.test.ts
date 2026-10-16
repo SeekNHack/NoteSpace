@@ -62,7 +62,7 @@ test('MCP stdio server reads, searches and writes a wiki safely', async () => {
       capabilities: {},
       clientInfo: { name: 't', version: '1' },
     });
-    assert.equal(init.result.serverInfo.name, 'wiki-studio');
+    assert.equal(init.result.serverInfo.name, 'notespace');
     assert.match(init.result.instructions, /read-only/);
     const list = await ro.call('tools/list');
     assert.deepEqual(

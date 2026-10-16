@@ -101,8 +101,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     activity = new WikiActivity(context, workspace),
     panels = new WikiPanels(workspace, context.extensionUri, activity);
   // Wikis removed from NoteSpace stay on disk but are not indexed; one may be the default.
-  workspace.setHidden(context.workspaceState.get<string[]>('wikiStudio.removedWikis', []));
-  workspace.defaultRoot = context.workspaceState.get<string>('wikiStudio.defaultWiki');
+  workspace.setHidden(context.workspaceState.get<string[]>('notespace.removedWikis', []));
+  workspace.defaultRoot = context.workspaceState.get<string>('notespace.defaultWiki');
   context.subscriptions.push(log, workspace, panels, activity);
   let httpBlocks: HttpBlocks | undefined;
   const studio = new VisualEditorProvider(workspace, context.extensionUri, {
@@ -137,7 +137,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
         true,
       ),
     createPage: async (name, rootId) => {
-      await vscode.commands.executeCommand('wikiStudio.newPage', name, rootId);
+      await vscode.commands.executeCommand('notespace.newPage', name, rootId);
     },
   });
   context.subscriptions.push(
@@ -188,13 +188,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
   context.subscriptions.push(plannerPanel);
   panels.planner = planner;
   const plannerStatus = vscode.window.createStatusBarItem(
-    'wikiStudio.planner',
+    'notespace.planner',
     vscode.StatusBarAlignment.Left,
     9,
   );
   plannerStatus.name = 'NoteSpace Planner';
   plannerStatus.command = {
-    command: 'wikiStudio.planner',
+    command: 'notespace.planner',
     title: 'Open Planner',
     arguments: ['today'],
   };
@@ -211,14 +211,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
   };
   context.subscriptions.push(planner.onDidChange(updatePlannerStatus));
   const status = vscode.window.createStatusBarItem(
-    'wikiStudio.wiki',
+    'notespace.wiki',
     vscode.StatusBarAlignment.Left,
     10,
   );
   status.name = 'NoteSpace';
-  status.command = 'wikiStudio.home';
+  status.command = 'notespace.home';
   const modeStatus = vscode.window.createStatusBarItem(
-    'wikiStudio.mode',
+    'notespace.mode',
     vscode.StatusBarAlignment.Right,
     100,
   );
@@ -245,19 +245,19 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
       modeStatus.tooltip = isStudio
         ? 'Switch to Markdown source (Code mode)'
         : 'Switch to Studio visual editing';
-      modeStatus.command = isStudio ? 'wikiStudio.source' : 'wikiStudio.visual';
+      modeStatus.command = isStudio ? 'notespace.source' : 'notespace.visual';
       modeStatus.show();
     } else modeStatus.hide();
-    void vscode.commands.executeCommand('setContext', 'wikiStudio.activeIsWikiPage', !!page);
+    void vscode.commands.executeCommand('setContext', 'notespace.activeIsWikiPage', !!page);
     void vscode.commands.executeCommand(
       'setContext',
-      'wikiStudio.activeIsJournal',
+      'notespace.activeIsJournal',
       !!activeJournalDate(),
     );
     const doc = vscode.window.activeTextEditor?.document;
     void vscode.commands.executeCommand(
       'setContext',
-      'wikiStudio.activeIsOpenApi',
+      'notespace.activeIsOpenApi',
       !!doc &&
         /\.(ya?ml|json)$/i.test(doc.uri.path) &&
         looksLikeOpenApi(doc.getText(new vscode.Range(0, 0, 80, 0))),
@@ -277,13 +277,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
   const plannerTree = new PlannerTree(workspace, planner, () => plannerPanel.boards);
   context.subscriptions.push(
     plannerTree,
-    vscode.window.createTreeView('wikiStudio.planner', { treeDataProvider: plannerTree }),
+    vscode.window.createTreeView('notespace.planner', { treeDataProvider: plannerTree }),
   );
   let pagesTree: WikiTree | undefined;
   let pagesView: vscode.TreeView<PageNode> | undefined;
   for (const mode of ['pages', 'context'] as const) {
     const provider = new WikiTree(workspace, mode, activity);
-    const treeView = vscode.window.createTreeView(`wikiStudio.${mode}`, {
+    const treeView = vscode.window.createTreeView(`notespace.${mode}`, {
       treeDataProvider: provider,
       dragAndDropController: mode === 'pages' ? provider : undefined,
       canSelectMany: mode === 'pages',
@@ -316,7 +316,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
   const revealActive = () => {
     const page = activity.activeUri && workspace.index.byUri(activity.activeUri);
     const follow = vscode.workspace
-      .getConfiguration('wikiStudio.explorer', page ? vscode.Uri.parse(page.uri) : undefined)
+      .getConfiguration('notespace.explorer', page ? vscode.Uri.parse(page.uri) : undefined)
       .get<boolean>('autoReveal', true);
     if (page && follow && pagesView?.visible && pagesTree)
       void Promise.resolve(
@@ -332,7 +332,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
       if (
         !shownDashboard &&
         !vscode.window.tabGroups.all.some((g) => g.tabs.length) &&
-        vscode.workspace.getConfiguration('wikiStudio').get<boolean>('home.openOnStartup', true)
+        vscode.workspace.getConfiguration('notespace').get<boolean>('home.openOnStartup', true)
       )
         plannerPanel.show('home');
       shownDashboard = true;
@@ -340,7 +340,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
   );
   const command = (name: string, fn: (...args: any[]) => unknown) =>
     context.subscriptions.push(
-      vscode.commands.registerCommand(`wikiStudio.${name}`, async (...args: unknown[]) => {
+      vscode.commands.registerCommand(`notespace.${name}`, async (...args: unknown[]) => {
         try {
           return await fn(...args);
         } catch (e) {
@@ -369,9 +369,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
   };
   const openPreferred = async (page: Page): Promise<void> => {
     const document = await vscode.workspace.openTextDocument(vscode.Uri.parse(page.uri));
-    // wikiStudio.openPagesIn: where pages open from the explorer, search and links.
+    // notespace.openPagesIn: where pages open from the explorer, search and links.
     const where = vscode.workspace
-      .getConfiguration('wikiStudio', document.uri)
+      .getConfiguration('notespace', document.uri)
       .get<'studio' | 'code' | 'preview'>('openPagesIn', 'studio');
     if (where === 'preview') {
       await activity.opened(page);
@@ -398,7 +398,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     if (!workspace.roots.length) {
       if (!vscode.workspace.workspaceFolders?.length)
         throw new Error('Open a workspace folder to create or use a wiki.');
-      throw new Error('Fix wiki.yaml or wikiStudio.root. See Output → NoteSpace for details.');
+      throw new Error('Fix wiki.yaml or notespace.root. See Output → NoteSpace for details.');
     }
     if (id) {
       const found = workspace.roots.find((r) => r.id === id);
@@ -450,7 +450,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     const existing = workspace.index.all(root.id).find((p) => p.path.toLowerCase() === 'home.md');
     if (existing) {
       await openPreferred(existing);
-      await vscode.commands.executeCommand('workbench.view.extension.wikiStudio');
+      await vscode.commands.executeCommand('workbench.view.extension.notespace');
       return;
     }
     const uri = await workspace.createPage(
@@ -459,7 +459,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
       '# Welcome to NoteSpace\n\nYour wiki is a folder of Markdown files. Own it, version it, and take it anywhere.\n\n## Start writing\n\n- Run **NoteSpace: New Page** to create a page from a template.\n- Connect pages with `[[Page name]]` or `[[/folder/page|a label]]`.\n- Type `[[` to complete page names and `#` to choose a heading.\n- Use **NoteSpace: Search Pages** to search text or `#tags`.\n- Open **NoteSpace: Open Live Preview** to read and follow links.\n\n## Make it yours\n\nAdd YAML front matter with `title` and `tags`, create daily notes, explore the link graph, or export a portable HTML wiki.\n',
     );
     await openPreferredUri(uri);
-    await vscode.commands.executeCommand('workbench.view.extension.wikiStudio');
+    await vscode.commands.executeCommand('workbench.view.extension.notespace');
   });
   command('createWiki', async () => {
     const folders = vscode.workspace.workspaceFolders || [];
@@ -562,7 +562,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     await vscode.workspace.fs.writeFile(configUri, new TextEncoder().encode(createConfig(config)));
     await workspace.refresh();
     await openPreferredUri(vscode.Uri.joinPath(root.uri, 'index.md'));
-    await vscode.commands.executeCommand('workbench.view.extension.wikiStudio');
+    await vscode.commands.executeCommand('workbench.view.extension.notespace');
   });
   command('importProject', async () => {
     const selected = await vscode.window.showOpenDialog({
@@ -579,7 +579,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     const choice = await vscode.window.showInformationMessage(message, 'Show Log');
     if (choice) log.show();
     if (result.homepage) await openPreferred(result.homepage);
-    await vscode.commands.executeCommand('workbench.view.extension.wikiStudio');
+    await vscode.commands.executeCommand('workbench.view.extension.notespace');
   });
   command('openWiki', async () => {
     const root = await chooseRoot();
@@ -588,7 +588,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     const page = workspace.index.all(root.id).find((p) => p.path === homepage);
     if (!page) throw new Error(`Homepage ${homepage} was not found.`);
     await openPreferred(page);
-    await vscode.commands.executeCommand('workbench.view.extension.wikiStudio');
+    await vscode.commands.executeCommand('workbench.view.extension.notespace');
   });
   /** Uri of the page shown in the active tab, when the command targets it. */
   const activeUriFor = (page: Page): vscode.Uri | undefined => {
@@ -629,11 +629,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     else await showSplit(uri, caret && new vscode.Range(caret.active, caret.active));
   });
   command('focusContext', async () => {
-    await vscode.commands.executeCommand('wikiStudio.context.focus');
+    await vscode.commands.executeCommand('notespace.context.focus');
   });
   command('revealSection', async (rootId?: string, prefix?: string) => {
     if (typeof rootId !== 'string' || typeof prefix !== 'string') return;
-    await vscode.commands.executeCommand('workbench.view.extension.wikiStudio');
+    await vscode.commands.executeCommand('workbench.view.extension.notespace');
     await pagesView?.reveal(
       { label: prefix.replace(/\/$/, '').split('/').pop() || prefix, root: rootId, prefix },
       { expand: true, select: true, focus: true },
@@ -767,7 +767,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
   // only destructive operation and asks for the wiki's name.
   // ---------------------------------------------------------------------------------------
   const wikiName = (root: WikiRoot) => root.config?.wiki.title || root.name;
-  const removedWikis = () => context.workspaceState.get<string[]>('wikiStudio.removedWikis', []);
+  const removedWikis = () => context.workspaceState.get<string[]>('notespace.removedWikis', []);
   command('removeWiki', async (node?: PageNode) => {
     const root = await chooseRoot(node?.root);
     if (!root) return;
@@ -782,10 +782,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     );
     if (choice !== 'Remove from NoteSpace') return;
     const list = [...new Set([...removedWikis(), root.id])];
-    await context.workspaceState.update('wikiStudio.removedWikis', list);
+    await context.workspaceState.update('notespace.removedWikis', list);
     if (workspace.defaultRoot === root.id) {
       workspace.defaultRoot = undefined;
-      await context.workspaceState.update('wikiStudio.defaultWiki', undefined);
+      await context.workspaceState.update('notespace.defaultWiki', undefined);
     }
     workspace.setHidden(list);
     await workspace.refresh();
@@ -808,7 +808,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     );
     if (!picked?.length) return;
     const list = removedWikis().filter((id) => !picked.some((p) => p.id === id));
-    await context.workspaceState.update('wikiStudio.removedWikis', list);
+    await context.workspaceState.update('notespace.removedWikis', list);
     workspace.setHidden(list);
     await workspace.refresh();
   });
@@ -816,7 +816,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     const root = await chooseRoot(node?.root);
     if (!root) return;
     workspace.defaultRoot = root.id;
-    await context.workspaceState.update('wikiStudio.defaultWiki', root.id);
+    await context.workspaceState.update('notespace.defaultWiki', root.id);
     pagesTree?.refreshNow();
     void vscode.window.showInformationMessage(
       `“${wikiName(root)}” is the default wiki when a command could apply to several.`,
@@ -899,7 +899,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     if (!root) return;
     if (root.projectUri)
       await vscode.window.showTextDocument(vscode.Uri.joinPath(root.projectUri, 'wiki.yaml'));
-    else await vscode.commands.executeCommand('workbench.action.openSettings', 'wikiStudio.root');
+    else await vscode.commands.executeCommand('workbench.action.openSettings', 'notespace.root');
   });
   command('deleteWiki', async (node?: PageNode) => {
     const root = await chooseRoot(node?.root);
@@ -1416,7 +1416,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
       if (!picked) return;
       boardId = picked.id;
     }
-    if (boardId === '__new') return vscode.commands.executeCommand('wikiStudio.newBoard');
+    if (boardId === '__new') return vscode.commands.executeCommand('notespace.newBoard');
     plannerPanel.show('board', boardId);
   });
   command('newBoard', async () => {
@@ -1430,7 +1430,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     });
     if (!name) return;
     const folder = vscode.workspace
-      .getConfiguration('wikiStudio', root.folder.uri)
+      .getConfiguration('notespace', root.folder.uri)
       .get<string>('boards.folder', 'boards');
     const path = await vscode.window.showInputBox({
       title: 'New Board',
@@ -1487,7 +1487,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     const root = await chooseRoot(activeTabPage()?.root || plannerPanel.root()?.id);
     if (!root) return;
     const folder = vscode.workspace
-      .getConfiguration('wikiStudio', root.folder.uri)
+      .getConfiguration('notespace', root.folder.uri)
       .get<string>('notes.folder', 'notes')
       .replace(/^\/+|\/+$/g, '');
     const title = await vscode.window.showInputBox({
@@ -1703,7 +1703,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     const server = vscode.Uri.joinPath(context.extensionUri, 'dist', 'mcp-server.js').fsPath;
     const wikiPath = (root.projectUri || root.uri).fsPath;
     const args = [server, '--wiki', wikiPath, ...(access.write ? ['--allow-write'] : [])];
-    const name = `wiki-studio-${
+    const name = `notespace-${
       (root.config?.wiki.title || root.name)
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
@@ -1998,7 +1998,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
       if (open) await vscode.env.openExternal(output);
     } else if (result.printHtml) {
       const open = await vscode.window.showWarningMessage(
-        'No Chrome, Edge, Chromium or Brave browser was found to create the PDF. A print-ready page was saved instead: open it and choose Print → Save as PDF, or set wikiStudio.export.browserPath.',
+        'No Chrome, Edge, Chromium or Brave browser was found to create the PDF. A print-ready page was saved instead: open it and choose Print → Save as PDF, or set notespace.export.browserPath.',
         'Open Print Page',
       );
       if (open) await vscode.env.openExternal(result.printHtml);
@@ -2167,7 +2167,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
           'This wiki has no other languages yet.',
           'Add Language…',
         );
-        if (add) await vscode.commands.executeCommand('wikiStudio.addLanguage');
+        if (add) await vscode.commands.executeCommand('notespace.addLanguage');
         return;
       }
       code =
@@ -2356,7 +2356,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
             `${posix.basename(uri.path)} changed: ${stale.length} generated reference page${stale.length === 1 ? ' is' : 's are'} out of date.`,
             'Regenerate…',
           );
-          if (choice) await vscode.commands.executeCommand('wikiStudio.generateApiReference', uri);
+          if (choice) await vscode.commands.executeCommand('notespace.generateApiReference', uri);
         } catch (e) {
           log.appendLine(`[openapi] ${uri.path}: ${String(e)}`);
         }
@@ -2572,7 +2572,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
       {
         modal: true,
         detail:
-          'The page moves to .wiki-studio-trash inside your wiki. Use Restore Deleted Page to recover it. Unsaved changes are saved first.',
+          'The page moves to .notespace-trash inside your wiki. Use Restore Deleted Page to recover it. Unsaved changes are saved first.',
       },
       'Delete Page',
     );
@@ -2662,7 +2662,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     }
     if (oldExists) {
       try {
-        await vscode.workspace.fs.stat(vscode.Uri.joinPath(destination, '.wiki-studio-build'));
+        await vscode.workspace.fs.stat(vscode.Uri.joinPath(destination, '.notespace-build'));
       } catch {
         throw new Error(
           'Configured build directory already exists and is not a NoteSpace build. Choose another build.output.',
@@ -2670,7 +2670,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
       }
     }
     const result = await exportWiki(workspace, root, root.projectUri, undefined, { planner });
-    const backup = vscode.Uri.joinPath(root.projectUri, `.wiki-studio-build-backup-${Date.now()}`);
+    const backup = vscode.Uri.joinPath(root.projectUri, `.notespace-build-backup-${Date.now()}`);
     try {
       if (oldExists) await vscode.workspace.fs.rename(destination, backup, { overwrite: false });
       await vscode.workspace.fs.rename(result.uri, destination, { overwrite: false });
@@ -2785,7 +2785,7 @@ function startReminders(
   open: () => void,
 ): void {
   const check = () => {
-    if (!vscode.workspace.getConfiguration('wikiStudio').get<boolean>('planner.reminders', false))
+    if (!vscode.workspace.getConfiguration('notespace').get<boolean>('planner.reminders', false))
       return;
     const today = planner.today();
     if (context.workspaceState.get<string>('planner.remindedOn') === today) return;

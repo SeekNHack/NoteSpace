@@ -73,7 +73,7 @@ export async function loadSnapshot(root: WikiRoot, ref: string): Promise<Snapsho
   const files = listing
     .split('\0')
     .filter(
-      (f) => /\.md$/i.test(f) && !/(^|\/)(\.wiki-studio-trash|_versions|node_modules)\//.test(f),
+      (f) => /\.md$/i.test(f) && !/(^|\/)(\.notespace-trash|_versions|node_modules)\//.test(f),
     );
   const truncated = files.length > MAX_PAGES;
   const pages: Page[] = [];
@@ -123,7 +123,7 @@ export async function browseGitVersion(
   const changed = new Set(diff.changed.map((p) => p.path));
   if (!panel) {
     panel = vscode.window.createWebviewPanel(
-      'wikiStudio.gitVersion',
+      'notespace.gitVersion',
       'Version',
       vscode.ViewColumn.Active,
       { enableScripts: true, retainContextWhenHidden: true },

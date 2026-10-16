@@ -7,7 +7,7 @@ import { WikiWorkspace } from './workspace';
  * diagnostics on the fence, so Code mode shows the same problems as Studio's preview.
  */
 export function registerMermaidDiagnostics(workspace: WikiWorkspace): vscode.Disposable {
-  const collection = vscode.languages.createDiagnosticCollection('wikiStudio.mermaid');
+  const collection = vscode.languages.createDiagnosticCollection('notespace.mermaid');
   const timers = new Map<string, ReturnType<typeof setTimeout>>();
   const check = async (document: vscode.TextDocument) => {
     if (!workspace.index.byUri(document.uri.toString())) return;
