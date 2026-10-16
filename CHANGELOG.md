@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.1 — 2026-10-16
+
+Published under the `hacknseek` publisher, so the same package can be installed from the Visual Studio Marketplace; the extension id is `hacknseek.notespace`. No functional changes from 1.0.0. If you installed the 1.0.0 VSIX from GitHub (`notespace.notespace`), uninstall it before installing 1.0.1.
+
 ## 1.0.0 — 2026-10-16
 
 First public release as **NoteSpace** (developed until now under the working name _Wiki Studio_; the entries below, 1.1.0–1.12.0, are that development history). Everything listed below is included. Everything is now named NoteSpace: commands, settings and views use the `notespace.*` prefix (for example `notespace.boards.folder`), the extension id is `notespace.notespace`, board front matter uses `notespace:`, and generated files use `notespace` names (`.notespace-trash`, `notespace.collection`, `notespace.review/1`, `notespace:generated` markers). Compatibility with files created by the earlier builds: boards with `wiki_studio:`, collection exports, review files and generated API pages are still read, and boards are migrated to `notespace:` the next time they are saved. Settings named `wikiStudio.*` are not read any more: set them again under `notespace.*`. Uninstall a locally installed `wiki-studio.wiki-studio` before installing NoteSpace. Also new: boards embedded in pages are draggable, and the release VSIX is built by GitHub Actions.

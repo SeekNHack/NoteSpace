@@ -39,7 +39,7 @@ const waitFor = async (
   assert.fail(`Timed out: ${typeof message === 'function' ? message() : message}`);
 };
 export async function run(): Promise<void> {
-  const extension = vscode.extensions.getExtension<WikiStudioApi>('notespace.notespace');
+  const extension = vscode.extensions.getExtension<WikiStudioApi>('hacknseek.notespace');
   assert.ok(extension);
   const api = await extension.activate();
   const ws = api.workspace;
@@ -1104,7 +1104,7 @@ export async function run(): Promise<void> {
     );
     await vscode.commands.executeCommand('notebook.selectKernel', {
       id: 'notespace-python',
-      extension: 'notespace.notespace',
+      extension: 'hacknseek.notespace',
     });
     await vscode.commands.executeCommand('notebook.execute');
     await waitFor(() => notebook.cellAt(4).outputs.length > 0, 'cells executed');

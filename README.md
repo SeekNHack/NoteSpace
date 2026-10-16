@@ -96,10 +96,8 @@ Document an endpoint once and let readers try it from the page. Nothing is sent 
 
 ## Install
 
-Download `notespace-<version>.vsix` from the [Releases](https://github.com/SeekNHack/NoteSpace/releases) page (built by GitHub Actions from the tagged source).
-
-- **VS Code**: Extensions view → **…** → **Install from VSIX…**, or `code --install-extension notespace-1.0.0.vsix`
-- **code-server**: `code-server --install-extension notespace-1.0.0.vsix`
+- **VS Code**: search for **NoteSpace** in the Extensions view, or run `code --install-extension hacknseek.notespace` ([Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=hacknseek.notespace)).
+- **From a VSIX** (code-server, offline machines): download `notespace-<version>.vsix` from the [Releases](https://github.com/SeekNHack/NoteSpace/releases) page (built by GitHub Actions from the tagged source), then use Extensions view → **…** → **Install from VSIX…**, or `code-server --install-extension notespace-<version>.vsix`.
 
 Reload the window afterwards. Requires VS Code 1.96 or later.
 

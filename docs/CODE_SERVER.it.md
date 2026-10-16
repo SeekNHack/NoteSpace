@@ -12,7 +12,7 @@ Installazione manuale dalla directory del progetto:
 ```sh
 npm ci
 npm run package
-code-server --install-extension notespace-1.0.0.vsix --force
+code-server --install-extension notespace-<versione>.vsix --force
 ```
 
 L'estensione gira nell'extension host del server. Non richiede un servizio aggiuntivo né porte dedicate. Le webview richiedono HTTPS o localhost e un proxy compatibile con WebSocket e service worker. Gli output vengono scritti sul filesystem del server; puoi scaricarli dall'Explorer di code-server.

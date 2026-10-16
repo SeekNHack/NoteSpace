@@ -2,8 +2,8 @@
   "name": "notespace",
   "displayName": "NoteSpace",
   "description": "A local-first workspace for VS Code: wiki and docs with a visual Markdown editor, tasks, Kanban boards, calendar, notebooks, dashboards and an API client — all in your files.",
-  "version": "1.0.0",
-  "publisher": "notespace",
+  "version": "1.0.1",
+  "publisher": "hacknseek",
   "license": "MIT",
   "repository": {
     "type": "git",
