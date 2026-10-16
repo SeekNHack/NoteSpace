@@ -1991,8 +1991,8 @@ export async function run(): Promise<void> {
       ),
     );
     const rel = path.posix.relative(
-      path.posix.dirname(vscode.Uri.joinPath(root.uri, 'code/Billing.md').path),
-      src.path,
+      path.posix.dirname(uriPath(vscode.Uri.joinPath(root.uri, 'code/Billing.md'))),
+      uriPath(src),
     );
     const uri = await ws.createPage(
       root,
