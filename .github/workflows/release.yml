@@ -47,7 +47,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           notes=$(awk '/^## /{n++} n==1' CHANGELOG.md | tail -n +2)
-          gh release create "${GITHUB_REF_NAME}" *.vsix --title "NoteSpace ${GITHUB_REF_NAME}" --notes "$notes"
+          if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+            # The tag was moved to a new commit: replace the package and notes of the same release.
+            gh release upload "${GITHUB_REF_NAME}" *.vsix --clobber
+            gh release edit "${GITHUB_REF_NAME}" --title "NoteSpace ${GITHUB_REF_NAME}" --notes "$notes"
+          else
+            gh release create "${GITHUB_REF_NAME}" *.vsix --title "NoteSpace ${GITHUB_REF_NAME}" --notes "$notes"
+          fi
       - name: Publish to the Visual Studio Marketplace
         if: startsWith(github.ref, 'refs/tags/') && env.VSCE_PAT != ''
         run: npx vsce publish --packagePath *.vsix

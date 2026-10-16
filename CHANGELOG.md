@@ -1,12 +1,26 @@
 # Changelog
 
-## 1.0.1 — 2026-10-16
-
-Published under the `hacknseek` publisher, so the same package can be installed from the Visual Studio Marketplace; the extension id is `hacknseek.notespace`. No functional changes from 1.0.0. If you installed the 1.0.0 VSIX from GitHub (`notespace.notespace`), uninstall it before installing 1.0.1.
-
 ## 1.0.0 — 2026-10-16
 
-First public release as **NoteSpace** (developed until now under the working name _Wiki Studio_; the entries below, 1.1.0–1.12.0, are that development history). Everything listed below is included. Everything is now named NoteSpace: commands, settings and views use the `notespace.*` prefix (for example `notespace.boards.folder`), the extension id is `notespace.notespace`, board front matter uses `notespace:`, and generated files use `notespace` names (`.notespace-trash`, `notespace.collection`, `notespace.review/1`, `notespace:generated` markers). Compatibility with files created by the earlier builds: boards with `wiki_studio:`, collection exports, review files and generated API pages are still read, and boards are migrated to `notespace:` the next time they are saved. Settings named `wikiStudio.*` are not read any more: set them again under `notespace.*`. Uninstall a locally installed `wiki-studio.wiki-studio` before installing NoteSpace. Also new: boards embedded in pages are draggable, and the release VSIX is built by GitHub Actions.
+First release.
+
+- **Home** — today's tasks with progress and quick add, calendar preview with upcoming deadlines, recent pages, boards and a single Create menu.
+- **Wiki with a visual Markdown editor (Studio)** — slash commands, bubble menu, block handles, `[[wiki links]]`, callouts, tabs, steps, cards, tables, math, Mermaid diagrams and charts; switch to Code or Split at any time, untouched lines stay byte-identical.
+- **Tasks** — plain `- [ ]` lines with `due:`, `priority:`, `status:`, `repeat:`, `#tags` and `@people`; Today, Upcoming, Overdue, Inbox lists, filters, grouping, saved views and a table layout; daily notes and recurring tasks.
+- **Kanban boards** — any number of boards, each a Markdown file with its own columns, colors and completed column; drag and drop, inline editing, swimlanes.
+- **Kanban inside pages** — a live board of a page's tasks; drag cards or use Alt+←/→ and the task lines update.
+- **Calendar** — month, week and day views; drag a task to change its due date.
+- **Jupyter notebooks** — preview saved outputs without a kernel, embed notebooks in pages, run cells with a built-in Python kernel or the Jupyter extension.
+- **API client** — Postman-style requests with params, headers, bodies, auth (API key, Basic, Bearer, OAuth 2.0 with PKCE), tests and request chaining; collections as Git-friendly JSON; environments with secrets in VS Code's secret storage; history.
+- **curl and Python** — paste a curl command to fill in a request; convert any request to curl or Python `requests`.
+- **Interactive API docs** — ` ```http ` blocks in pages that readers send with one click (never automatically); OpenAPI import and reference pages.
+- **Charts and data dashboards** — accessible charts from CSV/JSON; dashboards over Excel, CSV and JSON files with a safe formula language.
+- **Reader and publishing** — themed reader with search, outline and backlinks; static website, PDF and EPUB export.
+- **Knowledge tools** — content health report, advanced search, link graph, page history from Git, translations, versions and review comments.
+- **Wiki management** — remove a wiki from NoteSpace without touching its files, or delete its files with explicit confirmation; rename, description, icon, color, default wiki.
+- **Local-first and private** — everything is stored as files in your workspace; no account, no server, no telemetry.
+
+Install from the Visual Studio Marketplace (`hacknseek.notespace`) or download `notespace-1.0.0.vsix` below.
 
 ## Development history (as Wiki Studio)
 
