@@ -1347,7 +1347,7 @@ export async function run(): Promise<void> {
       // The same page reached through a symbolic link (as macOS /var → /private/var) has the
       // same history: paths are resolved before they are made relative to the repository.
       const linked = path.join(process.env.WIKI_TEST_DIR!, 'linked-wiki');
-      symlinkSync(repo, linked, 'dir');
+      symlinkSync(repo, linked, 'junction');
       try {
         const viaLink = vscode.Uri.file(path.join(linked, path.relative(repo, file.fsPath)));
         const linkedHistory = (await pageHistory(viaLink))!;
