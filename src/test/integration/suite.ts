@@ -1,6 +1,22 @@
 import * as vscode from 'vscode';
 import assert from 'node:assert/strict';
-import { symlink, readFile, writeFile } from 'node:fs/promises';
+import { symlink, readFile, writeFile as rawWriteFile } from 'node:fs/promises';
+
+/**
+ * Writes like an external tool (Git, another editor). On Windows a file VS Code has just saved
+ * or closed can stay locked for a moment (watchers, antivirus), so busy files are retried.
+ */
+async function writeFile(file: string, data: string | Uint8Array): Promise<void> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await rawWriteFile(file, data);
+    } catch (e) {
+      const code = (e as NodeJS.ErrnoException).code;
+      if (attempt >= 20 || (code !== 'EBUSY' && code !== 'EPERM')) throw e;
+      await new Promise((r) => setTimeout(r, 100));
+    }
+  }
+}
 import path from 'node:path';
 import type { WikiStudioApi } from '../../extension';
 import { createConfig, defaultConfig, parseConfig, updateConfig } from '../../core/config';
