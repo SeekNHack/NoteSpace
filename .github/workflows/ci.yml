@@ -31,6 +31,10 @@ jobs:
       - run: npm ci
       - run: npm test
       # The PDF export test prints with a real Chromium.
+      # Ubuntu 24.04 blocks the unprivileged user namespaces Chromium's sandbox needs.
+      - name: Allow the Chromium sandbox (Linux)
+        if: runner.os == 'Linux'
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
       - name: Install Chromium for the PDF export test
         run: npx playwright-core install${{ runner.os == 'Linux' && ' --with-deps' || '' }} chromium
       - run: npm audit

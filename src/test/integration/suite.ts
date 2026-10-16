@@ -791,7 +791,8 @@ export async function run(): Promise<void> {
     );
     try {
       await ws.refresh();
-      const current = ws.roots[0];
+      // Root order after a refresh follows discovery, which differs between file systems.
+      const current = ws.roots.find((r) => r.id === root.id)!;
       // Refreshing rebuilds the index in the background; export once the journal and tasks are back.
       await waitFor(
         () =>
