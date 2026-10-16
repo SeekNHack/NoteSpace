@@ -44,7 +44,18 @@ export async function run(): Promise<void> {
   const ws = api.workspace;
   let passed = 0;
   const test = async (name: string, fn: () => Promise<void>) => {
-    await fn();
+    try {
+      await fn();
+    } catch (error) {
+      // On GitHub Actions, failures also become annotations (readable without the full log).
+      const text = error instanceof Error ? error.stack || error.message : String(error);
+      console.error(`FAIL ${passed + 1}: ${name}\n${text}`);
+      if (process.env.GITHUB_ACTIONS)
+        console.log(
+          `::error title=Integration test ${passed + 1} failed::${name}: ${text.slice(0, 1500).replace(/%/g, '%25').replace(/\r?\n/g, '%0A')}`,
+        );
+      throw error;
+    }
     console.log(`PASS ${++passed}: ${name}`);
   };
   await test('activates all commands with two isolated wiki roots', async () => {
