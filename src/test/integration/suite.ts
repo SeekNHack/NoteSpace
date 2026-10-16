@@ -8,6 +8,7 @@ import { importImage, importAttachment } from '../../assets';
 import { showPage, WikiTree } from '../../views';
 import { importMarkdownProject } from '../../import-project';
 import { addDays } from '../../core/tasks';
+import { uriPath } from '../../core/paths';
 import { createServer } from 'node:http';
 import { CodeRunner } from '../../code-runner';
 import { importNotebook } from '../../notebooks';
@@ -509,7 +510,7 @@ export async function run(): Promise<void> {
     assert.ok(versioned);
     assert.equal(versioned.name, 'Product Docs');
     const section = await ws.createSection(versioned, 'guide');
-    assert.equal(section.path, vscode.Uri.joinPath(project, 'docs', 'guide').path);
+    assert.equal(uriPath(section), uriPath(vscode.Uri.joinPath(project, 'docs', 'guide')));
     assert.ok(ws.index.all(versioned.id).some((p) => p.path === 'guide/index.md'));
     const imageSource = vscode.Uri.joinPath(root.folder.uri, 'test-image.png');
     await vscode.workspace.fs.writeFile(
@@ -764,6 +765,12 @@ export async function run(): Promise<void> {
     const root = ws.roots[0];
     const planner = api.planner;
     await planner.ensureDaily(root, '2026-10-13');
+    // A task of this wiki (earlier tests may have used the other one; root order can change).
+    await planner.add(root, 'Call Bob about the export', { kind: 'daily', date: '2026-10-13' });
+    await waitFor(
+      () => planner.tasks(root.id).some((t) => t.title === 'Call Bob about the export'),
+      'export task indexed',
+    );
     await ws.createPage(root, 'planning/Status', '# Status\n\n```tasks\nstatus: open\n```\n');
     await waitFor(
       () => ws.index.all(root.id).some((p) => p.path === 'planning/Status.md'),
@@ -806,7 +813,7 @@ export async function run(): Promise<void> {
       await waitFor(
         () =>
           ws.index.all(current.id).some((p) => p.path.endsWith('2026-10-13.md')) &&
-          planner.tasks(current.id).some((t) => t.title.startsWith('Call Bob')),
+          planner.tasks(current.id).some((t) => t.title === 'Call Bob about the export'),
         () =>
           `index rebuilt after enabling planner export: ${JSON.stringify({
             root: current.id,
@@ -814,7 +821,7 @@ export async function run(): Promise<void> {
               .all(current.id)
               .map((p) => p.path)
               .filter((p) => /daily|journal|2026/.test(p)),
-            tasks: planner.tasks(current.id).map((t) => t.title),
+            tasks: planner.tasks(current.id).map((t) => `${t.pagePath}: ${t.title}`),
             issues: ws.issues,
           })}`,
       );
@@ -1923,7 +1930,7 @@ export async function run(): Promise<void> {
     await ws.createPage(
       root,
       'reports/Security',
-      `# Security\n\n\`\`\`dashboard\npath: ${path.posix.relative(path.posix.dirname(vscode.Uri.joinPath(root.uri, 'reports/Security.md').path), uri.path)}\nwidget: critical-card\n\`\`\`\n`,
+      `# Security\n\n\`\`\`dashboard\npath: ${path.posix.relative(path.posix.dirname(uriPath(vscode.Uri.joinPath(root.uri, 'reports/Security.md'))), uriPath(uri))}\nwidget: critical-card\n\`\`\`\n`,
     );
     await waitFor(
       () =>
@@ -2209,7 +2216,7 @@ export async function run(): Promise<void> {
     });
     await ws.refresh();
     function posixPath(file: vscode.Uri) {
-      return path.posix.relative(root.uri.path, file.path);
+      return path.posix.relative(uriPath(root.uri), uriPath(file));
     }
   });
   await test('discovery follows .gitignore per folder, shows readable names and orders folders', async () => {
@@ -2219,7 +2226,7 @@ export async function run(): Promise<void> {
     const folderOf = (r: typeof primary) => r.folder.uri;
     const write = (uri: vscode.Uri, text: string) =>
       vscode.workspace.fs.writeFile(uri, new TextEncoder().encode(text));
-    const wikiRel = path.posix.relative(folderOf(primary).path, primary.uri.path);
+    const wikiRel = path.posix.relative(uriPath(folderOf(primary)), uriPath(primary.uri));
     const settings = vscode.workspace.getConfiguration('notespace', folderOf(primary));
     const explorerSettings = vscode.workspace.getConfiguration(
       'notespace.explorer',
