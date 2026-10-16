@@ -1789,12 +1789,17 @@ export async function run(): Promise<void> {
       assert.equal(bytes.subarray(0, 5).toString(), '%PDF-');
       const python = process.env.WIKI_PYTHON || path.join(tools, 'venv', 'bin', 'python');
       assert.ok(existsSync(python), 'pypdf tool installed');
-      const text = execFileSync(python, [
-        '-c',
-        'import sys,pypdf;r=pypdf.PdfReader(sys.argv[1]);print(len(r.pages));print("\\n".join(p.extract_text() for p in r.pages))',
-        pdfUri.fsPath,
-      ]).toString();
-      const [count, ...rest] = text.split('\n');
+      const text = execFileSync(
+        python,
+        [
+          '-c',
+          'import sys,pypdf;r=pypdf.PdfReader(sys.argv[1]);print(len(r.pages));print("\\n".join(p.extract_text() for p in r.pages))',
+          pdfUri.fsPath,
+        ],
+        // Windows consoles default to a legacy code page; the extracted text is UTF-8.
+        { env: { ...process.env, PYTHONIOENCODING: 'utf-8', PYTHONUTF8: '1' } },
+      ).toString('utf8');
+      const [count, ...rest] = text.split(/\r?\n/);
       const content = rest.join('\n');
       assert.ok(Number(count) >= 2, `pages: ${count}`);
       for (const expected of [
