@@ -58,9 +58,20 @@ jobs:
           else
             gh release create "${GITHUB_REF_NAME}" *.vsix --title "NoteSpace ${GITHUB_REF_NAME}" --notes "$notes"
           fi
+      - name: Marketplace token configured?
+        if: startsWith(github.ref, 'refs/tags/') && env.VSCE_PAT == ''
+        run: echo "::notice title=Marketplace::No VSCE_PAT secret, the Marketplace publish step is skipped."
       - name: Publish to the Visual Studio Marketplace
         if: startsWith(github.ref, 'refs/tags/') && env.VSCE_PAT != ''
-        run: npx vsce publish --packagePath *.vsix
+        # vsce reads the token from VSCE_PAT. Its messages also become annotations, so a rejection
+        # by the Marketplace can be read on the run page.
+        run: |
+          set -o pipefail
+          if ! npx vsce publish --packagePath *.vsix 2>&1 | tee publish.log; then
+            msg=$(tail -c 1500 publish.log | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+            echo "::error title=Marketplace publish failed::${msg}"
+            exit 1
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: notespace-vsix
