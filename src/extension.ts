@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import path from 'node:path';
 import { WikiRoot, WikiWorkspace } from './workspace';
 import { WikiTree, PageNode, registerLanguageFeatures, showPage } from './views';
 import { WikiPanels } from './webviews';
@@ -52,6 +51,7 @@ import {
   GitContentProvider,
   repositoryOfFolder,
   showPageHistory,
+  repoRelative,
 } from './git-history';
 import { browseGitVersion, listRefs } from './git-versions';
 import { boardFileName, boardTemplates, STATUS_BOARD } from './core/board-model';
@@ -1604,7 +1604,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     if (!ref) return;
     const repo = (await repositoryOfFolder(root.uri))!;
     const file = vscode.Uri.parse(page.uri);
-    const relative = path.relative(repo, file.fsPath).split(path.sep).join('/');
+    const relative = await repoRelative(repo, file.fsPath);
     const sha = (
       await gitRead(['rev-parse', '--verify', '--quiet', `${ref}^{commit}`], repo).catch(() => '')
     ).trim();

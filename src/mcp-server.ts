@@ -31,10 +31,14 @@ const sha256 = (text: string) => createHash('sha256').update(text, 'utf8').diges
 async function contentRoot(): Promise<{ root: string; title: string }> {
   const given = option('--wiki');
   if (!given) throw new Error('Usage: mcp-server.js --wiki <wiki folder> [--allow-write]');
-  const base = realpathSync(path.resolve(given));
+  // The native realpath matches fs.realpath below (the JS one keeps Windows 8.3 short names).
+  const base = realpathSync.native(path.resolve(given));
   try {
     const config = parseConfig(await fs.readFile(path.join(base, 'wiki.yaml'), 'utf8'));
-    return { root: realpathSync(path.join(base, config.content.root)), title: config.wiki.title };
+    return {
+      root: realpathSync.native(path.join(base, config.content.root)),
+      title: config.wiki.title,
+    };
   } catch (e) {
     if ((e as NodeJS.ErrnoException).code === 'ENOENT')
       return { root: base, title: path.basename(base) };
@@ -133,13 +137,20 @@ function safePagePath(raw: string): string {
     throw new InvalidParams('Only Markdown pages (.md) are accessible.');
   return normalized;
 }
+/** `child` is `root` or inside it (case-insensitive on Windows, like its file system). */
+function within(child: string, root: string): boolean {
+  const fold = (p: string) => (process.platform === 'win32' ? p.toLowerCase() : p);
+  const c = fold(child);
+  const r = fold(root);
+  return c === r || c.startsWith(r.endsWith(path.sep) ? r : r + path.sep);
+}
 async function assertInside(full: string): Promise<void> {
   // Resolve the deepest existing ancestor so symlinked folders cannot escape the wiki.
   let probe = full;
   for (;;) {
     try {
       const real = await fs.realpath(probe);
-      if (real !== wiki.root && !real.startsWith(wiki.root + path.sep))
+      if (!within(real, wiki.root))
         throw new InvalidParams('The path leaves the wiki through a symbolic link.');
       if (probe === full && (await fs.lstat(full)).isSymbolicLink())
         throw new InvalidParams('Symbolic links are not accessible.');

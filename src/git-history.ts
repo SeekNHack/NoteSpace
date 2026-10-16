@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { execFile } from 'node:child_process';
 import path from 'node:path';
+import { realpath } from 'node:fs/promises';
 import { randomBytes } from 'node:crypto';
 import { diffLines, hunks } from './core/diff';
 import { escapeHtml } from './core/render';
@@ -65,13 +66,34 @@ export async function repositoryOf(file: vscode.Uri): Promise<string | undefined
   }
 }
 
+/**
+ * Path of `fsPath` relative to the repository, in Git's `/` form. Git reports the repository by
+ * its real path, so symbolic links in the workspace path (macOS `/var` → `/private/var`, a linked
+ * projects folder) are resolved first; otherwise the result would climb out of the repository.
+ */
+export async function repoRelative(repo: string, fsPath: string): Promise<string> {
+  const real = async (p: string): Promise<string> => {
+    try {
+      return await realpath(p);
+    } catch {
+      // A path that does not exist yet: resolve its folder and keep the name.
+      const parent = path.dirname(p);
+      return parent === p ? p : path.join(await real(parent), path.basename(p));
+    }
+  };
+  return path
+    .relative(await real(repo), await real(fsPath))
+    .split(path.sep)
+    .join('/');
+}
+
 export async function pageHistory(
   file: vscode.Uri,
   limit = 200,
 ): Promise<{ repo: string; relative: string; commits: Commit[]; modified: boolean } | undefined> {
   const repo = await repositoryOf(file);
   if (!repo) return undefined;
-  const relative = path.relative(repo, file.fsPath).split(path.sep).join('/');
+  const relative = await repoRelative(repo, file.fsPath);
   const out = await git(
     [
       'log',
@@ -283,7 +305,7 @@ export async function lastCommitDates(
 ): Promise<{ repo: string; dates: Map<string, string> } | undefined> {
   const repo = await repositoryOfFolder(folder);
   if (!repo) return undefined;
-  const relative = path.relative(repo, folder.fsPath).split(path.sep).join('/') || '.';
+  const relative = (await repoRelative(repo, folder.fsPath)) || '.';
   const out = await git(
     ['log', '--max-count=5000', '--format=%x1e%aI', '--name-only', '--no-renames', '--', relative],
     repo,

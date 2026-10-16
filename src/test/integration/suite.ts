@@ -24,7 +24,7 @@ import { exportEpub, exportPdf } from '../../publish';
 import { sharedDashboards, toCsv } from '../../dashboards';
 import { newDashboard } from '../../dashboard-editor';
 import { parseDashboard, serializeDashboard } from '../../core/dashboard';
-import { existsSync } from 'node:fs';
+import { existsSync, symlinkSync, unlinkSync } from 'node:fs';
 const waitFor = async (
   check: () => boolean | Promise<boolean>,
   message: string,
@@ -1319,6 +1319,18 @@ export async function run(): Promise<void> {
         ],
       );
       assert.equal(history.modified, false);
+      // The same page reached through a symbolic link (as macOS /var → /private/var) has the
+      // same history: paths are resolved before they are made relative to the repository.
+      const linked = path.join(process.env.WIKI_TEST_DIR!, 'linked-wiki');
+      symlinkSync(repo, linked, 'dir');
+      try {
+        const viaLink = vscode.Uri.file(path.join(linked, path.relative(repo, file.fsPath)));
+        const linkedHistory = (await pageHistory(viaLink))!;
+        assert.equal(linkedHistory.relative, 'history/Notes ü.md');
+        assert.equal(linkedHistory.commits.length, 2);
+      } finally {
+        unlinkSync(linked);
+      }
       const old = history.commits[1];
       const doc = await vscode.workspace.openTextDocument(
         GitContentProvider.uri(history.repo, old.sha, old.path),

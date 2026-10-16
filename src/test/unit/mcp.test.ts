@@ -7,6 +7,9 @@ import { mkdtemp, mkdir, writeFile, readFile, symlink, rm } from 'node:fs/promis
 import os from 'node:os';
 import path from 'node:path';
 
+// Servers still running when a test fails would keep the test process alive.
+const running = new Set<{ kill(): boolean }>();
+
 async function server(wiki: string, write = false) {
   const child = spawn(
     process.execPath,
@@ -36,7 +39,8 @@ async function server(wiki: string, write = false) {
       json: r.result.isError ? undefined : JSON.parse(text),
     };
   };
-  return { call, tool, close: () => child.kill() };
+  running.add(child);
+  return { call, tool, close: () => (running.delete(child), child.kill()) };
 }
 
 test('MCP stdio server reads, searches and writes a wiki safely', async () => {
@@ -55,7 +59,7 @@ test('MCP stdio server reads, searches and writes a wiki safely', async () => {
     );
     await writeFile(path.join(dir, 'secret.md'), 'outside the content root');
     await writeFile(path.join(outside, 'x.md'), 'outside');
-    await symlink(outside, path.join(dir, 'docs/linked'));
+    await symlink(outside, path.join(dir, 'docs/linked'), 'junction');
     const ro = await server(dir);
     const init = await ro.call('initialize', {
       protocolVersion: '2025-03-26',
@@ -158,6 +162,8 @@ test('MCP stdio server reads, searches and writes a wiki safely', async () => {
     assert.equal(await readFile(path.join(outside, 'x.md'), 'utf8'), 'outside');
     rw.close();
   } finally {
+    for (const child of running) child.kill();
+    running.clear();
     await rm(dir, { recursive: true, force: true });
     await rm(outside, { recursive: true, force: true });
   }

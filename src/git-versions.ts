@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
-import path from 'node:path';
 import { randomBytes } from 'node:crypto';
-import { git, GitContentProvider, repositoryOfFolder, diffHtml } from './git-history';
+import { git, GitContentProvider, repositoryOfFolder, diffHtml, repoRelative } from './git-history';
 import { WikiRoot, WikiWorkspace } from './workspace';
 import { parsePage } from './core/markdown';
 import { WikiIndex } from './core/index';
@@ -68,7 +67,7 @@ export async function loadSnapshot(root: WikiRoot, ref: string): Promise<Snapsho
     await git(['rev-parse', '--verify', '--quiet', `${ref}^{commit}`], repo).catch(() => '')
   ).trim();
   if (!/^[0-9a-f]{40}$/.test(sha)) throw new Error(`${ref} does not name a commit.`);
-  const base = path.relative(repo, root.uri.fsPath).split(path.sep).join('/');
+  const base = await repoRelative(repo, root.uri.fsPath);
   const listing = await git(['ls-tree', '-r', '-z', '--name-only', sha, '--', base || '.'], repo);
   const files = listing
     .split('\0')
