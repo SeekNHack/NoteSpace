@@ -1,6 +1,6 @@
 {
   "name": "notespace-workspace",
-  "displayName": "NoteSpace",
+  "displayName": "NoteSpace – Notes, Tasks & API",
   "description": "Notes, wiki, tasks, Kanban boards, calendar, Jupyter notebooks and a REST API client in one VS Code workspace. Visual Markdown editor, local-first, all in plain files.",
   "version": "1.0.0",
   "publisher": "hacknseek",
