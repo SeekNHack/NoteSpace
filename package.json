@@ -1,7 +1,7 @@
 {
   "name": "notespace-workspace",
   "displayName": "NoteSpace - Notes, Tasks and API",
-  "description": "Notes, wiki, tasks, Kanban boards, calendar, notebooks and an HTTP API client in one VS Code workspace. Visual Markdown editor, local-first, all in plain files.",
+  "description": "A local-first workspace for VS Code: wiki and docs with a visual Markdown editor, tasks, Kanban boards, calendar, notebooks, dashboards and an API client — all in your files.",
   "version": "1.0.0",
   "publisher": "hacknseek",
   "icon": "media/icon.png",
@@ -22,31 +22,15 @@
     "vscode": "^1.96.0"
   },
   "categories": [
-    "Notebooks",
-    "Visualization",
-    "Other"
+    "Other",
+    "Visualization"
   ],
   "keywords": [
-    "notes",
     "wiki",
     "markdown",
-    "knowledge base",
-    "documentation",
+    "knowledge",
     "backlinks",
-    "daily notes",
-    "tasks",
-    "todo",
-    "kanban",
-    "calendar",
-    "planner",
-    "notebooks",
-    "charts",
-    "dashboard",
-    "diagrams",
-    "api",
-    "http",
-    "local-first",
-    "productivity"
+    "notes"
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
