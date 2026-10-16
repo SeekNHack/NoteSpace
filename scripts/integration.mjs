@@ -17,6 +17,8 @@ try {
       settings: {
         'workbench.startupEditor': 'none',
         'files.autoSave': 'off',
+        // Same line endings on every OS (Windows defaults to CRLF); CRLF is covered by unit tests.
+        'files.eol': '\n',
         'extensions.autoUpdate': false,
         'security.workspace.trust.enabled': false,
       },

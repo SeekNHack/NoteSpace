@@ -24,6 +24,8 @@ jobs:
     env:
       VSCODE_VERSION: ${{ matrix.vscode }}
     steps:
+      # Keep files byte-for-byte (Windows runners convert line endings by default).
+      - run: git config --global core.autocrlf false
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
@@ -63,6 +65,8 @@ jobs:
   code-server:
     runs-on: ubuntu-latest
     steps:
+      # Keep files byte-for-byte (Windows runners convert line endings by default).
+      - run: git config --global core.autocrlf false
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
