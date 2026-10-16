@@ -12,6 +12,7 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     env:
       VSCE_PAT: ${{ secrets.VSCE_PAT }}
     steps:
@@ -21,7 +22,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm test
+      - run: npm run typecheck
+      - run: npm run test:unit:ci
       # The PDF export test prints with a real Chromium.
       # Ubuntu 24.04 blocks the unprivileged user namespaces Chromium's sandbox needs.
       - name: Allow the Chromium sandbox (Linux)
