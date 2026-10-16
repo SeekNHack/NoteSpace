@@ -87,3 +87,10 @@ export function namedSection(value: string): { path: string; title: string } {
   pagePath(`${path}/index`);
   return { path, title };
 }
+/**
+ * The path of a URI for comparisons. VS Code hands out the same Windows file as `/C:/…` (from
+ * workspace folders) and `/c:/…` (from file search and events); the drive letter is folded so
+ * prefix checks and relative paths agree.
+ */
+export const uriPath = (uri: { path: string }): string =>
+  uri.path.replace(/^\/([A-Za-z]):/, (_, drive: string) => `/${drive.toLowerCase()}:`);

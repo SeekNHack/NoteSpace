@@ -4,7 +4,7 @@ import { randomBytes } from 'node:crypto';
 import { WikiWorkspace } from './workspace';
 import { parseCanvas, renderCanvasSvg, serializeCanvas } from './core/canvas';
 import { Page } from './core/model';
-import { encodePath, insidePath, splitTarget } from './core/paths';
+import { encodePath, insidePath, splitTarget, uriPath } from './core/paths';
 import { escapeHtml } from './core/render';
 import { tokensCss } from './core/design';
 import { posix } from './core/paths';
@@ -44,7 +44,7 @@ export class CanvasEditorProvider implements vscode.CustomTextEditorProvider {
     };
     const pageRoot = () =>
       this.workspace.roots.find((r) =>
-        document.uri.path.startsWith(r.uri.path.replace(/\/$/, '') + '/'),
+        uriPath(document.uri).startsWith(uriPath(r.uri).replace(/\/$/, '') + '/'),
       );
     const subscription = vscode.workspace.onDidChangeTextDocument((event) => {
       if (event.document !== document || !event.contentChanges.length) return;

@@ -5,7 +5,15 @@ import { scopeOf, scopedPath } from './core/scopes';
 import { WikiIndex } from './core/index';
 import { parsePage } from './core/markdown';
 import { Page } from './core/model';
-import { pagePath, posix, safeRelative, splitTarget, isExternal, encodePath } from './core/paths';
+import {
+  pagePath,
+  posix,
+  safeRelative,
+  splitTarget,
+  isExternal,
+  encodePath,
+  uriPath,
+} from './core/paths';
 import { WikiConfig, parseConfig } from './core/config';
 export interface WikiRoot {
   id: string;
@@ -134,7 +142,7 @@ export class WikiWorkspace implements vscode.Disposable {
         1000,
       )) {
         try {
-          const dir = posix.relative(folder.uri.path, posix.dirname(uri.path));
+          const dir = posix.relative(uriPath(folder.uri), posix.dirname(uriPath(uri)));
           files.set(
             dir === '.' ? '' : dir,
             new TextDecoder().decode(await vscode.workspace.fs.readFile(uri)),
@@ -151,7 +159,7 @@ export class WikiWorkspace implements vscode.Disposable {
   isGitIgnored(root: WikiRoot, uri: vscode.Uri): boolean {
     const matcher = this.ignoreRules.get(root.folder.uri.toString());
     if (!matcher || matcher.empty) return false;
-    return matcher.ignores(posix.relative(root.folder.uri.path, uri.path));
+    return matcher.ignores(posix.relative(uriPath(root.folder.uri), uriPath(uri)));
   }
   private async updateFile(uri: vscode.Uri, kind: 'upsert' | 'delete'): Promise<void> {
     if (this.disposed) return;
@@ -159,14 +167,14 @@ export class WikiWorkspace implements vscode.Disposable {
       (r) =>
         uri.scheme === r.uri.scheme &&
         uri.authority === r.uri.authority &&
-        uri.path.startsWith(r.uri.path.replace(/\/$/, '') + '/'),
+        uriPath(uri).startsWith(uriPath(r.uri).replace(/\/$/, '') + '/'),
     );
     if (!root) return;
     if (kind === 'delete') {
       this.index.remove(uri.toString());
       return;
     }
-    const relative = posix.relative(root.uri.path, uri.path);
+    const relative = posix.relative(uriPath(root.uri), uriPath(uri));
     if (
       relative
         .split('/')
@@ -345,7 +353,10 @@ export class WikiWorkspace implements vscode.Disposable {
                 while (cursor < Math.min(uris.length, max)) {
                   const uri = uris[cursor++];
                   if (
-                    posix.relative(root.uri.path, uri.path).split('/').includes('.notespace-trash')
+                    posix
+                      .relative(uriPath(root.uri), uriPath(uri))
+                      .split('/')
+                      .includes('.notespace-trash')
                   )
                     continue;
                   try {
@@ -373,7 +384,7 @@ export class WikiWorkspace implements vscode.Disposable {
                     pages.push(
                       parsePage(
                         root.id,
-                        posix.relative(root.uri.path, uri.path),
+                        posix.relative(uriPath(root.uri), uriPath(uri)),
                         uri.toString(),
                         text,
                       ),
@@ -406,12 +417,12 @@ export class WikiWorkspace implements vscode.Disposable {
       uri.scheme !== root.folder.uri.scheme ||
       uri.authority !== root.folder.uri.authority ||
       !(
-        uri.path === root.folder.uri.path ||
-        uri.path.startsWith(root.folder.uri.path.replace(/\/$/, '') + '/')
+        uriPath(uri) === uriPath(root.folder.uri) ||
+        uriPath(uri).startsWith(uriPath(root.folder.uri).replace(/\/$/, '') + '/')
       )
     )
       throw new Error('Path is outside the workspace.');
-    const relative = posix.relative(root.folder.uri.path, uri.path);
+    const relative = posix.relative(uriPath(root.folder.uri), uriPath(uri));
     let current = root.folder.uri;
     for (const part of relative.split('/').filter(Boolean)) {
       current = vscode.Uri.joinPath(current, part);
@@ -668,7 +679,7 @@ export class WikiWorkspace implements vscode.Disposable {
     return uris
       .map((uri) => ({
         uri,
-        path: posix.relative(root.uri.path, uri.path).split('/').slice(2).join('/'),
+        path: posix.relative(uriPath(root.uri), uriPath(uri)).split('/').slice(2).join('/'),
       }))
       .sort((a, b) => b.uri.path.localeCompare(a.uri.path));
   }

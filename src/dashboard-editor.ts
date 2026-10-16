@@ -6,7 +6,7 @@ import { tokensCss } from './core/design';
 import { chartCss } from './core/charts';
 import { loadDataset, SourceType } from './core/dataset';
 import { readXlsx } from './core/xlsx';
-import { posix } from './core/paths';
+import { posix, uriPath } from './core/paths';
 
 const sourceTypeOf = (path: string): SourceType | undefined =>
   ({
@@ -138,7 +138,7 @@ export class DashboardEditorProvider implements vscode.CustomTextEditorProvider 
             if (!file) return;
             const type = sourceTypeOf(file.path);
             if (!type) throw new Error('Choose a CSV, TSV, XLSX, JSON or JSONL file.');
-            const path = posix.relative(posix.dirname(document.uri.path), file.path);
+            const path = posix.relative(posix.dirname(uriPath(document.uri)), uriPath(file));
             sourceUri(document.uri, path);
             let sheet: string | undefined;
             if (type === 'xlsx') {
@@ -277,7 +277,7 @@ export async function newDashboard(
   if (data) {
     const type = sourceTypeOf(data.path);
     if (!type) throw new Error('Choose a CSV, TSV, XLSX, JSON or JSONL file.');
-    const path = posix.relative(folder.path, data.path);
+    const path = posix.relative(uriPath(folder), uriPath(data));
     const bytes = await vscode.workspace.fs.readFile(data);
     const sheet = type === 'xlsx' ? readXlsx(bytes).sheets[0].name : undefined;
     const dataset = loadDataset(type, bytes, sheet ? { sheet } : {});

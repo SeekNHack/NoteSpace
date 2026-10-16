@@ -19,7 +19,7 @@ export { dashboardCss } from './core/dashboard';
 import { renderChart, Row } from './core/charts';
 import { escapeHtml } from './core/render';
 import { checkFormula, functions, Value } from './core/formula';
-import { posix } from './core/paths';
+import { posix, uriPath } from './core/paths';
 
 const inert = new MarkdownIt({ html: false, linkify: true });
 const MAX_SOURCE_BYTES = 50 * 1024 * 1024;
@@ -59,8 +59,8 @@ export function sourceUri(dashboardUri: vscode.Uri, path: string): vscode.Uri {
   if (
     folder &&
     !(
-      target.path === folder.uri.path ||
-      target.path.startsWith(folder.uri.path.replace(/\/$/, '') + '/')
+      uriPath(target) === uriPath(folder.uri) ||
+      uriPath(target).startsWith(uriPath(folder.uri).replace(/\/$/, '') + '/')
     )
   )
     throw new Error(`“${path}” is outside the workspace folder.`);

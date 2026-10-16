@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { createConfig, defaultConfig } from './core/config';
 import { planMkDocsImport, unsupportedMkDocsSyntax } from './core/import-project';
-import { posix } from './core/paths';
+import { posix, uriPath } from './core/paths';
 import { Page } from './core/model';
 import { WikiRoot, WikiWorkspace } from './workspace';
 
@@ -58,12 +58,12 @@ export async function importMarkdownProject(
   if (!files.length) throw new Error('No Markdown pages were found in the documentation folder.');
   if (files.length > 2000)
     throw new Error('Import contains more than 2,000 pages; narrow the project first.');
-  const paths = files.map((uri) => posix.relative(docsUri.path, uri.path)).sort();
+  const paths = files.map((uri) => posix.relative(uriPath(docsUri), uriPath(uri))).sort();
   plan.config.content.homepage = paths.includes('index.md') ? 'index.md' : paths[0];
   for (const file of files) {
     await workspace.assertNoSymlink(root, file);
     const stat = await vscode.workspace.fs.stat(file);
-    if (stat.type !== vscode.FileType.File) throw new Error(`Not a regular page: ${file.path}`);
+    if (stat.type !== vscode.FileType.File) throw new Error(`Not a regular page: ${uriPath(file)}`);
     if (stat.size > 1024 * 1024) {
       plan.warnings.push(
         `${file.path}: page was not scanned for MkDocs-specific syntax (over 1 MiB).`,
@@ -71,7 +71,9 @@ export async function importMarkdownProject(
       continue;
     }
     const text = new TextDecoder().decode(await vscode.workspace.fs.readFile(file));
-    plan.warnings.push(...unsupportedMkDocsSyntax(posix.relative(docsUri.path, file.path), text));
+    plan.warnings.push(
+      ...unsupportedMkDocsSyntax(posix.relative(uriPath(docsUri), uriPath(file)), text),
+    );
   }
   await vscode.workspace.fs.writeFile(
     configUri,

@@ -5,7 +5,7 @@ import MarkdownIt from 'markdown-it';
 import hljs from 'highlight.js/lib/core';
 import { WikiRoot, WikiWorkspace } from './workspace';
 import { Page } from './core/model';
-import { insidePath, posix, splitTarget } from './core/paths';
+import { insidePath, posix, splitTarget, uriPath } from './core/paths';
 import { notebookCss, notebookToMarkdown, parseNotebook, renderNotebook } from './core/notebook';
 import { contentCss, escapeHtml } from './core/render';
 import { storeImage } from './assets';
@@ -56,7 +56,7 @@ export class NotebookCatalog implements vscode.Disposable {
         2000,
       );
       for (const uri of found)
-        files.push({ root: root.id, path: posix.relative(root.uri.path, uri.path), uri });
+        files.push({ root: root.id, path: posix.relative(uriPath(root.uri), uriPath(uri)), uri });
     }
     files.sort((a, b) => a.path.localeCompare(b.path));
     const changed =
@@ -211,7 +211,7 @@ export async function convertNotebook(
   uri: vscode.Uri,
 ): Promise<vscode.Uri> {
   const notebook = await readNotebook(uri);
-  const relative = posix.relative(root.uri.path, uri.path);
+  const relative = posix.relative(uriPath(root.uri), uriPath(uri));
   const title = posix.basename(relative, '.ipynb');
   const { markdown, images } = notebookToMarkdown(notebook, title);
   const target = relative.replace(/\.ipynb$/i, '.md');

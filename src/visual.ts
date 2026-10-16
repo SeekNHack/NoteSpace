@@ -14,7 +14,7 @@ import {
   importAttachment,
   importMedia,
 } from './assets';
-import { encodePath, isExternal, posix } from './core/paths';
+import { encodePath, isExternal, posix, uriPath } from './core/paths';
 import { mermaidSvg, renderDiagrams } from './diagrams';
 import { locateText, plainLine } from './core/source-map';
 import { closeCompanion, modeOf, showCode, showSplit, showStudio, studioColumn } from './modes';
@@ -696,9 +696,13 @@ export class VisualEditorProvider implements vscode.CustomTextEditorProvider {
               if (looksLikeOpenApi(head)) files.push(uri);
             }
           }
-          const relative = (uri: vscode.Uri) => posix.relative(root.uri.path, uri.path);
+          const relative = (uri: vscode.Uri) => posix.relative(uriPath(root.uri), uriPath(uri));
           const items: Array<vscode.QuickPickItem & { uri?: vscode.Uri; action?: string }> = files
-            .map((uri) => ({ label: posix.basename(uri.path), description: relative(uri), uri }))
+            .map((uri) => ({
+              label: posix.basename(uriPath(uri)),
+              description: relative(uri),
+              uri,
+            }))
             .sort((a, b) => a.description.localeCompare(b.description));
           if (m.language === 'notebook')
             items.push({ label: '$(add) Import a notebook…', action: 'import', alwaysShow: true });
@@ -733,7 +737,7 @@ export class VisualEditorProvider implements vscode.CustomTextEditorProvider {
           if (!uri) return;
           let path = posix.relative(posix.dirname(page.path), relative(uri));
           if (m.language === 'dashboard') {
-            path = posix.relative(posix.dirname(document.uri.path), uri.path);
+            path = posix.relative(posix.dirname(uriPath(document.uri)), uriPath(uri));
             // Optionally embed a single widget.
             const { parseDashboard } = await import('./core/dashboard');
             const { dashboard } = parseDashboard(
@@ -793,7 +797,7 @@ export class VisualEditorProvider implements vscode.CustomTextEditorProvider {
             files
               .map((uri) => ({
                 label: posix.basename(uri.path),
-                description: posix.relative(pageDir, uri.path),
+                description: posix.relative(pageDir, uriPath(uri)),
                 uri,
               }))
               .sort((a, b) => a.description.localeCompare(b.description)),
@@ -803,7 +807,7 @@ export class VisualEditorProvider implements vscode.CustomTextEditorProvider {
           await panel.webview.postMessage({
             type: 'componentPath',
             requestId: m.requestId,
-            path: posix.relative(pageDir, picked.uri.path),
+            path: posix.relative(pageDir, uriPath(picked.uri)),
           });
           return;
         }

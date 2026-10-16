@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { WikiWorkspace } from './workspace';
 import { Page } from './core/model';
 import { CodeRef, findSymbol, parseCodeRef, SymbolNode } from './core/code-refs';
-import { posix } from './core/paths';
+import { posix, uriPath } from './core/paths';
 
 /** Resolves a code reference relative to its page; it must stay inside the page's workspace folder. */
 export function codeUri(page: Page, ref: CodeRef): vscode.Uri {
@@ -12,7 +12,7 @@ export function codeUri(page: Page, ref: CodeRef): vscode.Uri {
     ref.path.startsWith('/') && folder
       ? vscode.Uri.joinPath(folder.uri, ref.path)
       : vscode.Uri.joinPath(pageUri, '..', ref.path);
-  if (folder && !uri.path.startsWith(folder.uri.path.replace(/\/$/, '') + '/'))
+  if (folder && !uriPath(uri).startsWith(uriPath(folder.uri).replace(/\/$/, '') + '/'))
     throw new Error(`“${ref.path}” is outside the workspace folder.`);
   return uri;
 }

@@ -3,7 +3,15 @@ import { WikiRoot, WikiWorkspace } from './workspace';
 import { WikiTree, PageNode, registerLanguageFeatures, showPage } from './views';
 import { WikiPanels } from './webviews';
 import { fillTemplate, homepageTemplate, templates } from './templates';
-import { encodePath, namedPage, namedSection, pagePath, posix, safeRelative } from './core/paths';
+import {
+  encodePath,
+  namedPage,
+  namedSection,
+  pagePath,
+  posix,
+  safeRelative,
+  uriPath,
+} from './core/paths';
 import { Page } from './core/model';
 import { exportWiki } from './export';
 import { createConfig, defaultConfig, parseConfig, updateConfig, WikiConfig } from './core/config';
@@ -1535,7 +1543,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     const uri = notebookUri(node);
     if (!uri) throw new Error('Open or select a notebook first.');
     const root = workspace.roots.find((r) =>
-      uri.path.startsWith(r.uri.path.replace(/\/$/, '') + '/'),
+      uriPath(uri).startsWith(uriPath(r.uri).replace(/\/$/, '') + '/'),
     );
     if (!root) throw new Error('The notebook is not inside a wiki.');
     await openPreferredUri(await convertNotebook(workspace, root, uri));
@@ -2070,7 +2078,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     );
     if (!picked) return;
     const s = picked.symbol;
-    const relative = posix.relative(posix.dirname(editor.document.uri.path), s.location.uri.path);
+    const relative = posix.relative(
+      posix.dirname(uriPath(editor.document.uri)),
+      uriPath(s.location.uri),
+    );
     const fragment =
       s.containerName &&
       /^[\w$]+$/.test(s.containerName) &&
@@ -2253,7 +2264,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     if (!specUri) return;
     const owner =
       workspace.roots.find((r) =>
-        specUri.path.startsWith((r.projectUri || r.uri).path.replace(/\/$/, '') + '/'),
+        uriPath(specUri).startsWith(uriPath(r.projectUri || r.uri).replace(/\/$/, '') + '/'),
       ) || (await chooseRoot(activeTabPage()?.root));
     if (!owner) return;
     const name = posix
@@ -2336,7 +2347,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
   const apiChanged = (uri: vscode.Uri) => {
     if (
       !workspace.roots.some((r) =>
-        uri.path.startsWith((r.projectUri || r.uri).path.replace(/\/$/, '') + '/'),
+        uriPath(uri).startsWith(uriPath(r.projectUri || r.uri).replace(/\/$/, '') + '/'),
       )
     )
       return;
@@ -2353,7 +2364,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
           const stale = await staleGeneratedPages(workspace, uri);
           if (!stale.length) return;
           const choice = await vscode.window.showInformationMessage(
-            `${posix.basename(uri.path)} changed: ${stale.length} generated reference page${stale.length === 1 ? ' is' : 's are'} out of date.`,
+            `${posix.basename(uriPath(uri))} changed: ${stale.length} generated reference page${stale.length === 1 ? ' is' : 's are'} out of date.`,
             'Regenerate…',
           );
           if (choice) await vscode.commands.executeCommand('notespace.generateApiReference', uri);

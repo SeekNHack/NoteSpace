@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { randomBytes } from 'node:crypto';
 import { WikiRoot, WikiWorkspace } from './workspace';
 import { contentCss, escapeHtml, renderPage, safeExternal } from './core/render';
-import { isExternal, posix, splitTarget } from './core/paths';
+import { isExternal, posix, splitTarget, uriPath } from './core/paths';
 import { Page } from './core/model';
 import { showPage } from './views';
 import { resolveImage, resolveAttachment, resolveMedia } from './assets';
@@ -781,10 +781,10 @@ export class WikiPanels implements vscode.Disposable {
     let api = '';
     const specs: Array<{ file: string; spec: ReturnType<typeof parseOpenApi> }> = [];
     for (const uri of await findApiDescriptions(this.workspace)) {
-      if (!uri.path.startsWith(root.uri.path.replace(/\/$/, '') + '/')) continue;
+      if (!uriPath(uri).startsWith(uriPath(root.uri).replace(/\/$/, '') + '/')) continue;
       try {
         specs.push({
-          file: posix.relative(root.uri.path, uri.path),
+          file: posix.relative(uriPath(root.uri), uriPath(uri)),
           spec: parseOpenApi(new TextDecoder().decode(await vscode.workspace.fs.readFile(uri))),
         });
       } catch (e) {

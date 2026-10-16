@@ -4,7 +4,7 @@ import { randomBytes } from 'node:crypto';
 import { WikiRoot, WikiWorkspace } from './workspace';
 import { Page } from './core/model';
 import { contentCss, escapeHtml, renderPage } from './core/render';
-import { encodePath, insidePath, isExternal, posix, splitTarget } from './core/paths';
+import { encodePath, insidePath, isExternal, posix, splitTarget, uriPath } from './core/paths';
 import { renderDiagrams } from './diagrams';
 import { resolveAttachment } from './assets';
 import { pageWithIncludes } from './core/includes';
@@ -162,10 +162,10 @@ export async function exportWiki(
         }
         const projectAsset =
           root.projectUri &&
-          uri.path.startsWith(root.projectUri.path.replace(/\/$/, '') + '/assets/');
+          uriPath(uri).startsWith(uriPath(root.projectUri).replace(/\/$/, '') + '/assets/');
         const outputAsset = projectAsset
-          ? posix.relative(root.projectUri!.path, uri.path)
-          : `assets/${posix.relative(root.uri.path, uri.path)}`;
+          ? posix.relative(uriPath(root.projectUri!), uriPath(uri))
+          : `assets/${posix.relative(uriPath(root.uri), uriPath(uri))}`;
         if (!assets.has(outputAsset)) {
           await write(outputAsset, await vscode.workspace.fs.readFile(uri));
           assets.add(outputAsset);
@@ -304,7 +304,7 @@ export async function exportWiki(
       2000,
     )) {
       if (token?.isCancellationRequested) throw new vscode.CancellationError();
-      const relativePath = posix.relative(root.uri.path, uri.path);
+      const relativePath = posix.relative(uriPath(root.uri), uriPath(uri));
       if (!insidePath(relativePath)) continue;
       try {
         await workspace.assertNoSymlink(root, uri);

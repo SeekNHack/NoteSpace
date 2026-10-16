@@ -2,7 +2,7 @@ import { looksLikeMedia } from './core/media';
 import * as vscode from 'vscode';
 import { WikiRoot, WikiWorkspace } from './workspace';
 import { Page } from './core/model';
-import { insidePath, posix, splitTarget } from './core/paths';
+import { insidePath, posix, splitTarget, uriPath } from './core/paths';
 
 const raster = /\.(png|jpe?g|gif|webp)$/i;
 const media = /\.(mp4|webm|mp3|ogg)$/i;
@@ -232,8 +232,8 @@ export async function browseImages(
       target: posix.relative(
         posix.dirname(base),
         root.projectUri
-          ? posix.relative(root.projectUri.path, uri.path)
-          : posix.relative(root.uri.path, uri.path),
+          ? posix.relative(uriPath(root.projectUri), uriPath(uri))
+          : posix.relative(uriPath(root.uri), uriPath(uri)),
       ),
     }))
     .sort((a, b) => a.label.localeCompare(b.label));

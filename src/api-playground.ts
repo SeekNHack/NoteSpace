@@ -13,7 +13,7 @@ import {
 } from './core/openapi';
 import { Page } from './core/model';
 import { findGenerated, generateApiPages, planRegeneration } from './core/api-pages';
-import { insidePath, posix, splitTarget } from './core/paths';
+import { insidePath, posix, splitTarget, uriPath } from './core/paths';
 import { escapeHtml, highlightCode } from './core/render';
 import { tokensCss } from './core/design';
 
@@ -381,7 +381,8 @@ export async function generateApiReference(
 ): Promise<GenerationSummary> {
   const root = workspace.roots.find(
     (r) =>
-      folder.path === r.uri.path || folder.path.startsWith(r.uri.path.replace(/\/$/, '') + '/'),
+      uriPath(folder) === uriPath(r.uri) ||
+      uriPath(folder).startsWith(uriPath(r.uri).replace(/\/$/, '') + '/'),
   );
   if (!root) throw new Error('Choose a folder inside a wiki.');
   const spec = parseOpenApi(new TextDecoder().decode(await vscode.workspace.fs.readFile(specUri)));
@@ -397,7 +398,7 @@ export async function generateApiReference(
   for (const page of generateApiPages(spec)) {
     const file = vscode.Uri.joinPath(folder, page.file);
     await workspace.assertNoSymlink(root, file);
-    const source = posix.relative(posix.dirname(file.path), specUri.path);
+    const source = posix.relative(posix.dirname(uriPath(file)), uriPath(specUri));
     let existing: string | undefined;
     try {
       existing = new TextDecoder().decode(await vscode.workspace.fs.readFile(file));
