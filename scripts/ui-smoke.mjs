@@ -818,6 +818,16 @@ try {
   await rm('docs/screenshots/failure.png', { force: true });
   console.log(`NoteSpace UI smoke passed on ${codeServer ? 'code-server' : 'VS Code desktop'}.`);
 } catch (error) {
+  // On GitHub Actions the failure is also an annotation, readable without the full log.
+  if (process.env.GITHUB_ACTIONS)
+    console.log(
+      `::error title=UI smoke failed (${codeServer ? 'code-server' : 'desktop'})::${String(
+        error?.stack || error,
+      )
+        .slice(0, 1500)
+        .replace(/%/g, '%25')
+        .replace(/\r?\n/g, '%0A')}`,
+    );
   if (codeServer) console.error(serverOutput.slice(-5000));
   if (page)
     console.error(
