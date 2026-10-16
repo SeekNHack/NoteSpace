@@ -11,7 +11,7 @@ First release.
 - **Kanban inside pages** — a live board of a page's tasks; drag cards or use Alt+←/→ and the task lines update.
 - **Calendar** — month, week and day views; drag a task to change its due date.
 - **Jupyter notebooks** — preview saved outputs without a kernel, embed notebooks in pages, run cells with a built-in Python kernel or the Jupyter extension.
-- **API client** — Postman-style requests with params, headers, bodies, auth (API key, Basic, Bearer, OAuth 2.0 with PKCE), tests and request chaining; collections as Git-friendly JSON; environments with secrets in VS Code's secret storage; history.
+- **API client** — requests with params, headers, bodies, auth (API key, Basic, Bearer, OAuth 2.0 with PKCE), tests and request chaining; collections as Git-friendly JSON; environments with secrets in VS Code's secret storage; history.
 - **curl and Python** — paste a curl command to fill in a request; convert any request to curl or Python `requests`.
 - **Interactive API docs** — ` ```http ` blocks in pages that readers send with one click (never automatically); OpenAPI import and reference pages.
 - **Charts and data dashboards** — accessible charts from CSV/JSON; dashboards over Excel, CSV and JSON files with a safe formula language.

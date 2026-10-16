@@ -4,7 +4,7 @@
 
 **Your docs, notes, tasks and APIs — in one VS Code workspace, stored as plain files.**
 
-NoteSpace is an MIT-licensed extension for VS Code and code-server that turns a folder into a personal or team workspace: a wiki with a visual Markdown editor, daily notes, tasks, Kanban boards and a calendar, Jupyter notebooks, charts and data dashboards, and a Postman-style API client. Everything lives in readable files in your repository (Markdown, YAML, JSON), works offline, needs no account or server, and sends no telemetry.
+NoteSpace is an MIT-licensed extension for VS Code and code-server that turns a folder into a personal or team workspace: a wiki with a visual Markdown editor, daily notes, tasks, Kanban boards and a calendar, Jupyter notebooks, charts and data dashboards, and an HTTP API client. Everything lives in readable files in your repository (Markdown, YAML, JSON), works offline, needs no account or server, and sends no telemetry.
 
 ![NoteSpace Home](docs/images/home.png)
 
@@ -84,7 +84,7 @@ Notebooks open in VS Code's notebook editor; NoteSpace adds a read-only preview 
 
 ![Jupyter notebook](docs/images/jupyter.png)
 
-### API client (Postman-style)
+### API client
 
 Collections, environments and history on the left; request tabs with params, auth, headers, body, cookies, tests and generated code; the response below. Paste a curl command and every field is filled in; the **Code** tab turns the request into curl or Python `requests` (with `params`, `headers` and `cookies` as dictionaries).
 
@@ -157,7 +157,7 @@ More browser journeys: `test:workspace`, `test:planner`, `test:api`, `test:embed
 ## Limitations
 
 - Pages with constructs Studio cannot round-trip exactly (for example links inside formatted text, or nesting deeper than four levels) open in Code.
-- OAuth 2.0 in the API client supports client credentials and authorization code with PKCE; implicit, password and device flows, token refresh and client certificates are not supported. No proxy support or Postman collection import yet.
+- OAuth 2.0 in the API client supports client credentials and authorization code with PKCE; implicit, password and device flows, token refresh and client certificates are not supported. No proxy support or collection import from other API tools yet.
 - The Python kernel and code runner need Python or Node installed locally and are off until you enable them.
 - Settings from builds made before the rename (`wikiStudio.*`) are not migrated automatically; boards, collections and review files are.
 
