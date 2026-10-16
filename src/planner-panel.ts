@@ -258,8 +258,8 @@ export class PlannerPanel implements vscode.Disposable {
         },
       );
       this.panel.iconPath = {
-        light: vscode.Uri.joinPath(this.extensionUri, 'media', 'wiki-light.svg'),
-        dark: vscode.Uri.joinPath(this.extensionUri, 'media', 'wiki-dark.svg'),
+        light: vscode.Uri.joinPath(this.extensionUri, 'media', 'notespace-light.svg'),
+        dark: vscode.Uri.joinPath(this.extensionUri, 'media', 'notespace-dark.svg'),
       };
       const nonce = randomBytes(18).toString('base64');
       const script = this.panel.webview.asWebviewUri(

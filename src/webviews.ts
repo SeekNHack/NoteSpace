@@ -214,8 +214,8 @@ export class WikiPanels implements vscode.Disposable {
   }
   private icon(): { light: vscode.Uri; dark: vscode.Uri } {
     return {
-      light: vscode.Uri.joinPath(this.extensionUri, 'media', 'wiki-light.svg'),
-      dark: vscode.Uri.joinPath(this.extensionUri, 'media', 'wiki-dark.svg'),
+      light: vscode.Uri.joinPath(this.extensionUri, 'media', 'notespace-light.svg'),
+      dark: vscode.Uri.joinPath(this.extensionUri, 'media', 'notespace-dark.svg'),
     };
   }
   get homeOpen(): boolean {

@@ -72,8 +72,8 @@ export class ApiClientPanel implements vscode.Disposable {
         },
       );
       this.panel.iconPath = {
-        light: vscode.Uri.joinPath(this.context.extensionUri, 'media', 'wiki-light.svg'),
-        dark: vscode.Uri.joinPath(this.context.extensionUri, 'media', 'wiki-dark.svg'),
+        light: vscode.Uri.joinPath(this.context.extensionUri, 'media', 'notespace-light.svg'),
+        dark: vscode.Uri.joinPath(this.context.extensionUri, 'media', 'notespace-dark.svg'),
       };
       const nonce = randomBytes(18).toString('base64');
       const script = this.panel.webview.asWebviewUri(

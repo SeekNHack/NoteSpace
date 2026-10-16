@@ -1,3 +1,5 @@
+<p align="center"><img src="media/icon.png" width="128" height="128" alt="NoteSpace logo"></p>
+
 # NoteSpace
 
 **Your docs, notes, tasks and APIs — in one VS Code workspace, stored as plain files.**

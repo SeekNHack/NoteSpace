@@ -7,8 +7,11 @@ const result = spawnSync(
     'node_modules/@vscode/vsce/vsce',
     'package',
     '--no-dependencies',
-    '--allow-missing-repository',
-    '--no-rewrite-relative-links',
+    // README images and links point to the repository, so they work on the Marketplace too.
+    '--baseContentUrl',
+    'https://github.com/SeekNHack/NoteSpace/blob/main',
+    '--baseImagesUrl',
+    'https://github.com/SeekNHack/NoteSpace/raw/main',
     '--out',
     `${pkg.name}-${pkg.version}.vsix`,
   ],
