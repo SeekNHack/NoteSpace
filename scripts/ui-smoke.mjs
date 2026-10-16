@@ -160,8 +160,13 @@ try {
       await page.keyboard.press('F1');
       const input = page.locator('.quick-input-widget input[type=text]');
       await input.waitFor({ state: 'visible' });
-      await input.focus();
-      await input.fill(`>NoteSpace: ${name}`);
+      // An editor that finishes opening can take focus and close the palette: try again.
+      const typed = await input
+        .focus({ timeout: 3000 })
+        .then(() => input.fill(`>NoteSpace: ${name}`, { timeout: 3000 }))
+        .then(() => true)
+        .catch(() => false);
+      if (!typed) continue;
       const row = page
         .locator('.quick-input-list .monaco-list-row')
         .filter({ hasText: `NoteSpace: ${name}` })
