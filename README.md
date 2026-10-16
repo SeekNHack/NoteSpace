@@ -98,8 +98,8 @@ Document an endpoint once and let readers try it from the page. Nothing is sent 
 
 ## Install
 
-- **VS Code**: search for **NoteSpace** in the Extensions view, or run `code --install-extension hacknseek.notespace` ([Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=hacknseek.notespace)).
-- **From a VSIX** (code-server, offline machines): download `notespace-<version>.vsix` from the [Releases](https://github.com/SeekNHack/NoteSpace/releases) page (built by GitHub Actions from the tagged source), then use Extensions view → **…** → **Install from VSIX…**, or `code-server --install-extension notespace-<version>.vsix`.
+- **VS Code**: search for **NoteSpace** in the Extensions view, or run `code --install-extension hacknseek.notespace-workspace` ([Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=hacknseek.notespace-workspace)).
+- **From a VSIX** (code-server, offline machines): download `notespace-workspace-<version>.vsix` from the [Releases](https://github.com/SeekNHack/NoteSpace/releases) page (built by GitHub Actions from the tagged source), then use Extensions view → **…** → **Install from VSIX…**, or `code-server --install-extension notespace-workspace-<version>.vsix`.
 
 Reload the window afterwards. Requires VS Code 1.96 or later.
 
@@ -136,7 +136,7 @@ Node.js 22.12+ and npm:
 npm ci
 npm test                              # typecheck + unit tests
 xvfb-run -a npm run test:integration  # VS Code extension host tests (Linux without a display)
-npm run package                       # builds notespace-<version>.vsix
+npm run package                       # builds notespace-workspace-<version>.vsix
 npm run test:code-server              # browser journeys on code-server (requires code-server and Chromium)
 ```
 

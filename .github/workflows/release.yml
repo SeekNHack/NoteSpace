@@ -46,9 +46,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          notes=$(awk '/^## /{n++} n==1' CHANGELOG.md | tail -n +2)
+          notes=$(awk '/^## /{n++} n==1' CHANGELOG.md | tail -n +2 | sed '/./,$!d')
           if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
             # The tag was moved to a new commit: replace the package and notes of the same release.
+            # Packages from the previous build of this release (possibly under another name) go first.
+            gh release view "${GITHUB_REF_NAME}" --json assets --jq '.assets[].name' | grep '\.vsix$' | while read -r old; do
+              gh release delete-asset "${GITHUB_REF_NAME}" "$old" --yes
+            done
             gh release upload "${GITHUB_REF_NAME}" *.vsix --clobber
             gh release edit "${GITHUB_REF_NAME}" --title "NoteSpace ${GITHUB_REF_NAME}" --notes "$notes"
           else

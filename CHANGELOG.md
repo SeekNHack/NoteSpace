@@ -20,7 +20,7 @@ First release.
 - **Wiki management** — remove a wiki from NoteSpace without touching its files, or delete its files with explicit confirmation; rename, description, icon, color, default wiki.
 - **Local-first and private** — everything is stored as files in your workspace; no account, no server, no telemetry.
 
-Install from the Visual Studio Marketplace (`hacknseek.notespace`) or download `notespace-1.0.0.vsix` below.
+Install from the Visual Studio Marketplace (`hacknseek.notespace-workspace`) or download `notespace-workspace-1.0.0.vsix` below.
 
 ## Development history (as Wiki Studio)
 
