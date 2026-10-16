@@ -27,7 +27,7 @@ import { parseDashboard, serializeDashboard } from '../../core/dashboard';
 import { existsSync, symlinkSync, unlinkSync } from 'node:fs';
 const waitFor = async (
   check: () => boolean | Promise<boolean>,
-  message: string,
+  message: string | (() => string),
   timeout = 15000,
 ) => {
   const end = Date.now() + timeout;
@@ -35,7 +35,7 @@ const waitFor = async (
     if (await check()) return;
     await new Promise((r) => setTimeout(r, 100));
   }
-  assert.fail(`Timed out: ${message}`);
+  assert.fail(`Timed out: ${typeof message === 'function' ? message() : message}`);
 };
 export async function run(): Promise<void> {
   const extension = vscode.extensions.getExtension<WikiStudioApi>('notespace.notespace');
@@ -92,7 +92,16 @@ export async function run(): Promise<void> {
       '# Target\n\n## Details\n\n[Home](../Home.md)\n\nUse `<script>alert(1)</script>` as an example.\n\n```md\n:::unknown\n[ref]: Guide.md\n```\n',
     );
     await ws.createPage(other, 'Home', '# Other Home\n');
-    assert.equal(ws.index.pages.size, 3);
+    assert.equal(
+      ws.index.pages.size,
+      3,
+      `index: ${JSON.stringify({
+        roots: ws.roots.map((r) => [r.uri.toString(), r.folder.uri.toString()]),
+        created: [home.toString(), target.toString()],
+        pages: [...ws.index.pages.values()].map((p) => p.uri),
+        issues: ws.issues,
+      })}`,
+    );
     assert.deepEqual(ws.index.byUri(home.toString())?.tags, ['start']);
     assert.match(Buffer.from(await vscode.workspace.fs.readFile(target)).toString(), /# Target/);
   });
@@ -798,7 +807,16 @@ export async function run(): Promise<void> {
         () =>
           ws.index.all(current.id).some((p) => p.path.endsWith('2026-10-13.md')) &&
           planner.tasks(current.id).some((t) => t.title.startsWith('Call Bob')),
-        'index rebuilt after enabling planner export',
+        () =>
+          `index rebuilt after enabling planner export: ${JSON.stringify({
+            root: current.id,
+            journals: ws.index
+              .all(current.id)
+              .map((p) => p.path)
+              .filter((p) => /daily|journal|2026/.test(p)),
+            tasks: planner.tasks(current.id).map((t) => t.title),
+            issues: ws.issues,
+          })}`,
       );
       const shared = await api.exportWiki(ws, current, parent, undefined, { planner });
       assert.ok((await files(vscode.Uri.joinPath(shared.uri, 'pages'))).includes('daily'));
