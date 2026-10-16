@@ -1,0 +1,131 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "NoteSpace dashboard",
+  "type": "object",
+  "required": ["schemaVersion", "title", "sources", "metrics", "widgets"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "title": { "type": "string" },
+    "description": { "type": "string" },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type", "path"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Za-z][\\w-]{0,63}$" },
+          "type": { "enum": ["csv", "tsv", "json", "jsonl", "xlsx"] },
+          "path": {
+            "type": "string",
+            "description": "Relative to this file; no ..",
+            "pattern": "^(?![a-zA-Z]+:|/|\\\\)(?!.*(^|[\\\\/])\\.\\.([\\\\/]|$)).+"
+          },
+          "sheet": { "type": "string" },
+          "range": { "type": "string", "description": "Excel table, defined name or A1 range" },
+          "headerRow": { "type": "integer", "minimum": 0 },
+          "dateOrder": { "enum": ["dmy", "mdy"] },
+          "decimal": { "enum": [".", ","] },
+          "missing": { "type": "array", "items": { "type": "string" } },
+          "types": {
+            "type": "object",
+            "additionalProperties": { "enum": ["number", "string", "date", "boolean"] }
+          }
+        }
+      }
+    },
+    "columns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source", "name", "formula"],
+        "properties": {
+          "source": { "type": "string" },
+          "name": { "type": "string" },
+          "formula": { "type": "string" },
+          "type": { "enum": ["number", "string", "date", "boolean"] }
+        }
+      }
+    },
+    "metrics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "source", "formula"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Za-z][\\w-]{0,63}$" },
+          "source": { "type": "string" },
+          "formula": {
+            "type": "string",
+            "description": "For example COUNT(rows) or COUNT_IF(Severity = \"Critical\")"
+          },
+          "label": { "type": "string" },
+          "format": { "enum": ["number", "percent", "currency", "days"] },
+          "decimals": { "type": "integer", "minimum": 0, "maximum": 6 }
+        }
+      }
+    },
+    "filters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "source", "column", "kind"],
+        "properties": {
+          "id": { "type": "string" },
+          "source": { "type": "string" },
+          "column": { "type": "string" },
+          "kind": { "enum": ["select", "dateRange", "search"] },
+          "label": { "type": "string" }
+        }
+      }
+    },
+    "widgets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Za-z][\\w-]{0,63}$" },
+          "type": { "enum": ["metric", "chart", "table", "progress", "text", "filter"] },
+          "title": { "type": "string" },
+          "layout": {
+            "type": "object",
+            "properties": {
+              "x": { "type": "integer" },
+              "y": { "type": "integer" },
+              "w": { "type": "integer" },
+              "h": { "type": "integer" }
+            }
+          },
+          "metric": { "type": "string" },
+          "target": { "type": ["number", "string"] },
+          "chart": {
+            "enum": ["bar", "line", "area", "pie", "donut", "scatter", "histogram", "timeseries"]
+          },
+          "source": { "type": "string" },
+          "dimension": { "type": "string" },
+          "bucket": { "enum": ["day", "week", "month", "quarter", "year"] },
+          "metrics": { "type": "array", "items": { "type": "string" } },
+          "y": { "type": "string" },
+          "bins": { "type": "integer" },
+          "sort": { "enum": ["label", "value-desc", "value-asc"] },
+          "limit": { "type": "integer" },
+          "columns": { "type": "array", "items": { "type": "string" } },
+          "pageSize": { "type": "integer" },
+          "text": { "type": "string" },
+          "filter": { "type": "string" }
+        }
+      }
+    },
+    "export": {
+      "type": "object",
+      "properties": {
+        "snapshots": {
+          "type": "boolean",
+          "description": "Allow aggregated snapshots in static exports"
+        },
+        "tables": { "type": "boolean", "description": "Allow record tables in static exports" }
+      }
+    },
+    "refresh": { "type": "object", "properties": { "auto": { "type": "boolean" } } }
+  }
+}

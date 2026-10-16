@@ -1,0 +1,1652 @@
+{
+  "name": "notespace",
+  "displayName": "NoteSpace",
+  "description": "A local-first workspace for VS Code: wiki and docs with a visual Markdown editor, tasks, Kanban boards, calendar, notebooks, dashboards and an API client — all in your files.",
+  "version": "1.0.0",
+  "publisher": "notespace",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SeekNHack/NoteSpace.git"
+  },
+  "homepage": "https://github.com/SeekNHack/NoteSpace#readme",
+  "bugs": {
+    "url": "https://github.com/SeekNHack/NoteSpace/issues"
+  },
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "categories": [
+    "Other",
+    "Visualization"
+  ],
+  "keywords": [
+    "wiki",
+    "markdown",
+    "knowledge",
+    "backlinks",
+    "notes"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "Running notebook cells and code blocks, and sending API Playground requests, require a trusted workspace. Reading, editing, dashboards, search and exporting work without trust."
+    },
+    "virtualWorkspaces": {
+      "supported": true
+    }
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "wikiStudio.initialize",
+        "title": "Initialize Wiki",
+        "category": "NoteSpace",
+        "icon": "$(book)"
+      },
+      {
+        "command": "wikiStudio.newPage",
+        "title": "New Page",
+        "category": "NoteSpace",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "wikiStudio.dailyNote",
+        "title": "Open Today's Daily Note",
+        "category": "NoteSpace",
+        "icon": "$(calendar)"
+      },
+      {
+        "command": "wikiStudio.search",
+        "title": "Search Pages",
+        "category": "NoteSpace",
+        "icon": "$(search)"
+      },
+      {
+        "command": "wikiStudio.advancedSearch",
+        "title": "Advanced Search",
+        "category": "NoteSpace",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "wikiStudio.preview",
+        "title": "Open Reader Preview",
+        "category": "NoteSpace",
+        "icon": "$(open-preview)"
+      },
+      {
+        "command": "wikiStudio.graph",
+        "title": "Explore Link Graph",
+        "category": "NoteSpace",
+        "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "wikiStudio.renamePage",
+        "title": "Rename Page and Update Links",
+        "category": "NoteSpace",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "wikiStudio.deletePage",
+        "title": "Delete Page",
+        "category": "NoteSpace",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "wikiStudio.export",
+        "title": "Export Wiki to HTML",
+        "category": "NoteSpace",
+        "icon": "$(export)"
+      },
+      {
+        "command": "wikiStudio.refresh",
+        "title": "Refresh Index",
+        "category": "NoteSpace",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "wikiStudio.insertLink",
+        "title": "Insert Wiki Link",
+        "category": "NoteSpace",
+        "icon": "$(link)"
+      },
+      {
+        "command": "wikiStudio.openPage",
+        "title": "Open Page",
+        "category": "NoteSpace"
+      },
+      {
+        "command": "wikiStudio.restorePage",
+        "title": "Restore Deleted Page",
+        "category": "NoteSpace",
+        "icon": "$(history)"
+      },
+      {
+        "command": "wikiStudio.createWiki",
+        "title": "Create Wiki",
+        "category": "NoteSpace",
+        "icon": "$(add)"
+      },
+      {
+        "command": "wikiStudio.openWiki",
+        "title": "Open Wiki Index Page",
+        "category": "NoteSpace",
+        "icon": "$(book)"
+      },
+      {
+        "command": "wikiStudio.importProject",
+        "title": "Import Markdown or MkDocs Project",
+        "category": "NoteSpace",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "wikiStudio.newSection",
+        "title": "New Folder",
+        "category": "NoteSpace",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "wikiStudio.visual",
+        "title": "Open in Studio",
+        "category": "NoteSpace",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "wikiStudio.source",
+        "title": "Open in Code (Markdown Source)",
+        "category": "NoteSpace",
+        "icon": "$(code)"
+      },
+      {
+        "command": "wikiStudio.split",
+        "title": "Open Split View",
+        "category": "NoteSpace",
+        "icon": "$(split-horizontal)"
+      },
+      {
+        "command": "wikiStudio.duplicatePage",
+        "title": "Duplicate Page",
+        "category": "NoteSpace",
+        "icon": "$(files)"
+      },
+      {
+        "command": "wikiStudio.copyLink",
+        "title": "Copy Wiki Link",
+        "category": "NoteSpace",
+        "icon": "$(link)"
+      },
+      {
+        "command": "wikiStudio.settings",
+        "title": "Open Wiki Settings",
+        "category": "NoteSpace",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "wikiStudio.movePage",
+        "title": "Move Page",
+        "category": "NoteSpace",
+        "icon": "$(move)"
+      },
+      {
+        "command": "wikiStudio.buildWiki",
+        "title": "Build Wiki",
+        "category": "NoteSpace",
+        "icon": "$(package)"
+      },
+      {
+        "command": "wikiStudio.importImage",
+        "title": "Import Image",
+        "category": "NoteSpace",
+        "icon": "$(file-media)"
+      },
+      {
+        "command": "wikiStudio.pageProperties",
+        "title": "Edit Page Properties and Order",
+        "category": "NoteSpace",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "wikiStudio.validate",
+        "title": "Validate Wiki",
+        "category": "NoteSpace",
+        "icon": "$(check-all)"
+      },
+      {
+        "command": "wikiStudio.renameSection",
+        "title": "Rename or Move Section",
+        "category": "NoteSpace",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "wikiStudio.deleteSection",
+        "title": "Delete Section",
+        "category": "NoteSpace",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "wikiStudio.browseImages",
+        "title": "Browse Wiki Images",
+        "category": "NoteSpace",
+        "icon": "$(symbol-color)"
+      },
+      {
+        "command": "wikiStudio.importAttachment",
+        "title": "Import Attachment",
+        "category": "NoteSpace",
+        "icon": "$(file-binary)"
+      },
+      {
+        "command": "wikiStudio.newFromTemplate",
+        "title": "New Page from Template",
+        "category": "NoteSpace",
+        "icon": "$(file-add)"
+      },
+      {
+        "command": "wikiStudio.toggleFavorite",
+        "title": "Toggle Favorite",
+        "category": "NoteSpace",
+        "icon": "$(star)"
+      },
+      {
+        "command": "wikiStudio.filterPages",
+        "title": "Filter Wiki Explorer",
+        "category": "NoteSpace",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "wikiStudio.home",
+        "title": "Open Home",
+        "category": "NoteSpace",
+        "icon": "$(home)"
+      },
+      {
+        "command": "wikiStudio.focusContext",
+        "title": "Show Page Outline and Backlinks",
+        "category": "NoteSpace",
+        "icon": "$(list-tree)"
+      },
+      {
+        "command": "wikiStudio.revealSection",
+        "title": "Reveal Section in Wiki Explorer",
+        "category": "NoteSpace",
+        "icon": "$(folder)"
+      },
+      {
+        "command": "wikiStudio.revealInExplorer",
+        "title": "Reveal in File Explorer",
+        "category": "NoteSpace",
+        "icon": "$(files)"
+      },
+      {
+        "command": "wikiStudio.openToSide",
+        "title": "Open to the Side",
+        "category": "NoteSpace",
+        "icon": "$(split-horizontal)"
+      },
+      {
+        "command": "wikiStudio.addFavorite",
+        "title": "Add to Favorites",
+        "category": "NoteSpace",
+        "icon": "$(star-empty)"
+      },
+      {
+        "command": "wikiStudio.removeFavorite",
+        "title": "Remove from Favorites",
+        "category": "NoteSpace",
+        "icon": "$(star-full)"
+      },
+      {
+        "command": "wikiStudio.importMedia",
+        "title": "Import Audio or Video",
+        "category": "NoteSpace",
+        "icon": "$(device-camera-video)"
+      },
+      {
+        "command": "wikiStudio.planner",
+        "title": "Open Planner",
+        "category": "NoteSpace",
+        "icon": "$(checklist)"
+      },
+      {
+        "command": "wikiStudio.addTask",
+        "title": "Add Task",
+        "category": "NoteSpace",
+        "icon": "$(add)"
+      },
+      {
+        "command": "wikiStudio.dailyNotePrevious",
+        "title": "Previous Daily Note",
+        "category": "NoteSpace",
+        "icon": "$(arrow-left)"
+      },
+      {
+        "command": "wikiStudio.dailyNoteNext",
+        "title": "Next Daily Note",
+        "category": "NoteSpace",
+        "icon": "$(arrow-right)"
+      },
+      {
+        "command": "wikiStudio.dailyNoteForDate",
+        "title": "Open Daily Note for Date…",
+        "category": "NoteSpace",
+        "icon": "$(calendar)"
+      },
+      {
+        "command": "wikiStudio.openNotebook",
+        "title": "Open Notebook",
+        "category": "NoteSpace",
+        "icon": "$(notebook)"
+      },
+      {
+        "command": "wikiStudio.notebookPreview",
+        "title": "Preview Notebook (Saved Outputs)",
+        "category": "NoteSpace",
+        "icon": "$(open-preview)"
+      },
+      {
+        "command": "wikiStudio.notebookToMarkdown",
+        "title": "Convert Notebook to Markdown Page",
+        "category": "NoteSpace",
+        "icon": "$(markdown)"
+      },
+      {
+        "command": "wikiStudio.importNotebook",
+        "title": "Import Jupyter Notebook",
+        "category": "NoteSpace",
+        "icon": "$(notebook)"
+      },
+      {
+        "command": "wikiStudio.newCanvas",
+        "title": "New Canvas",
+        "category": "NoteSpace",
+        "icon": "$(symbol-structure)"
+      },
+      {
+        "command": "wikiStudio.openApiPlayground",
+        "title": "Open API Playground",
+        "category": "NoteSpace",
+        "icon": "$(debug-alt)"
+      },
+      {
+        "command": "wikiStudio.generateApiReference",
+        "title": "Generate API Reference Pages",
+        "category": "NoteSpace",
+        "icon": "$(references)"
+      },
+      {
+        "command": "wikiStudio.contentHealth",
+        "title": "Open Content Health Report",
+        "category": "NoteSpace",
+        "icon": "$(pulse)"
+      },
+      {
+        "command": "wikiStudio.addLanguage",
+        "title": "Add Language",
+        "category": "NoteSpace",
+        "icon": "$(globe)"
+      },
+      {
+        "command": "wikiStudio.createTranslation",
+        "title": "Create Translation",
+        "category": "NoteSpace",
+        "icon": "$(globe)"
+      },
+      {
+        "command": "wikiStudio.markTranslationCurrent",
+        "title": "Mark Translation as Up to Date",
+        "category": "NoteSpace",
+        "icon": "$(check)"
+      },
+      {
+        "command": "wikiStudio.archiveVersion",
+        "title": "Archive Current Version",
+        "category": "NoteSpace",
+        "icon": "$(archive)"
+      },
+      {
+        "command": "wikiStudio.pageHistory",
+        "title": "Show Page History",
+        "category": "NoteSpace",
+        "icon": "$(history)"
+      },
+      {
+        "command": "wikiStudio.browseGitVersion",
+        "title": "Browse Wiki at Git Tag or Branch",
+        "category": "NoteSpace",
+        "icon": "$(tag)"
+      },
+      {
+        "command": "wikiStudio.compareWithGitVersion",
+        "title": "Compare Page with Git Tag or Branch",
+        "category": "NoteSpace",
+        "icon": "$(git-compare)"
+      },
+      {
+        "command": "wikiStudio.review.comment",
+        "title": "Add Comment",
+        "category": "NoteSpace",
+        "icon": "$(comment)"
+      },
+      {
+        "command": "wikiStudio.review.resolve",
+        "title": "Resolve",
+        "category": "NoteSpace",
+        "icon": "$(check)"
+      },
+      {
+        "command": "wikiStudio.review.reopen",
+        "title": "Reopen",
+        "category": "NoteSpace",
+        "icon": "$(debug-restart)"
+      },
+      {
+        "command": "wikiStudio.review.delete",
+        "title": "Delete Comment",
+        "category": "NoteSpace",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "wikiStudio.importObsidian",
+        "title": "Import Obsidian Vault",
+        "category": "NoteSpace",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "wikiStudio.copyMcpConfig",
+        "title": "Copy MCP Server Configuration",
+        "category": "NoteSpace",
+        "icon": "$(plug)"
+      },
+      {
+        "command": "wikiStudio.ai.improve",
+        "title": "AI: Improve Page or Selection",
+        "category": "NoteSpace",
+        "icon": "$(sparkle)"
+      },
+      {
+        "command": "wikiStudio.ai.translate",
+        "title": "AI: Translate Page",
+        "category": "NoteSpace",
+        "icon": "$(globe)"
+      },
+      {
+        "command": "wikiStudio.ai.docsFromCode",
+        "title": "AI: Draft Documentation from Code",
+        "category": "NoteSpace",
+        "icon": "$(sparkle)"
+      },
+      {
+        "command": "wikiStudio.ai.review",
+        "title": "AI: Review Page Quality",
+        "category": "NoteSpace",
+        "icon": "$(checklist)"
+      },
+      {
+        "command": "wikiStudio.ai.apply",
+        "title": "Apply AI Proposal",
+        "category": "NoteSpace",
+        "icon": "$(check)"
+      },
+      {
+        "command": "wikiStudio.ai.discard",
+        "title": "Discard AI Proposal",
+        "category": "NoteSpace",
+        "icon": "$(close)"
+      },
+      {
+        "command": "wikiStudio.ai.setEndpointKey",
+        "title": "AI: Set Endpoint API Key",
+        "category": "NoteSpace",
+        "icon": "$(key)"
+      },
+      {
+        "command": "wikiStudio.semanticSearch",
+        "title": "Semantic Search (Local Model)",
+        "category": "NoteSpace",
+        "icon": "$(search-fuzzy)"
+      },
+      {
+        "command": "wikiStudio.exportPdf",
+        "title": "Export PDF (Page, Section or Wiki)",
+        "category": "NoteSpace",
+        "icon": "$(file-pdf)"
+      },
+      {
+        "command": "wikiStudio.exportEpub",
+        "title": "Export EPUB",
+        "category": "NoteSpace",
+        "icon": "$(book)"
+      },
+      {
+        "command": "wikiStudio.themeBuilder",
+        "title": "Customize Site Theme",
+        "category": "NoteSpace",
+        "icon": "$(symbol-color)"
+      },
+      {
+        "command": "wikiStudio.kanban",
+        "title": "Open Kanban Board",
+        "category": "NoteSpace",
+        "icon": "$(project)"
+      },
+      {
+        "command": "wikiStudio.boards",
+        "title": "Open Boards",
+        "category": "NoteSpace",
+        "icon": "$(project)"
+      },
+      {
+        "command": "wikiStudio.openBoard",
+        "title": "Open Board…",
+        "category": "NoteSpace",
+        "icon": "$(project)"
+      },
+      {
+        "command": "wikiStudio.newBoard",
+        "title": "New Board",
+        "category": "NoteSpace",
+        "icon": "$(add)"
+      },
+      {
+        "command": "wikiStudio.tasks",
+        "title": "Open Tasks",
+        "category": "NoteSpace",
+        "icon": "$(checklist)"
+      },
+      {
+        "command": "wikiStudio.calendar",
+        "title": "Open Calendar",
+        "category": "NoteSpace",
+        "icon": "$(calendar)"
+      },
+      {
+        "command": "wikiStudio.insights",
+        "title": "Open Insights",
+        "category": "NoteSpace",
+        "icon": "$(graph)"
+      },
+      {
+        "command": "wikiStudio.openWikiHome",
+        "title": "Open Wiki Homepage",
+        "category": "NoteSpace",
+        "icon": "$(book)"
+      },
+      {
+        "command": "wikiStudio.apiClient",
+        "title": "Open API Client",
+        "category": "NoteSpace",
+        "icon": "$(globe)"
+      },
+      {
+        "command": "wikiStudio.apiNewRequest",
+        "title": "New API Request",
+        "category": "NoteSpace",
+        "icon": "$(add)"
+      },
+      {
+        "command": "wikiStudio.apiImportCurl",
+        "title": "Import curl Command",
+        "category": "NoteSpace",
+        "icon": "$(terminal)"
+      },
+      {
+        "command": "wikiStudio.apiImportOpenApi",
+        "title": "Import OpenAPI as API Collection",
+        "category": "NoteSpace",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "wikiStudio.removeWiki",
+        "title": "Remove Wiki from NoteSpace",
+        "category": "NoteSpace",
+        "icon": "$(close)"
+      },
+      {
+        "command": "wikiStudio.restoreWikis",
+        "title": "Restore Removed Wikis",
+        "category": "NoteSpace",
+        "icon": "$(history)"
+      },
+      {
+        "command": "wikiStudio.renameWiki",
+        "title": "Rename Wiki…",
+        "category": "NoteSpace",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "wikiStudio.editWikiDescription",
+        "title": "Edit Wiki Description…",
+        "category": "NoteSpace",
+        "icon": "$(note)"
+      },
+      {
+        "command": "wikiStudio.setWikiIcon",
+        "title": "Change Wiki Icon…",
+        "category": "NoteSpace",
+        "icon": "$(symbol-misc)"
+      },
+      {
+        "command": "wikiStudio.setWikiColor",
+        "title": "Change Wiki Color…",
+        "category": "NoteSpace",
+        "icon": "$(symbol-color)"
+      },
+      {
+        "command": "wikiStudio.openWikiSettings",
+        "title": "Open Wiki Settings",
+        "category": "NoteSpace",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "wikiStudio.setDefaultWiki",
+        "title": "Set as Default Wiki",
+        "category": "NoteSpace",
+        "icon": "$(star-full)"
+      },
+      {
+        "command": "wikiStudio.deleteWiki",
+        "title": "Delete Wiki Files…",
+        "category": "NoteSpace",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "wikiStudio.newNote",
+        "title": "New Note",
+        "category": "NoteSpace",
+        "icon": "$(note)"
+      },
+      {
+        "command": "wikiStudio.addTaskToBoard",
+        "title": "Add Task to Board",
+        "category": "NoteSpace",
+        "icon": "$(project)"
+      },
+      {
+        "command": "wikiStudio.newDashboard",
+        "title": "New Dashboard",
+        "category": "NoteSpace",
+        "icon": "$(graph)"
+      },
+      {
+        "command": "wikiStudio.openCodeRef",
+        "title": "Open Code Reference",
+        "category": "NoteSpace"
+      },
+      {
+        "command": "wikiStudio.insertCodeReference",
+        "title": "Insert Code Reference",
+        "category": "NoteSpace",
+        "icon": "$(symbol-method)"
+      },
+      {
+        "command": "wikiStudio.showDocsForFile",
+        "title": "Show Documentation for This File",
+        "category": "NoteSpace",
+        "icon": "$(book)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "wikiStudio",
+          "title": "NoteSpace",
+          "icon": "media/wiki.svg"
+        }
+      ]
+    },
+    "views": {
+      "wikiStudio": [
+        {
+          "id": "wikiStudio.pages",
+          "name": "Pages"
+        },
+        {
+          "id": "wikiStudio.planner",
+          "name": "Workspace"
+        },
+        {
+          "id": "wikiStudio.context",
+          "name": "Page",
+          "visibility": "collapsed"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "wikiStudio.pages",
+        "contents": "NoteSpace keeps documentation as local Markdown files.\n[Create Wiki](command:wikiStudio.createWiki)\n[Import Markdown or MkDocs Project](command:wikiStudio.importProject)\nAlready have Markdown in a folder named `wiki`? [New Page](command:wikiStudio.newPage) creates the first one.",
+        "when": "!wikiStudio.hasPages"
+      },
+      {
+        "view": "wikiStudio.context",
+        "contents": "Open a wiki page to see its outline, backlinks, links and properties here.\nTip: drag this view to the Secondary Side Bar to keep it beside your editor."
+      },
+      {
+        "view": "wikiStudio.planner",
+        "contents": "Home, tasks, boards and calendar for this wiki.\n[Open Home](command:wikiStudio.home)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "wikiStudio.newPage",
+          "when": "view == wikiStudio.pages",
+          "group": "navigation@1"
+        },
+        {
+          "command": "wikiStudio.newSection",
+          "when": "view == wikiStudio.pages",
+          "group": "navigation@2"
+        },
+        {
+          "command": "wikiStudio.filterPages",
+          "when": "view == wikiStudio.pages",
+          "group": "navigation@4"
+        },
+        {
+          "command": "wikiStudio.home",
+          "when": "view == wikiStudio.pages",
+          "group": "navigation@5"
+        },
+        {
+          "command": "wikiStudio.search",
+          "when": "view == wikiStudio.pages",
+          "group": "navigation@3"
+        },
+        {
+          "command": "wikiStudio.advancedSearch",
+          "when": "view == wikiStudio.pages",
+          "group": "navigation@3"
+        },
+        {
+          "command": "wikiStudio.newFromTemplate",
+          "when": "view == wikiStudio.pages",
+          "group": "2_create@1"
+        },
+        {
+          "command": "wikiStudio.dailyNote",
+          "when": "view == wikiStudio.pages",
+          "group": "2_create@2"
+        },
+        {
+          "command": "wikiStudio.graph",
+          "when": "view == wikiStudio.pages",
+          "group": "3_wiki@1"
+        },
+        {
+          "command": "wikiStudio.validate",
+          "when": "view == wikiStudio.pages",
+          "group": "3_wiki@2"
+        },
+        {
+          "command": "wikiStudio.restorePage",
+          "when": "view == wikiStudio.pages",
+          "group": "3_wiki@3"
+        },
+        {
+          "command": "wikiStudio.settings",
+          "when": "view == wikiStudio.pages",
+          "group": "3_wiki@4"
+        },
+        {
+          "command": "wikiStudio.buildWiki",
+          "when": "view == wikiStudio.pages",
+          "group": "4_publish@1"
+        },
+        {
+          "command": "wikiStudio.export",
+          "when": "view == wikiStudio.pages",
+          "group": "4_publish@2"
+        },
+        {
+          "command": "wikiStudio.createWiki",
+          "when": "view == wikiStudio.pages",
+          "group": "5_project@1"
+        },
+        {
+          "command": "wikiStudio.importProject",
+          "when": "view == wikiStudio.pages",
+          "group": "5_project@2"
+        },
+        {
+          "command": "wikiStudio.refresh",
+          "when": "view == wikiStudio.pages",
+          "group": "5_project@3"
+        },
+        {
+          "command": "wikiStudio.pageProperties",
+          "when": "view == wikiStudio.context",
+          "group": "navigation"
+        },
+        {
+          "command": "wikiStudio.addTask",
+          "when": "view == wikiStudio.planner",
+          "group": "navigation@1"
+        },
+        {
+          "command": "wikiStudio.planner",
+          "when": "view == wikiStudio.planner",
+          "group": "navigation@2"
+        },
+        {
+          "command": "wikiStudio.dailyNoteForDate",
+          "when": "view == wikiStudio.planner",
+          "group": "navigation@3"
+        },
+        {
+          "command": "wikiStudio.importNotebook",
+          "when": "view == wikiStudio.pages",
+          "group": "5_project@4"
+        },
+        {
+          "command": "wikiStudio.newCanvas",
+          "when": "view == wikiStudio.pages",
+          "group": "2_create@3"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "wikiStudio.addFavorite",
+          "when": "view == wikiStudio.pages && viewItem == wikiPage",
+          "group": "inline"
+        },
+        {
+          "command": "wikiStudio.removeFavorite",
+          "when": "view == wikiStudio.pages && viewItem == wikiFavoritePage",
+          "group": "inline"
+        },
+        {
+          "command": "wikiStudio.newPage",
+          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Folder|Root)$/",
+          "group": "inline@1"
+        },
+        {
+          "command": "wikiStudio.newSection",
+          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Folder|Root)$/",
+          "group": "inline@2"
+        },
+        {
+          "command": "wikiStudio.visual",
+          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "group": "1_open@1"
+        },
+        {
+          "command": "wikiStudio.source",
+          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "group": "1_open@2"
+        },
+        {
+          "command": "wikiStudio.openToSide",
+          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "group": "1_open@3"
+        },
+        {
+          "command": "wikiStudio.preview",
+          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "group": "1_open@4"
+        },
+        {
+          "command": "wikiStudio.renamePage",
+          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "group": "2_edit@1"
+        },
+        {
+          "command": "wikiStudio.movePage",
+          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "group": "2_edit@2"
+        },
+        {
+          "command": "wikiStudio.duplicatePage",
+          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "group": "2_edit@3"
+        },
+        {
+          "command": "wikiStudio.pageProperties",
+          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "group": "2_edit@4"
+        },
+        {
+          "command": "wikiStudio.copyLink",
+          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "group": "3_link@1"
+        },
+        {
+          "command": "wikiStudio.addFavorite",
+          "when": "view == wikiStudio.pages && viewItem == wikiPage",
+          "group": "3_link@2"
+        },
+        {
+          "command": "wikiStudio.removeFavorite",
+          "when": "view == wikiStudio.pages && viewItem == wikiFavoritePage",
+          "group": "3_link@2"
+        },
+        {
+          "command": "wikiStudio.importImage",
+          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "group": "4_assets@1"
+        },
+        {
+          "command": "wikiStudio.browseImages",
+          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "group": "4_assets@2"
+        },
+        {
+          "command": "wikiStudio.importAttachment",
+          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "group": "4_assets@3"
+        },
+        {
+          "command": "wikiStudio.importMedia",
+          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "group": "4_assets@4"
+        },
+        {
+          "command": "wikiStudio.revealInExplorer",
+          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "group": "8_reveal@1"
+        },
+        {
+          "command": "wikiStudio.deletePage",
+          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "group": "9_delete@1"
+        },
+        {
+          "command": "wikiStudio.newPage",
+          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Folder|Root)$/",
+          "group": "1_create@1"
+        },
+        {
+          "command": "wikiStudio.newFromTemplate",
+          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Folder|Root)$/",
+          "group": "1_create@2"
+        },
+        {
+          "command": "wikiStudio.newSection",
+          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Folder|Root)$/",
+          "group": "1_create@3"
+        },
+        {
+          "command": "wikiStudio.renameSection",
+          "when": "view == wikiStudio.pages && viewItem == wikiFolder",
+          "group": "2_edit@1"
+        },
+        {
+          "command": "wikiStudio.revealInExplorer",
+          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Folder|Root)$/",
+          "group": "8_reveal@1"
+        },
+        {
+          "command": "wikiStudio.deleteSection",
+          "when": "view == wikiStudio.pages && viewItem == wikiFolder",
+          "group": "9_delete@1"
+        },
+        {
+          "command": "wikiStudio.renameWiki",
+          "when": "view == wikiStudio.pages && viewItem == wikiRoot",
+          "group": "2_edit@1"
+        },
+        {
+          "command": "wikiStudio.editWikiDescription",
+          "when": "view == wikiStudio.pages && viewItem == wikiRoot",
+          "group": "2_edit@2"
+        },
+        {
+          "command": "wikiStudio.setWikiIcon",
+          "when": "view == wikiStudio.pages && viewItem == wikiRoot",
+          "group": "2_edit@3"
+        },
+        {
+          "command": "wikiStudio.setWikiColor",
+          "when": "view == wikiStudio.pages && viewItem == wikiRoot",
+          "group": "2_edit@4"
+        },
+        {
+          "command": "wikiStudio.setDefaultWiki",
+          "when": "view == wikiStudio.pages && viewItem == wikiRoot",
+          "group": "3_wiki@1"
+        },
+        {
+          "command": "wikiStudio.openWikiSettings",
+          "when": "view == wikiStudio.pages && viewItem == wikiRoot",
+          "group": "3_wiki@2"
+        },
+        {
+          "command": "wikiStudio.removeWiki",
+          "when": "view == wikiStudio.pages && viewItem == wikiRoot",
+          "group": "9_delete@1"
+        },
+        {
+          "command": "wikiStudio.deleteWiki",
+          "when": "view == wikiStudio.pages && viewItem == wikiRoot",
+          "group": "9_delete@2"
+        },
+        {
+          "command": "wikiStudio.openNotebook",
+          "when": "view == wikiStudio.pages && viewItem == wikiNotebook",
+          "group": "1_open@1"
+        },
+        {
+          "command": "wikiStudio.notebookPreview",
+          "when": "view == wikiStudio.pages && viewItem == wikiNotebook",
+          "group": "1_open@2"
+        },
+        {
+          "command": "wikiStudio.notebookToMarkdown",
+          "when": "view == wikiStudio.pages && viewItem == wikiNotebook",
+          "group": "2_edit@1"
+        },
+        {
+          "command": "wikiStudio.revealInExplorer",
+          "when": "view == wikiStudio.pages && viewItem == wikiNotebook",
+          "group": "8_reveal@1"
+        },
+        {
+          "command": "wikiStudio.revealInExplorer",
+          "when": "view == wikiStudio.pages && viewItem == wikiCanvas",
+          "group": "8_reveal@1"
+        },
+        {
+          "command": "wikiStudio.createTranslation",
+          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "group": "2_edit@9"
+        },
+        {
+          "command": "wikiStudio.pageHistory",
+          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "group": "1_open@5"
+        },
+        {
+          "command": "wikiStudio.compareWithGitVersion",
+          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "group": "1_open@6"
+        },
+        {
+          "command": "wikiStudio.exportPdf",
+          "when": "view == wikiStudio.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
+          "group": "7_export@1"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "wikiStudio.visual",
+          "when": "wikiStudio.activeIsWikiPage && editorLangId == markdown && !activeCustomEditorId",
+          "group": "navigation@1"
+        },
+        {
+          "command": "wikiStudio.source",
+          "when": "activeCustomEditorId == wikiStudio.visual",
+          "group": "navigation@1"
+        },
+        {
+          "command": "wikiStudio.split",
+          "when": "activeCustomEditorId == wikiStudio.visual",
+          "group": "navigation@2"
+        },
+        {
+          "command": "wikiStudio.preview",
+          "when": "activeCustomEditorId == wikiStudio.visual || wikiStudio.activeIsWikiPage && editorLangId == markdown && !activeCustomEditorId",
+          "group": "navigation@3"
+        },
+        {
+          "command": "wikiStudio.dailyNotePrevious",
+          "when": "wikiStudio.activeIsJournal",
+          "group": "navigation@0"
+        },
+        {
+          "command": "wikiStudio.dailyNoteNext",
+          "when": "wikiStudio.activeIsJournal",
+          "group": "navigation@0"
+        },
+        {
+          "command": "wikiStudio.notebookPreview",
+          "when": "resourceExtname == .ipynb && activeEditor == workbench.editor.notebook",
+          "group": "navigation@5"
+        },
+        {
+          "command": "wikiStudio.openApiPlayground",
+          "when": "resourceExtname =~ /^\\.(ya?ml|json)$/ && wikiStudio.activeIsOpenApi",
+          "group": "navigation@5"
+        },
+        {
+          "command": "wikiStudio.ai.apply",
+          "when": "resourceScheme == wiki-ai",
+          "group": "navigation@1"
+        },
+        {
+          "command": "wikiStudio.ai.discard",
+          "when": "resourceScheme == wiki-ai",
+          "group": "navigation@2"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "wikiStudio.openPage",
+          "when": "false"
+        },
+        {
+          "command": "wikiStudio.revealSection",
+          "when": "false"
+        },
+        {
+          "command": "wikiStudio.addFavorite",
+          "when": "wikiStudio.activeIsWikiPage"
+        },
+        {
+          "command": "wikiStudio.removeFavorite",
+          "when": "wikiStudio.activeIsWikiPage"
+        },
+        {
+          "command": "wikiStudio.review.comment",
+          "when": "false"
+        },
+        {
+          "command": "wikiStudio.review.resolve",
+          "when": "false"
+        },
+        {
+          "command": "wikiStudio.review.reopen",
+          "when": "false"
+        },
+        {
+          "command": "wikiStudio.review.delete",
+          "when": "false"
+        },
+        {
+          "command": "wikiStudio.ai.apply",
+          "when": "resourceScheme == wiki-ai"
+        },
+        {
+          "command": "wikiStudio.ai.discard",
+          "when": "resourceScheme == wiki-ai"
+        },
+        {
+          "command": "wikiStudio.openCodeRef",
+          "when": "false"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "wikiStudio.openApiPlayground",
+          "when": "resourceExtname =~ /^\\.(ya?ml|json)$/",
+          "group": "navigation@9"
+        },
+        {
+          "command": "wikiStudio.generateApiReference",
+          "when": "resourceExtname =~ /^\\.(ya?ml|json)$/",
+          "group": "navigation@9"
+        },
+        {
+          "command": "wikiStudio.apiImportOpenApi",
+          "when": "resourceExtname =~ /^\\.(ya?ml|json)$/",
+          "group": "navigation@9"
+        },
+        {
+          "command": "wikiStudio.newDashboard",
+          "when": "resourceExtname =~ /^\\.(csv|tsv|xlsx|json|jsonl|ndjson)$/",
+          "group": "navigation@10"
+        }
+      ],
+      "comments/commentThread/context": [
+        {
+          "command": "wikiStudio.review.comment",
+          "group": "inline",
+          "when": "commentController == wikiStudio.review"
+        }
+      ],
+      "comments/commentThread/title": [
+        {
+          "command": "wikiStudio.review.resolve",
+          "group": "inline",
+          "when": "commentController == wikiStudio.review && commentThread == reviewOpen"
+        },
+        {
+          "command": "wikiStudio.review.reopen",
+          "group": "inline",
+          "when": "commentController == wikiStudio.review && commentThread == reviewResolved"
+        }
+      ],
+      "comments/comment/title": [
+        {
+          "command": "wikiStudio.review.delete",
+          "group": "inline",
+          "when": "commentController == wikiStudio.review && comment == reviewComment"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "wikiStudio.showDocsForFile",
+          "when": "resourceScheme == file && resourceLangId != markdown",
+          "group": "navigation@90"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "wikiStudio.search",
+        "key": "ctrl+alt+w",
+        "mac": "cmd+alt+w"
+      },
+      {
+        "command": "wikiStudio.advancedSearch",
+        "key": "ctrl+alt+shift+f",
+        "mac": "cmd+alt+shift+f"
+      },
+      {
+        "command": "wikiStudio.home",
+        "key": "ctrl+alt+h",
+        "mac": "cmd+alt+h"
+      },
+      {
+        "command": "wikiStudio.source",
+        "key": "ctrl+alt+e",
+        "mac": "cmd+alt+e",
+        "when": "activeCustomEditorId == wikiStudio.visual"
+      },
+      {
+        "command": "wikiStudio.visual",
+        "key": "ctrl+alt+e",
+        "mac": "cmd+alt+e",
+        "when": "wikiStudio.activeIsWikiPage && editorLangId == markdown && !activeCustomEditorId"
+      },
+      {
+        "command": "wikiStudio.dailyNote",
+        "key": "ctrl+alt+d",
+        "mac": "cmd+alt+d"
+      },
+      {
+        "command": "wikiStudio.addTask",
+        "key": "ctrl+alt+t",
+        "mac": "cmd+alt+t"
+      },
+      {
+        "command": "wikiStudio.planner",
+        "key": "ctrl+alt+p",
+        "mac": "cmd+alt+p"
+      }
+    ],
+    "configuration": {
+      "title": "NoteSpace",
+      "properties": {
+        "wikiStudio.root": {
+          "type": "string",
+          "default": "wiki",
+          "scope": "resource",
+          "description": "Wiki directory relative to each workspace folder. Use '.' to index the whole folder."
+        },
+        "wikiStudio.exclude": {
+          "type": "string",
+          "default": "**/{node_modules,.git,.templates,.wiki-studio-trash,.wiki-studio-export}/**",
+          "scope": "resource",
+          "description": "Glob of files excluded from the wiki index."
+        },
+        "wikiStudio.respectGitignore": {
+          "type": "boolean",
+          "default": false,
+          "scope": "resource",
+          "markdownDescription": "Leave out pages that Git ignores (`.gitignore` files of the workspace folder, including nested files and `!` negations). Off by default so private, ignored notes stay visible in your wiki."
+        },
+        "wikiStudio.openPagesIn": {
+          "type": "string",
+          "enum": [
+            "studio",
+            "code",
+            "preview"
+          ],
+          "enumDescriptions": [
+            "Studio, or Code when Studio cannot keep the page's Markdown exactly",
+            "The Markdown text editor",
+            "The read-only Wiki Preview"
+          ],
+          "default": "studio",
+          "scope": "resource",
+          "description": "Where pages open from the Pages view, search and links."
+        },
+        "wikiStudio.explorer.humanizeNames": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "markdownDescription": "Show readable labels in the Pages view for folders and for pages without a title (`getting-started.md` → Getting Started). Page titles from front matter or a `#` heading are shown as written; files are never renamed."
+        },
+        "wikiStudio.explorer.acronyms": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "API",
+            "CLI",
+            "CSS",
+            "CSV",
+            "FAQ",
+            "HTML",
+            "HTTP",
+            "HTTPS",
+            "ID",
+            "JSON",
+            "JWT",
+            "OAuth",
+            "PDF",
+            "REST",
+            "SDK",
+            "SQL",
+            "SSO",
+            "UI",
+            "URL",
+            "UX",
+            "XML",
+            "YAML"
+          ],
+          "scope": "resource",
+          "description": "Words kept in this exact casing in readable labels."
+        },
+        "wikiStudio.explorer.directorySort": {
+          "type": "string",
+          "enum": [
+            "folders-first",
+            "files-first",
+            "mixed"
+          ],
+          "default": "folders-first",
+          "scope": "resource",
+          "markdownDescription": "Order of folders and pages in the Pages view. A folder's `index.md` or `README.md` is always listed first; within groups, `navigation.sort` in wiki.yaml applies."
+        },
+        "wikiStudio.explorer.autoReveal": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "description": "Select the active page in the Pages view when you switch editors."
+        },
+        "wikiStudio.diagnostics": {
+          "type": "boolean",
+          "default": true,
+          "description": "Report broken, ambiguous and missing-heading links."
+        },
+        "wikiStudio.maxFileSizeKB": {
+          "type": "number",
+          "default": 1024,
+          "minimum": 1,
+          "maximum": 16384,
+          "description": "Maximum page size to index, in KiB."
+        },
+        "wikiStudio.maxPages": {
+          "type": "number",
+          "default": 10000,
+          "minimum": 1,
+          "maximum": 100000,
+          "description": "Maximum pages to index per workspace folder."
+        },
+        "wikiStudio.maxIndexSizeMB": {
+          "type": "number",
+          "default": 64,
+          "minimum": 1,
+          "maximum": 512,
+          "description": "Maximum total on-disk page content to index per wiki, in MiB."
+        },
+        "wikiStudio.editor.width": {
+          "type": "string",
+          "enum": [
+            "normal",
+            "wide",
+            "full"
+          ],
+          "enumDescriptions": [
+            "760 px reading column",
+            "960 px column",
+            "Use the full editor width"
+          ],
+          "default": "normal",
+          "scope": "resource",
+          "description": "Width of the Studio writing column."
+        },
+        "wikiStudio.dailyNotes.folder": {
+          "type": "string",
+          "default": "daily",
+          "scope": "resource",
+          "description": "Folder (relative to the wiki root) that holds one daily note per date, named YYYY-MM-DD.md."
+        },
+        "wikiStudio.dailyNotes.template": {
+          "type": "string",
+          "default": "",
+          "scope": "resource",
+          "description": "Template page for new daily notes, relative to the wiki root (for example .templates/Daily.md). Supports {{title}}, {{date}}, {{weekday}}, {{yesterday}} and {{tomorrow}}. Empty uses the built-in template."
+        },
+        "wikiStudio.api.folder": {
+          "type": "string",
+          "default": "api",
+          "scope": "resource",
+          "description": "Folder (relative to the first workspace folder) for API collections and environments."
+        },
+        "wikiStudio.api.maxResponseMB": {
+          "type": "number",
+          "default": 10,
+          "minimum": 1,
+          "maximum": 200,
+          "description": "Responses larger than this are truncated (the rest is not downloaded)."
+        },
+        "wikiStudio.api.historyLimit": {
+          "type": "number",
+          "default": 200,
+          "minimum": 0,
+          "maximum": 5000,
+          "description": "How many sent requests the API history keeps (0 keeps none). History stores method, redacted address, status, time and size; never bodies or credentials."
+        },
+        "wikiStudio.home.openOnStartup": {
+          "type": "boolean",
+          "default": true,
+          "description": "Open the NoteSpace Home when the NoteSpace sidebar opens and no editor is open."
+        },
+        "wikiStudio.boards.folder": {
+          "type": "string",
+          "default": "boards",
+          "scope": "resource",
+          "description": "Folder (in the wiki) suggested for new board files."
+        },
+        "wikiStudio.notes.folder": {
+          "type": "string",
+          "default": "notes",
+          "scope": "resource",
+          "description": "Folder (in the wiki) for New Note. Empty: the wiki root."
+        },
+        "wikiStudio.tasks.captureTo": {
+          "type": "string",
+          "enum": [
+            "inbox",
+            "daily"
+          ],
+          "enumDescriptions": [
+            "The inbox page (wikiStudio.planner.inbox)",
+            "Today's daily note"
+          ],
+          "default": "inbox",
+          "scope": "resource",
+          "markdownDescription": "Where global quick capture writes new tasks. Tasks created on a board go to the board's file; tasks typed in a page stay in that page."
+        },
+        "wikiStudio.planner.timeZone": {
+          "type": "string",
+          "default": "",
+          "scope": "resource",
+          "description": "IANA time zone used to decide which day is today (for example Europe/Rome). Empty uses this machine's zone."
+        },
+        "wikiStudio.planner.inbox": {
+          "type": "string",
+          "default": "Inbox.md",
+          "scope": "resource",
+          "description": "Page (relative to the wiki root) where Quick Add and Add Task write new tasks."
+        },
+        "wikiStudio.planner.upcomingDays": {
+          "type": "number",
+          "default": 14,
+          "minimum": 1,
+          "maximum": 90,
+          "scope": "resource",
+          "description": "How many days ahead the Upcoming list shows."
+        },
+        "wikiStudio.planner.reminders": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show one notification per day for tasks due today or overdue while VS Code is running. No reminders fire while VS Code or code-server is closed."
+        },
+        "wikiStudio.notebooks.pythonKernel": {
+          "type": "boolean",
+          "default": true,
+          "description": "Offer the NoteSpace Python kernel in the notebook editor when python3 is available. Cells run only when you run them, and only in trusted workspaces."
+        },
+        "wikiStudio.codeRunner.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show a Run button on Python, JavaScript and Bash code blocks in Studio. Runs only on click, only in trusted workspaces, after a per-session confirmation for each runtime."
+        },
+        "wikiStudio.codeRunner.timeoutSeconds": {
+          "type": "number",
+          "default": 20,
+          "minimum": 1,
+          "maximum": 300,
+          "description": "Maximum run time for a code block before it is stopped."
+        },
+        "wikiStudio.ai.provider": {
+          "type": "string",
+          "enum": [
+            "vscode",
+            "endpoint",
+            "off"
+          ],
+          "default": "vscode",
+          "enumDescriptions": [
+            "Language models available in VS Code (for example from a chat extension). VS Code asks for permission the first time.",
+            "An OpenAI-compatible endpoint you configure, such as a local Ollama or llama.cpp server.",
+            "No AI features."
+          ],
+          "markdownDescription": "Where AI commands send text. Every request asks for confirmation and results are proposals you review before applying."
+        },
+        "wikiStudio.ai.endpoint": {
+          "type": "string",
+          "default": "http://127.0.0.1:11434/v1",
+          "markdownDescription": "Base URL of an OpenAI-compatible API (`/chat/completions`, `/embeddings`). Used when `wikiStudio.ai.provider` is `endpoint` and by semantic search."
+        },
+        "wikiStudio.ai.model": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Chat model name at the endpoint, for example `llama3.1`."
+        },
+        "wikiStudio.semanticSearch.model": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Embedding model at `wikiStudio.ai.endpoint` for **Semantic Search**, for example `nomic-embed-text`. Empty disables semantic search. NoteSpace never downloads models."
+        },
+        "wikiStudio.export.browserPath": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Path to a Chromium-based browser (Chrome, Edge, Chromium, Brave) used in headless mode to create PDFs. Empty: detect an installed one. Without a browser, **Export PDF** saves a print-ready HTML page instead."
+        }
+      }
+    },
+    "customEditors": [
+      {
+        "viewType": "wikiStudio.visual",
+        "displayName": "NoteSpace Visual Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.md"
+          }
+        ],
+        "priority": "option"
+      },
+      {
+        "viewType": "wikiStudio.canvas",
+        "displayName": "NoteSpace Canvas",
+        "selector": [
+          {
+            "filenamePattern": "*.canvas"
+          }
+        ],
+        "priority": "default"
+      },
+      {
+        "viewType": "wikiStudio.dashboard",
+        "displayName": "NoteSpace Dashboard",
+        "selector": [
+          {
+            "filenamePattern": "*.wiki-dashboard.json"
+          }
+        ],
+        "priority": "default"
+      }
+    ],
+    "jsonValidation": [
+      {
+        "fileMatch": "*.wiki-dashboard.json",
+        "url": "./media/dashboard.schema.json"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "watch": "node scripts/build.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run typecheck && npm run test:unit",
+    "test:unit": "node --import tsx --test src/test/unit/*.test.ts",
+    "test:integration": "npm run build && node scripts/integration.mjs",
+    "check": "npm test && npm run test:integration && npm run package && npm run test:code-server && npm run test:rich && npm run test:planner",
+    "vscode:prepublish": "npm run typecheck && npm run build && npm run notices",
+    "package": "node scripts/package.mjs",
+    "test:ui": "npm run build && node scripts/ui-smoke.mjs",
+    "notices": "node scripts/notices.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test:code-server": "node scripts/ui-smoke.mjs --code-server",
+    "bench:index": "node --import tsx scripts/bench-index.mjs",
+    "test:rich": "node scripts/ui-rich.mjs",
+    "test:planner": "node scripts/ui-planner.mjs",
+    "test:phase04": "node scripts/ui-phase04.mjs",
+    "test:phase05": "node scripts/ui-phase05.mjs",
+    "test:phase06": "node scripts/ui-phase06.mjs",
+    "test:phase065": "node scripts/ui-phase065.mjs",
+    "test:phase07": "node scripts/ui-phase07.mjs && node scripts/ui-phase07-knowledge.mjs",
+    "test:phase08": "node scripts/ui-phase08.mjs",
+    "test:workspace": "node scripts/ui-workspace.mjs",
+    "test:api": "node scripts/ui-api.mjs",
+    "test:embedded-board": "node scripts/ui-embedded-board.mjs"
+  },
+  "dependencies": {
+    "@tiptap/core": "^3.32.0",
+    "@tiptap/extension-code-block-lowlight": "^3.32.0",
+    "@tiptap/extension-image": "^3.32.0",
+    "@tiptap/extension-table": "^3.32.0",
+    "@tiptap/extension-task-item": "^3.32.0",
+    "@tiptap/extension-task-list": "^3.32.0",
+    "@tiptap/markdown": "^3.32.0",
+    "@tiptap/starter-kit": "^3.32.0",
+    "beautiful-mermaid": "^1.1.3",
+    "highlight.js": "^11.12.0",
+    "katex": "^0.19.0",
+    "lowlight": "^3.3.0",
+    "lucide-static": "^1.57.0",
+    "markdown-it": "^14.1.0",
+    "markdown-it-abbr": "^2.0.0",
+    "markdown-it-deflist": "^4.0.0",
+    "markdown-it-footnote": "^4.0.0",
+    "markdown-it-mark": "^4.0.0",
+    "parse5": "^8.0.1",
+    "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "@types/markdown-it": "^14.1.2",
+    "@types/node": "^22.0.0",
+    "@types/vscode": "1.96.0",
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^4.0.0",
+    "axe-core": "^4.14.0",
+    "esbuild": "^0.25.0",
+    "playwright-core": "^1.64.0",
+    "prettier": "^3.9.10",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  },
+  "extensionKind": [
+    "workspace"
+  ]
+}

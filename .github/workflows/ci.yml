@@ -1,0 +1,75 @@
+name: Verify NoteSpace
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            vscode: '1.96.4'
+          - os: ubuntu-latest
+            vscode: stable
+          - os: windows-latest
+            vscode: '1.96.4'
+          - os: macos-latest
+            vscode: '1.96.4'
+    runs-on: ${{ matrix.os }}
+    env:
+      VSCODE_VERSION: ${{ matrix.vscode }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm audit
+      - name: Extension host tests (Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a npm run test:integration
+      - name: Extension host tests (Windows/macOS)
+        if: runner.os != 'Linux'
+        run: npm run test:integration
+      - name: UI smoke test
+        if: runner.os == 'Linux' && matrix.vscode == '1.96.4'
+        run: xvfb-run -a npm run test:ui
+      - run: npm run package
+      - uses: actions/upload-artifact@v4
+        if: runner.os == 'Linux' && matrix.vscode == '1.96.4'
+        with:
+          name: notespace-vsix
+          path: '*.vsix'
+      - uses: actions/upload-artifact@v4
+        if: always() && runner.os == 'Linux' && matrix.vscode == '1.96.4'
+        with:
+          name: ui-screenshots
+          path: docs/screenshots/*.png
+  code-server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run package
+      - name: Install code-server 4.138.0 and browser
+        run: |
+          curl --fail --location https://github.com/coder/code-server/releases/download/v4.138.0/code-server-4.138.0-linux-amd64.tar.gz --output /tmp/code-server.tar.gz
+          tar -xzf /tmp/code-server.tar.gz -C /tmp
+          echo /tmp/code-server-4.138.0-linux-amd64/bin >> "$GITHUB_PATH"
+          npx playwright-core install --with-deps chromium
+      - run: npm run test:code-server
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: code-server-screenshots
+          path: docs/screenshots/*.png

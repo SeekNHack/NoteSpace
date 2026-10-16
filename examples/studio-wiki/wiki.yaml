@@ -1,0 +1,21 @@
+schemaVersion: 1
+wiki:
+  title: NoteSpace Example
+  description: A small local documentation project
+  language: en
+content:
+  root: docs
+  homepage: index.md
+navigation:
+  mode: automatic
+  sort: order
+appearance:
+  theme: system
+  accent: "#4f87ff"
+features:
+  search: true
+  tableOfContents: true
+  breadcrumbs: true
+build:
+  output: dist
+  basePath: /

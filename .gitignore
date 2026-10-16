@@ -1,0 +1,14 @@
+node_modules/
+dist/
+out/
+.vscode-test/
+*.vsix
+coverage/
+*.log
+docs/screenshots/failure.png
+artifacts/
+docs/screenshots/**
+!docs/screenshots/preview.png
+!docs/screenshots/graph.png
+!docs/screenshots/code-server-preview.png
+!docs/screenshots/code-server-graph.png

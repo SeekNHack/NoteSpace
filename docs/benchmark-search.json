@@ -1,0 +1,28 @@
+{
+  "note": "WikiIndex.search over synthetic pages, parsing excluded; one run of src/test/unit/search-query.test.ts.",
+  "node": "v22.23.3",
+  "runs": [
+    {
+      "pages": 1000,
+      "indexMs": 29,
+      "queriesMs": {
+        "documentation topic 42": 3.3,
+        "tag:t3 code:python": 2.4,
+        "prop:owner=user7 path:section-4/ searchable": 0.4,
+        "\"content number 999\"": 0.3,
+        "link:page-500": 13.5
+      }
+    },
+    {
+      "pages": 10000,
+      "indexMs": 85,
+      "queriesMs": {
+        "documentation topic 42": 48.5,
+        "tag:t3 code:python": 12.6,
+        "prop:owner=user7 path:section-4/ searchable": 3.2,
+        "\"content number 999\"": 2.5,
+        "link:page-500": 35.8
+      }
+    }
+  ]
+}

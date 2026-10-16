@@ -1,0 +1,10 @@
+{
+  "pages": 1005,
+  "fixtureCreationMs": 239,
+  "wikiOpenAndIndexMs": 884,
+  "searchMs": 1.2,
+  "staticExportMs": 4088,
+  "epubExportMs": 4259,
+  "pdfExportMs": 6110,
+  "environment": "linux"
+}
