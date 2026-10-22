@@ -1237,7 +1237,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     });
     if (!title?.trim()) return;
     const date = planner.today(root);
-    const name = slug(title.replace(/\./g, '-')).replace(/-+/g, '-').replace(/^-|-$/g, '') || 'post';
+    const name =
+      slug(title.replace(/\./g, '-')).replace(/-+/g, '-').replace(/^-|-$/g, '') || 'post';
     try {
       if (!workspace.index.all(root.id).some((p) => p.path === 'blog/index.md'))
         await workspace.createPage(
