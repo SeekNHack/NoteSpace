@@ -425,3 +425,35 @@ test('media imports require content that matches the file type', async () => {
   assert.equal(looksLikeMedia(Buffer.from('<html><script>'), '.mp4'), false);
   assert.equal(looksLikeMedia(Buffer.from('ID3'), '.exe'), false);
 });
+test('renderer shows task lists as checkboxes with badges instead of raw metadata', () => {
+  const p = page(
+      'a.md',
+      '---\ntitle: T\n---\n- [ ] Ship <b> due:2026-10-22 priority:high @ana #docs ^t-abc123\n- [x] Done thing done:2026-10-20\n- plain item [ ] text',
+    ),
+    idx = indexOf(p);
+  const lines: number[] = [];
+  const html = renderPage(p, idx, {
+    pageHref: () => '#',
+    today: '2026-10-22',
+    taskKey: (line, raw) => {
+      lines.push(line);
+      return raw.includes('^t-abc123') ? 'a#t-abc123' : undefined;
+    },
+  });
+  assert.deepEqual(lines, [0, 1], 'body lines of the two tasks');
+  assert.ok(html.includes('class="contains-task-list"'));
+  assert.ok(html.includes(`data-task-key="${encodeURIComponent('a#t-abc123')}"`));
+  assert.match(html, /<input type="checkbox" class="task-check" checked disabled/);
+  assert.ok(html.includes('Ship &lt;b&gt;'), 'title stays escaped');
+  assert.ok(!/due:|priority:|\^t-abc123|done:2026/.test(html), 'metadata words are hidden');
+  assert.ok(html.includes('task-badge due today'));
+  assert.ok(html.includes('task-badge priority high'));
+  assert.ok(html.includes('@ana'));
+  assert.ok(html.includes('<span class="task-tag">#docs</span>'));
+  assert.ok(html.includes('plain item [ ] text'), 'other list items are untouched');
+});
+test('reader scripts are valid JavaScript', async () => {
+  const { readerInteractions, richTabsScript } = await import('../../core/reader-interactions');
+  assert.doesNotThrow(() => new Function(readerInteractions));
+  assert.doesNotThrow(() => new Function(richTabsScript));
+});

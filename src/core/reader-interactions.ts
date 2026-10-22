@@ -1,5 +1,8 @@
-/** Shared, CSP-compatible behavior for preview and static export. Without JS, tabs remain disclosures. */
-export const readerInteractions = `document.querySelectorAll('.rich-tabs').forEach((group, groupIndex) => {
+/**
+ * Content tabs on a container (`root`); without JS, tabs remain disclosures. The source is a
+ * string so it runs as is in the Reader, the workspace panel and the static site (CSP-compatible).
+ */
+const richTabs = `(root) => root.querySelectorAll('.rich-tabs').forEach((group, groupIndex) => {
   const container = group.querySelector(':scope > .rich-content');
   if (!container) return;
   const disclosures = [...container.children].filter((child) => child.matches('details.rich-tab'));
@@ -51,4 +54,9 @@ export const readerInteractions = `document.querySelectorAll('.rich-tabs').forEa
     });
   });
   select(0, false);
-});`;
+})`;
+/** Shared behavior for preview and static export, applied to the whole page. */
+// The leading `;` keeps it separate from a script it is appended to (the static site).
+export const readerInteractions = `;(${richTabs})(document);`;
+/** Defines `window.wikiRichTabs(root)` for pages inserted later (the workspace panel). */
+export const richTabsScript = `window.wikiRichTabs = ${richTabs};`;

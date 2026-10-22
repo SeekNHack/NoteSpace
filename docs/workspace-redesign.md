@@ -19,7 +19,7 @@ Constraints: everything must work in VS Code desktop and code-server (webviews, 
 
 ## Design
 
-**One workspace panel.** The Planner panel becomes the _NoteSpace_ panel with destinations **Home, Wiki, Tasks, Boards, Calendar, Insights** in a compact top navigation. _Wiki_ opens the wiki's real homepage document (`content.homepage`, else `index.md`) in the editor. The other destinations render in the same tab, so switching keeps filters, scroll and drafts.
+**One workspace panel.** The Planner panel becomes the _NoteSpace_ panel. Since the sidebar redesign its navigation has five sections — **Home, Wiki, Tasks** (List, Boards, Calendar), **API, Insights** (Overview, Content health, Link graph) — and the sidebar only launches it. _Wiki_ reads the wiki's pages in the panel with an MkDocs-style page tree (Edit opens the real document). The other destinations render in the same tab, so switching keeps filters, scroll and drafts.
 
 **Boards are Markdown files.** A board is a page whose front matter has a `notespace` block of `type: board`:
 

@@ -25,6 +25,7 @@ import {
   TaskDto,
   TaskList,
   ui,
+  shownTitle,
 } from './core';
 
 // ---------------------------------------------------------------------------------------------
@@ -346,7 +347,7 @@ export function row(task: TaskDto): HTMLElement {
     event.stopPropagation();
     completeTask(task, check.checked);
   });
-  const title = h('span', { class: 'title', text: task.title, title: 'Click to rename' });
+  const title = h('span', { class: 'title', text: shownTitle(task), title: 'Click to rename' });
   title.addEventListener('click', (event) => {
     event.stopPropagation();
     editTitle(title, task);

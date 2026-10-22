@@ -303,7 +303,26 @@ try {
   assert.equal(await graph.locator('.page-list button').count(), 1);
   await graph.getByLabel('Find a page').fill('');
   await page.screenshot({ path: `docs/screenshots/${codeServer ? 'code-server-' : ''}graph.png` });
+  // The graph is a page of the NoteSpace tab: a page chosen there opens in its Wiki.
+  await clearToasts();
   await graph.getByRole('button', { name: 'Guide', exact: true }).click();
+  const wikiPanel = await poll(async () => {
+    for (const frame of page.frames())
+      if (
+        /Getting started/.test(
+          await frame
+            .locator('.wiki-article')
+            .innerText()
+            .catch(() => ''),
+        )
+      )
+        return frame;
+  }, 'graph opens the page in the Wiki');
+  await wikiPanel.locator('.wiki-head [aria-label="Edit this page"]').click();
+  await poll(
+    async () => (await page.locator('.tab.active', { hasText: 'Guide.md' }).count()) > 0,
+    'Edit opens the page',
+  );
   await command('Open in Studio');
   const readonlyVisual = await poll(async () => {
     for (const frame of page.frames())
@@ -332,18 +351,17 @@ try {
   await readonlyVisual.locator('#source').click();
   console.log('PASS UI: graph renders, filters and opens pages');
   await command('Toggle Favorite');
-  await command('Open Home');
+  await command('Open NoteSpace');
   const wikiHome = await poll(async () => {
     for (const frame of page.frames()) if (await frame.locator('.home-grid').count()) return frame;
   }, 'NoteSpace Home DOM');
   // The Home is an application view; it opens the wiki's homepage instead of embedding it.
   assert.equal(await wikiHome.locator('.home-document, .ProseMirror').count(), 0);
-  assert.match(
-    await wikiHome.locator('.home-card', { hasText: 'Continue working' }).innerText(),
-    /Favorites[\s\S]*Guide/i,
-  );
+  assert.match(await wikiHome.locator('.home-card', { hasText: 'Favorites' }).innerText(), /Guide/);
   // Insights: the same health numbers the dashboard used to show.
   await wikiHome.locator('.nav [data-nav=insights]').click();
+  // Insights reopens its last page (the graph); Overview has the numbers.
+  await wikiHome.locator('.subnav [data-nav=insights]').click();
   await poll(
     async () =>
       (await wikiHome
@@ -358,21 +376,22 @@ try {
         .catch(() => '')) === '2',
     'insights numbers',
   );
+  // Wiki reads the homepage inside the tab; it opens no editor.
+  const tabsBefore = await page.locator('.tab').count();
   await wikiHome.locator('.nav [data-nav=wiki]').click();
+  // It reopens the page read last (Guide, from the graph); the tree goes to the homepage.
+  await wikiHome.locator('.wiki-node.page', { hasText: 'Home' }).first().click();
   await poll(
     async () =>
-      (await page.locator('.tab.active', { hasText: 'Home.md' }).count()) > 0 &&
-      (await page.locator('.tab', { hasText: 'Home.md' }).count()) === 1 &&
-      (await Promise.all(
-        page.frames().map((frame) =>
-          frame
-            .locator('.ProseMirror', { hasText: 'Welcome' })
-            .count()
-            .catch(() => 0),
-        ),
-      ).then((counts) => counts.some(Boolean))),
-    'Wiki reveals the already open homepage instead of duplicating it',
+      /Welcome to/.test(
+        await wikiHome
+          .locator('.wiki-article')
+          .innerText()
+          .catch(() => ''),
+      ),
+    'Wiki shows the homepage in the tab',
   );
+  assert.equal(await page.locator('.tab').count(), tabsBefore, 'no new editor tab');
   console.log('PASS UI: Home, favorites, Insights health numbers and the Wiki homepage action');
   await command('New Page');
   const input = page.locator('.quick-input-widget input[type=text]');

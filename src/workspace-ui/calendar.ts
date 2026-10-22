@@ -16,6 +16,7 @@ import {
   setPrefs,
   TaskDto,
   ui,
+  shownTitle,
 } from './core';
 import { filtered, row, select, taskMenu, updateTask } from './tasks';
 
@@ -188,7 +189,7 @@ export function calendarView(): HTMLElement {
         const item = h('button', {
           type: 'button',
           class: `item${task.checked ? ' done' : ''}${!task.checked && task.due && task.due.slice(0, 10) < S().today ? ' overdue' : ''}${starts ? ' start' : ''}`,
-          text: `${starts ? '▸ ' : ''}${task.title}`,
+          text: `${starts ? '▸ ' : ''}${shownTitle(task)}`,
           title: `${starts ? 'Starts: ' : ''}${task.title} — ${task.pageTitle}`,
           tabindex: '-1',
         });

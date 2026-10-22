@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { WikiRoot, WikiWorkspace } from './workspace';
-import { WikiTree, PageNode, registerLanguageFeatures, showPage } from './views';
+import { PageNode, registerLanguageFeatures, showPage } from './views';
 import { WikiPanels } from './webviews';
 import { fillTemplate, homepageTemplate, templates } from './templates';
 import {
@@ -40,7 +40,6 @@ import { visualSafety } from './core/visual-safety';
 import { importMarkdownProject } from './import-project';
 import { PlannerService } from './planner';
 import { PlannerPanel, PlannerView, plannerViews } from './planner-panel';
-import { PlannerTree } from './planner-tree';
 import { NotebookCatalog, convertNotebook, importNotebook, showNotebookPreview } from './notebooks';
 import { registerPythonKernel } from './python-kernel';
 import { CodeRunner } from './code-runner';
@@ -94,6 +93,7 @@ import { addDays, inList, resolveDate, Task } from './core/tasks';
 export interface WikiStudioApi {
   workspace: WikiWorkspace;
   panels: WikiPanels;
+  plannerPanel: PlannerPanel;
   activity: WikiActivity;
   planner: PlannerService;
   exportWiki: typeof exportWiki;
@@ -195,6 +195,20 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
   );
   context.subscriptions.push(plannerPanel);
   panels.planner = planner;
+  plannerPanel.reader = (page, webview, href) => panels.renderBody(page, webview, href);
+  plannerPanel.pages = panels;
+  plannerPanel.files = (rootId) => [
+    ...notebooks
+      .all(rootId)
+      .map((f) => ({ path: f.path, uri: f.uri.toString(), file: 'notebook' as const })),
+    ...canvases
+      .all(rootId)
+      .map((f) => ({ path: f.path, uri: f.uri.toString(), file: 'canvas' as const })),
+  ];
+  context.subscriptions.push(
+    notebooks.onDidChange(() => plannerPanel.refresh()),
+    canvases.onDidChange(() => plannerPanel.refresh()),
+  );
   const plannerStatus = vscode.window.createStatusBarItem(
     'notespace.planner',
     vscode.StatusBarAlignment.Left,
@@ -282,68 +296,21 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     }),
     vscode.window.tabGroups.onDidChangeTabGroups(updateStatus),
   );
-  const plannerTree = new PlannerTree(workspace, planner, () => plannerPanel.boards);
+  // The NoteSpace icon in the activity bar opens the workspace panel: pages, tasks and the API
+  // client are all there, so the sidebar only launches it (and gives the space back).
+  const launcher = vscode.window.createTreeView('notespace.start', {
+    treeDataProvider: { getTreeItem: (item: vscode.TreeItem) => item, getChildren: () => [] },
+  });
   context.subscriptions.push(
-    plannerTree,
-    vscode.window.createTreeView('notespace.planner', { treeDataProvider: plannerTree }),
-  );
-  let pagesTree: WikiTree | undefined;
-  let pagesView: vscode.TreeView<PageNode> | undefined;
-  for (const mode of ['pages', 'context'] as const) {
-    const provider = new WikiTree(workspace, mode, activity);
-    const treeView = vscode.window.createTreeView(`notespace.${mode}`, {
-      treeDataProvider: provider,
-      dragAndDropController: mode === 'pages' ? provider : undefined,
-      canSelectMany: mode === 'pages',
-      showCollapseAll: mode === 'pages',
-    });
-    context.subscriptions.push(provider, treeView);
-    if (mode === 'context')
-      provider.tasksFor = (page) =>
-        planner.tasks(page.root).filter(
-          (task) =>
-            task.pageId === page.id ||
-            task.links.some((link) => {
-              const owner = workspace.index.pages.get(task.pageId);
-              return !!owner && workspace.index.resolve(owner, link, 'wiki').page?.id === page.id;
-            }),
-        );
-    if (mode === 'pages') {
-      provider.notebooks = (rootId) => notebooks.all(rootId);
-      provider.canvases = (rootId) => canvases.all(rootId);
-      context.subscriptions.push(
-        notebooks.onDidChange(() => provider.refreshNow()),
-        canvases.onDidChange(() => provider.refreshNow()),
-      );
-      pagesTree = provider;
-      pagesView = treeView;
-    }
-  }
-  // Follow the active page in the explorer, like the built-in Explorer does.
-  let shownDashboard = false;
-  const revealActive = () => {
-    const page = activity.activeUri && workspace.index.byUri(activity.activeUri);
-    const follow = vscode.workspace
-      .getConfiguration('notespace.explorer', page ? vscode.Uri.parse(page.uri) : undefined)
-      .get<boolean>('autoReveal', true);
-    if (page && follow && pagesView?.visible && pagesTree)
-      void Promise.resolve(
-        pagesView.reveal(pagesTree.nodeFor(page), { select: true, focus: false }),
-      ).catch((e) => log.appendLine(`[explorer] reveal: ${String(e)}`));
-  };
-  context.subscriptions.push(
-    activity.onDidChange(revealActive),
-    pagesView!.onDidChangeVisibility((event) => {
-      if (!event.visible) return;
-      revealActive();
-      // Open the workspace Home once per session when nothing else is open (configurable).
+    launcher,
+    launcher.onDidChangeVisibility((event) => {
       if (
-        !shownDashboard &&
-        !vscode.window.tabGroups.all.some((g) => g.tabs.length) &&
-        vscode.workspace.getConfiguration('notespace').get<boolean>('home.openOnStartup', true)
+        !event.visible ||
+        !vscode.workspace.getConfiguration('notespace').get<boolean>('sidebar.openPanel', true)
       )
-        plannerPanel.show('home');
-      shownDashboard = true;
+        return;
+      plannerPanel.show();
+      void vscode.commands.executeCommand('workbench.action.closeSidebar');
     }),
   );
   const command = (name: string, fn: (...args: any[]) => unknown) =>
@@ -458,7 +425,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     const existing = workspace.index.all(root.id).find((p) => p.path.toLowerCase() === 'home.md');
     if (existing) {
       await openPreferred(existing);
-      await vscode.commands.executeCommand('workbench.view.extension.notespace');
       return;
     }
     const uri = await workspace.createPage(
@@ -467,7 +433,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
       '# Welcome to NoteSpace\n\nYour wiki is a folder of Markdown files. Own it, version it, and take it anywhere.\n\n## Start writing\n\n- Run **NoteSpace: New Page** to create a page from a template.\n- Connect pages with `[[Page name]]` or `[[/folder/page|a label]]`.\n- Type `[[` to complete page names and `#` to choose a heading.\n- Use **NoteSpace: Search Pages** to search text or `#tags`.\n- Open **NoteSpace: Open Live Preview** to read and follow links.\n\n## Make it yours\n\nAdd YAML front matter with `title` and `tags`, create daily notes, explore the link graph, or export a portable HTML wiki.\n',
     );
     await openPreferredUri(uri);
-    await vscode.commands.executeCommand('workbench.view.extension.notespace');
   });
   command('createWiki', async () => {
     const folders = vscode.workspace.workspaceFolders || [];
@@ -570,7 +535,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     await vscode.workspace.fs.writeFile(configUri, new TextEncoder().encode(createConfig(config)));
     await workspace.refresh();
     await openPreferredUri(vscode.Uri.joinPath(root.uri, 'index.md'));
-    await vscode.commands.executeCommand('workbench.view.extension.notespace');
   });
   command('importProject', async () => {
     const selected = await vscode.window.showOpenDialog({
@@ -587,16 +551,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     const choice = await vscode.window.showInformationMessage(message, 'Show Log');
     if (choice) log.show();
     if (result.homepage) await openPreferred(result.homepage);
-    await vscode.commands.executeCommand('workbench.view.extension.notespace');
   });
   command('openWiki', async () => {
-    const root = await chooseRoot();
-    if (!root) return;
-    const homepage = root.config?.content.homepage || 'Home.md';
-    const page = workspace.index.all(root.id).find((p) => p.path === homepage);
-    if (!page) throw new Error(`Homepage ${homepage} was not found.`);
-    await openPreferred(page);
-    await vscode.commands.executeCommand('workbench.view.extension.notespace');
+    const root = await chooseRoot(plannerPanel.root()?.id);
+    if (root)
+      await plannerPanel.showWiki({
+        path: root.config?.content.homepage || 'index.md',
+        root: root.id,
+      });
   });
   /** Uri of the page shown in the active tab, when the command targets it. */
   const activeUriFor = (page: Page): vscode.Uri | undefined => {
@@ -637,15 +599,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     else await showSplit(uri, caret && new vscode.Range(caret.active, caret.active));
   });
   command('focusContext', async () => {
-    await vscode.commands.executeCommand('notespace.context.focus');
+    // The page's outline and backlinks are shown with the page in the Wiki.
+    const page = activeTabPage();
+    await plannerPanel.showWiki(page ? { id: page.id } : {});
   });
   command('revealSection', async (rootId?: string, prefix?: string) => {
     if (typeof rootId !== 'string' || typeof prefix !== 'string') return;
-    await vscode.commands.executeCommand('workbench.view.extension.notespace');
-    await pagesView?.reveal(
-      { label: prefix.replace(/\/$/, '').split('/').pop() || prefix, root: rootId, prefix },
-      { expand: true, select: true, focus: true },
-    );
+    await plannerPanel.showWiki({ section: prefix, root: rootId });
   });
   command('revealInExplorer', async (node?: PageNode) => {
     const root = node?.root ? workspace.roots.find((r) => r.id === node.root) : undefined;
@@ -680,26 +640,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     if (activity.isFavorite(page)) await activity.toggleFavorite(page);
   });
   command('home', () => plannerPanel.show('home'));
-  command('filterPages', () => {
-    const input = vscode.window.createInputBox();
-    const previous = pagesTree?.getFilter() || '';
-    let accepted = false;
-    input.title = 'Filter Wiki Explorer';
-    input.placeholder = 'Title, path, or tag. Clear to show all pages.';
-    input.value = previous;
-    const subscriptions = [
-      input.onDidChangeValue((value) => pagesTree?.setFilter(value)),
-      input.onDidAccept(() => {
-        accepted = true;
-        input.hide();
-      }),
-      input.onDidHide(() => {
-        if (!accepted) pagesTree?.setFilter(previous);
-        subscriptions.forEach((item) => item.dispose());
-        input.dispose();
-      }),
-    ];
-    input.show();
+  command('filterPages', async () => {
+    await plannerPanel.showWiki({ filter: true });
   });
   command('newSection', async (node?: PageNode) => {
     const active = activePage(node);
@@ -825,7 +767,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     if (!root) return;
     workspace.defaultRoot = root.id;
     await context.workspaceState.update('notespace.defaultWiki', root.id);
-    pagesTree?.refreshNow();
     void vscode.window.showInformationMessage(
       `“${wikiName(root)}” is the default wiki when a command could apply to several.`,
     );
@@ -1380,6 +1321,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
   context.subscriptions.push(apiStore, apiClient);
   httpBlocks = new HttpBlocks(apiStore, apiClient, context.workspaceState);
   panels.http = httpBlocks;
+  plannerPanel.http = httpBlocks;
+  // The API Client is a destination of the workspace panel, with its navigation and history.
+  plannerPanel.api = apiClient;
+  apiClient.host = {
+    reveal: () => plannerPanel.show('api'),
+    post: (message) => plannerPanel.postApi(message),
+  };
   command('apiClient', () => apiClient.show());
   command('apiNewRequest', () =>
     apiClient.show({ request: { ...emptyApiRequest('new', 'New request') } }),
@@ -1530,7 +1478,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
   };
   command('openNotebook', async (node?: unknown) => {
     const uri = notebookUri(node);
-    if (!uri) throw new Error('Choose a notebook in the Wiki Explorer.');
+    if (!uri) throw new Error('Choose a notebook in the Wiki.');
     // VS Code's notebook editor provides cell editing, saved outputs and kernels.
     await vscode.commands.executeCommand('vscode.openWith', uri, 'jupyter-notebook');
   });
@@ -2145,7 +2093,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     const root = await chooseRoot(activeTabPage()?.root);
     if (root) openThemeBuilder(workspace, root);
   });
-  command('contentHealth', async () => panels.openHealth(activeTabPage()?.root));
+  command('contentHealth', () => plannerPanel.show('health'));
   command('addLanguage', async () => {
     const root = await chooseRoot(activeTabPage()?.root);
     if (!root) return;
@@ -2549,10 +2497,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     else await openPreferred(page);
   });
   command('preview', (node?: PageNode) => panels.openPreview(getPage(node)));
-  command('graph', async () => {
-    const root = await chooseRoot();
-    if (root) panels.openGraph(root.id);
-  });
+  command('graph', () => plannerPanel.show('graph'));
   command('renamePage', async (node?: PageNode) => {
     const page = getPage(node);
     const name = await vscode.window.showInputBox({
@@ -2768,6 +2713,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
   return {
     workspace,
     panels,
+    plannerPanel,
     activity,
     planner,
     exportWiki,

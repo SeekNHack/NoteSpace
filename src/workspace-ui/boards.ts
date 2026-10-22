@@ -31,6 +31,7 @@ import {
   svg,
   TaskDto,
   ui,
+  shownTitle,
 } from './core';
 import {
   chips,
@@ -558,7 +559,7 @@ function sortCards(board: AnyBoard, cards: TaskDto[]) {
 
 function card(task: TaskDto, board: AnyBoard, columnId: string, cards: TaskDto[]): HTMLElement {
   const compact = board.density === 'compact';
-  const title = h('span', { class: 'card-title', text: task.title, title: 'Click to edit' });
+  const title = h('span', { class: 'card-title', text: shownTitle(task), title: 'Click to edit' });
   const check = h('input', {
     type: 'checkbox',
     'aria-label': `Complete ${task.title}`,

@@ -35,12 +35,25 @@ function cleanRequest(raw: unknown): ApiRequest {
   return parsed;
 }
 
+/** A webview that hosts the API Client UI in place of its own editor tab (the workspace panel). */
+export interface ApiClientHost {
+  /** Shows the client; resolves once the host can receive messages. */
+  reveal(): void | Promise<void>;
+  post(message: unknown): Thenable<boolean>;
+}
+
 /**
- * The API Client editor tab. All network access, files and secrets stay in the extension host;
- * the webview edits plain request data and shows responses.
+ * The API Client. All network access, files and secrets stay in the extension host; the webview
+ * edits plain request data and shows responses. It is shown in the workspace panel when a host
+ * is set, otherwise in its own editor tab.
  */
 export class ApiClientPanel implements vscode.Disposable {
   private panel?: vscode.WebviewPanel;
+  /** The workspace panel, when it hosts the client. */
+  host?: ApiClientHost;
+  /** A request to open once the hosted UI has started (it may load after `show`). */
+  private pendingOpen?: { request: ApiRequest; collection?: string };
+  private hostReady = false;
   private readonly running = new Map<string, AbortController>();
   private readonly responses = new Map<string, ApiResponse>();
   private readonly subscriptions: vscode.Disposable[];
@@ -52,14 +65,60 @@ export class ApiClientPanel implements vscode.Disposable {
     this.subscriptions = [store.onDidChange(() => this.schedule())];
   }
   private timer?: ReturnType<typeof setTimeout>;
+  private send(message: unknown): Thenable<boolean> {
+    if (this.host) return this.host.post(message);
+    return this.panel?.webview.postMessage(message) ?? Promise.resolve(false);
+  }
+  private get visible(): boolean {
+    return this.host ? this.hostReady : !!this.panel;
+  }
+  /** A message from the hosted UI (the workspace panel forwards them). */
+  receive(m: Record<string, unknown>): void {
+    if (m?.type === 'ready') this.hostReady = true;
+    this.queue = this.queue.then(() =>
+      this.onMessage(m).then(
+        () => {
+          if (m?.type === 'ready' && this.pendingOpen) {
+            void this.send({ type: 'open', ...this.pendingOpen });
+            this.pendingOpen = undefined;
+          }
+        },
+        (e) => {
+          void this.send({
+            type: 'error',
+            message: e instanceof Error ? e.message : String(e),
+            tab: m?.tab,
+          });
+        },
+      ),
+    );
+  }
+  /** The host's webview went away: its UI starts again (and asks for state) next time. */
+  hostClosed(): void {
+    this.hostReady = false;
+    for (const c of this.running.values()) c.abort();
+  }
   private schedule() {
-    if (!this.panel) return;
+    if (!this.visible) return;
     clearTimeout(this.timer);
     this.timer = setTimeout(() => void this.postState(), 120);
   }
 
   /** Opens the client; with `open`, a stored request or a new one prefilled from curl/text. */
   async show(open?: { collection?: string; path?: string; request?: ApiRequest }) {
+    if (this.host) {
+      await this.host.reveal();
+      const request =
+        open?.request ||
+        (open?.collection && open.path
+          ? await this.store.request(open.collection, open.path)
+          : undefined);
+      if (request) {
+        if (this.hostReady) void this.send({ type: 'open', request, collection: open?.collection });
+        else this.pendingOpen = { request, collection: open?.collection };
+      }
+      return;
+    }
     if (!this.panel) {
       this.panel = vscode.window.createWebviewPanel(
         'notespace.apiClient',
@@ -84,20 +143,7 @@ export class ApiClientPanel implements vscode.Disposable {
         this.panel = undefined;
         for (const c of this.running.values()) c.abort();
       });
-      this.panel.webview.onDidReceiveMessage((m) => {
-        this.queue = this.queue.then(() =>
-          this.onMessage(m).then(
-            () => undefined,
-            (e) => {
-              void this.panel?.webview.postMessage({
-                type: 'error',
-                message: e instanceof Error ? e.message : String(e),
-                tab: m?.tab,
-              });
-            },
-          ),
-        );
-      });
+      this.panel.webview.onDidReceiveMessage((m) => this.receive(m));
     } else this.panel.reveal();
     if (open) {
       const request =
@@ -105,16 +151,15 @@ export class ApiClientPanel implements vscode.Disposable {
         (open.collection && open.path
           ? await this.store.request(open.collection, open.path)
           : undefined);
-      if (request)
-        void this.panel.webview.postMessage({ type: 'open', request, collection: open.collection });
+      if (request) void this.send({ type: 'open', request, collection: open.collection });
     }
   }
 
   private async postState() {
-    if (!this.panel) return;
+    if (!this.visible) return;
     const collections = await this.store.collections();
     const environments = await this.store.environments();
-    void this.panel.webview.postMessage({
+    void this.send({
       type: 'state',
       collections: collections.map((c) => ({
         id: c.id,
@@ -178,7 +223,7 @@ export class ApiClientPanel implements vscode.Disposable {
       case 'open': {
         if (!collection || !path) return;
         const request = await this.store.request(collection, path);
-        return void this.panel?.webview.postMessage({ type: 'open', request, collection });
+        return void this.send({ type: 'open', request, collection });
       }
       case 'send': {
         const request = cleanRequest(m.request);
@@ -196,7 +241,7 @@ export class ApiClientPanel implements vscode.Disposable {
             signal: controller.signal,
           });
           if (result.response) this.responses.set(tab, result.response);
-          void this.panel?.webview.postMessage({ type: 'response', tab, ...result });
+          void this.send({ type: 'response', tab, ...result });
         } finally {
           this.running.delete(tab);
         }
@@ -211,7 +256,7 @@ export class ApiClientPanel implements vscode.Disposable {
         if (!target) return;
         const parent = m.parent === undefined ? undefined : str(m.parent, 400);
         const savedPath = await this.store.saveRequest(target, request, collection ? parent : '');
-        void this.panel?.webview.postMessage({
+        void this.send({
           type: 'saved',
           tab,
           collection: target,
@@ -300,7 +345,7 @@ export class ApiClientPanel implements vscode.Disposable {
           emptyRequest('new', 'New request'),
           path,
         );
-        void this.panel?.webview.postMessage({
+        void this.send({
           type: 'open',
           request: await this.store.request(collection, savedPath),
           collection,
@@ -366,7 +411,7 @@ export class ApiClientPanel implements vscode.Disposable {
       case 'importCurl': {
         const text = str(m.text, 200000);
         const { request, warnings } = parseCurl(text);
-        void this.panel?.webview.postMessage({
+        void this.send({
           type: 'open',
           request,
           tab: tab || undefined,
@@ -493,7 +538,7 @@ export class ApiClientPanel implements vscode.Disposable {
       error?: string;
       tests: Array<{ pass: boolean; source: string; message: string }>;
     }> = [];
-    void this.panel?.webview.postMessage({
+    void this.send({
       type: 'run',
       collection,
       results,
@@ -519,7 +564,7 @@ export class ApiClientPanel implements vscode.Disposable {
           error: r.error,
           tests: r.tests.results,
         });
-        void this.panel?.webview.postMessage({
+        void this.send({
           type: 'run',
           collection,
           results,
@@ -530,7 +575,7 @@ export class ApiClientPanel implements vscode.Disposable {
     } finally {
       this.running.delete('__run');
     }
-    void this.panel?.webview.postMessage({
+    void this.send({
       type: 'run',
       collection,
       results,

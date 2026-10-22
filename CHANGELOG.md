@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+- **A documentation-site look** — the tab's header shows the wiki's name, icon and color (`wiki.color`) with a search box, the sections as underlined tabs and a section's pages below them. Wiki pages read like a docs site: navigation with expandable sections on the left, breadcrumbs and Edit / Reader icons above the title, an outline that follows the heading being read, "Last updated", backlinks and previous/next cards at the end. Insights cards and numbers are larger and easier to scan.
+- **A new Home** — a landing page with a greeting and today's date, a large search box, clickable counts (due today, overdue, open tasks, pages, boards), Today's tasks with quick add, the coming week day by day, recently edited pages and favorites as cards that open in the Wiki, the wiki's top-level sections, and boards as one line each with their progress.
+- **One tab, five sections** — the NoteSpace tab's navigation is Home · Wiki · Tasks · API · Insights. Tasks groups List, Boards and Calendar (the same tasks); Insights groups Overview, Content health and the Link graph, which now open inside the tab instead of tabs of their own. A section reopens on its last page.
+- **The sidebar only launches NoteSpace** — the Pages, Workspace and Page views are gone: the NoteSpace icon opens the tab and closes the sidebar (`notespace.sidebar.openPanel`). Their features moved into the Wiki: a context menu on pages and folders (edit, rename, move, duplicate, favorites, properties, history, delete), drag and drop to move, Favorites at the top, notebooks and canvases in the tree, and a wiki menu (settings, export, import, remove). `notespace.explorer.autoReveal` and `notespace.home.openOnStartup` were removed.
+- **Find (/)** — one search for pages, tasks, boards and the tab's own pages.
+- **Fewer commands** — duplicates (Open Planner, Open Kanban Board, Open Boards, Open Calendar, Open Wiki Homepage…) are hidden from the Command Palette and still work from keybindings. **Open Home** is now **Open NoteSpace**; **Open Wiki** shows the wiki in the tab.
+- Task titles no longer repeat their `#tags` next to the tag chips.
+- **Wiki inside the workspace panel** — Wiki no longer leaves the panel for the homepage: pages are read in place with an MkDocs-style page tree, breadcrumbs, outline, previous/next and backlinks; links stay in the panel and **Edit** opens the Markdown file.
+- **Back and Forward** in the workspace panel (arrows, Alt+←/→, mouse side buttons) across destinations, boards and wiki pages.
+- **API Client inside the workspace panel** — API is a destination like the others: the navigation stays, Back returns to where you were, and open requests and drafts are kept while you move around.
+- **Tasks in pages read as tasks** — `- [ ]` lines render as checkboxes with badges for due date (Today, Tomorrow, overdue), priority, status, person, project and repeat instead of raw `due:`/`priority:` words; ticking a checkbox in the Reader or the Wiki writes the line. Exported sites show read-only checkboxes.
+- **Interactive blocks in the Wiki** — embedded boards, ```http requests, tabs, Copy on code and diagram zoom work in the panel as in the Reader.
+- Fixed: content tabs in exported sites could stay as disclosures when the site script was concatenated.
+
 ## 1.0.0 — 2026-10-16
 
 First release.

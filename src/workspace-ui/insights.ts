@@ -1,4 +1,4 @@
-import { button, emptyState, h, post, S } from './core';
+import { emptyState, h, post, S } from './core';
 
 export function insightsView(): HTMLElement {
   const data = S().insights;
@@ -37,18 +37,7 @@ export function insightsView(): HTMLElement {
         : undefined,
     );
   wrap.append(
-    h(
-      'div',
-      { class: 'section-head' },
-      h('h2', { text: 'Insights' }),
-      h('span', { class: 'spacer' }),
-      button(
-        'Full content health report',
-        () => post({ type: 'command', name: 'contentHealth' }),
-        'btn',
-      ),
-      button('Link graph', () => post({ type: 'command', name: 'graph' }), 'btn ghost'),
-    ),
+    h('div', { class: 'section-head' }, h('h2', { text: 'Overview' })),
     h('h3', { class: 'sub-head', text: 'Wiki health' }),
     h(
       'div',

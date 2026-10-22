@@ -1,4 +1,4 @@
-// Unified workspace journey on code-server: Home, navigation, Wiki homepage, quick create,
+// Unified workspace journey on code-server: Home, navigation, the Wiki reader, quick create,
 // multiple boards with custom columns, inline editing, keyboard moves, the task panel, the
 // calendar and responsive layouts — every change checked in the Markdown files.
 import assert from 'node:assert/strict';
@@ -18,8 +18,9 @@ const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0'
 const files = {
   'wiki.yaml':
     'schemaVersion: 1\nwiki:\n  title: Acme Docs\n  description: Product and team notes\ncontent:\n  root: docs\n  homepage: index.md\n',
-  'docs/index.md': '# Acme Docs\n\nWelcome to the docs.\n',
-  'docs/guide/setup.md': `# Setup\n\n- [ ] Write install guide due:${today} priority:high #docs\n- [ ] Review API page\n`,
+  'docs/index.md':
+    '# Acme Docs\n\nWelcome to the docs. Start with [[Setup]].\n\n## Overview\n\n:::tabs\n:::tab "Mac"\nUse brew.\n:::\n:::tab "Linux"\nUse apt.\n:::\n:::\n\n## More\n\n- [ ] Draft welcome\n\n```tasks\npage: this\nview: board\n```\n',
+  'docs/guide/setup.md': `# Setup\n\n- [ ] Write install guide due:${today} priority:high #docs\n- [ ] Review API page\n- [ ] Check links\n`,
 };
 
 async function axe(frame, label) {
@@ -48,7 +49,7 @@ const file = (p) => readFile(path.join(workspace, 'docs', p), 'utf8').catch(() =
 const panel = () => frameWith(page, '.nav', 'workspace panel');
 try {
   // 1. Home is the entry point; navigation between destinations keeps one tab.
-  await runCommand(page, 'NoteSpace: Open Home');
+  await runCommand(page, 'NoteSpace: Open NoteSpace');
   let f = await panel();
   await poll(
     async () => /Acme Docs/.test(await f.locator('.home-title h1').innerText()),
@@ -79,15 +80,85 @@ try {
   await axe(f, 'home');
   console.log('PASS workspace: Home shows today, completes and captures tasks into Markdown');
 
-  // 2. Wiki opens the real homepage document (no generated copy).
+  // 2. Wiki reads pages inside the panel: a page tree, the page and its outline; links, Back
+  // and Forward stay in the panel, Edit opens the real document.
   await f.locator('.nav [data-nav=wiki]').click();
   await poll(
-    async () => (await page.locator('.tab.active', { hasText: 'index.md' }).count()) > 0,
-    'wiki homepage opened',
+    async () => /Welcome to the docs/.test(await f.locator('.wiki-article').innerText()),
+    'wiki homepage rendered in the panel',
+  );
+  assert.equal(await f.locator('.nav [aria-current=page]').innerText(), 'Wiki');
+  assert.match(await f.locator('.wiki-nav').innerText(), /Guide/);
+  assert.match(await f.locator('.wiki-toc').innerText(), /Overview/);
+  // Interactive blocks work in the panel as in the Reader: tabs and an embedded board.
+  assert.equal(await f.locator('.wiki-article .rich-tab-button').count(), 2);
+  await f.locator('.wiki-article .rich-tab-button', { hasText: 'Linux' }).click();
+  assert.ok(await f.locator('.wiki-article .rich-tab-panel', { hasText: 'Use apt' }).isVisible());
+  await f.locator('.wiki-article .collection-card', { hasText: 'Draft welcome' }).first().focus();
+  await page.keyboard.press('Alt+ArrowRight');
+  await poll(
+    async () => /^- \[ \] Draft welcome status:doing$/m.test(await file('index.md')),
+    'embedded board move from the panel',
+  );
+  assert.match(
+    await f.locator('.wiki-article').innerText(),
+    /Welcome to the docs/,
+    'no navigation',
+  );
+  await f.locator('.wiki-article a', { hasText: 'Setup' }).click();
+  await poll(
+    async () => /Write install guide/.test(await f.locator('.wiki-article').innerText()),
+    'wiki link followed in the panel',
+  );
+  assert.match(await f.locator('.wiki-node.current').innerText(), /Setup/);
+  // Tasks read as checkboxes with badges; ticking one writes the line.
+  assert.ok(!/priority:|due:/.test(await f.locator('.wiki-article').innerText()));
+  assert.equal(await f.locator('.wiki-article .task-badge.priority.high').count(), 1);
+  await f.locator('.wiki-article li', { hasText: 'Check links' }).locator('.task-check').click();
+  await poll(
+    async () => /^- \[x\] Check links/m.test(await file('guide/setup.md')),
+    'task checked from the wiki page',
+  );
+  await poll(
+    async () =>
+      (await f.locator('.wiki-article li.done', { hasText: 'Check links' }).count()) === 1,
+    'page re-rendered with the task done',
+  );
+  await page.screenshot({ path: `${shots}/wiki.png` });
+  await axe(f, 'wiki');
+  await f.locator('.history button[aria-label^=Back]').click();
+  await poll(
+    async () => /Welcome to the docs/.test(await f.locator('.wiki-article').innerText()),
+    'back to the homepage',
+  );
+  await f.locator('.history button[aria-label^=Forward]').click();
+  await poll(
+    async () => /Write install guide/.test(await f.locator('.wiki-article').innerText()),
+    'forward to setup',
+  );
+  await f.locator('.wiki-head [aria-label="Edit this page"]').click();
+  await poll(
+    async () => (await page.locator('.tab.active', { hasText: /setup/i }).count()) > 0,
+    'edit opens the page',
   );
   await page.locator('.tab', { hasText: 'NoteSpace' }).first().click();
   f = await panel();
-  console.log('PASS workspace: Wiki opens docs/index.md');
+  // API is a destination of the panel too: same navigation, and Back returns to the page.
+  await f.locator('.nav [data-nav=api]').click();
+  const api = await frameWith(page, '.app .side-tabs', 'API Client in the panel');
+  assert.ok(await api.locator('.side-tabs').isVisible());
+  assert.equal(await f.locator('.nav [aria-current=page]').innerText(), 'API');
+  await page.screenshot({ path: `${shots}/api.png` });
+  await f.locator('.history button[aria-label^=Back]').click();
+  await poll(
+    async () =>
+      (await f.locator('.api-host').isHidden()) &&
+      /Setup/.test(await f.locator('.wiki-article').innerText()),
+    'back from API to the wiki page',
+  );
+  await f.locator('.nav [data-nav=home]').click();
+  console.log('PASS workspace: Wiki reads pages in the panel with tree, outline, Back and Forward');
+  console.log('PASS workspace: API opens inside the panel and Back returns to the page');
 
   // 3. Quick Create → Kanban board: name, file and template, written as a board page.
   await f.locator('.home-head .btn.primary', { hasText: 'Create' }).click();
@@ -245,7 +316,7 @@ try {
   console.log('PASS workspace: the task panel edits details; note tasks join boards in place');
 
   // 9. A second board is independent; the switcher moves between boards.
-  await f.locator('.nav [data-nav=boards]').click();
+  await f.locator('.subnav [data-nav=boards]').click();
   f = await panel();
   await f.locator('.section-head button', { hasText: 'New board' }).click();
   await f.locator('.modal input').first().fill('Dev');
@@ -269,13 +340,14 @@ try {
   await poll(async () => (await f.locator('.card').count()) >= 3, 'switched back');
   console.log('PASS workspace: boards are independent and the switcher changes board');
 
-  // 10. Calendar shows the same task; keyboard navigation between destinations.
-  await page.keyboard.press('Alt+5');
+  // 10. Calendar shows the same task (a page of Tasks); keyboard navigation between sections.
+  await f.locator('.subnav [data-nav=calendar]').click();
   f = await panel();
   await poll(
-    async () => (await f.locator('.nav [aria-current=page]').innerText()) === 'Calendar',
-    'Alt+5 opens the calendar',
+    async () => (await f.locator('.subnav [aria-current=page]').innerText()) === 'Calendar',
+    'calendar under Tasks',
   );
+  assert.match(await f.locator('.nav [aria-current=page]').innerText(), /^Tasks/);
   assert.ok(
     (await f
       .locator(`.day[data-date="${today}"] .item`, { hasText: 'Launch video teaser' })
@@ -289,6 +361,25 @@ try {
     'Alt+1 home',
   );
   assert.match(await f.locator('.home-card', { hasText: 'My boards' }).innerText(), /Content Plan/);
+  // A section reopens on the page last shown in it.
+  await page.keyboard.press('Alt+3');
+  await poll(
+    async () => (await f.locator('.subnav [aria-current=page]').innerText()) === 'Calendar',
+    'Alt+3 back to the calendar',
+  );
+  // Find (/ or the Search button) goes to pages, tasks and boards.
+  await f.locator('.nav .finder-button').click();
+  await f.locator('.finder input').fill('content plan');
+  await f.locator('.finder-item', { hasText: 'Content Plan' }).first().waitFor();
+  await page.keyboard.press('Enter');
+  await poll(
+    async () =>
+      (await f
+        .locator('.board-switcher')
+        .inputValue()
+        .catch(() => '')) !== '',
+    'board opened from Find',
+  );
   console.log('PASS workspace: calendar and keyboard navigation use the same tasks');
 
   // 11. Narrow editor: secondary controls collapse, content stays usable.

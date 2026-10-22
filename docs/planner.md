@@ -59,7 +59,15 @@ One page per date in `notespace.dailyNotes.folder` (default `daily`), named `YYY
 
 ## The workspace panel
 
-**Open Home** (the **Workspace** view in the NoteSpace sidebar, the status bar, or the Command Palette) opens one editor tab with a compact navigation: **Home**, **Wiki**, **Tasks**, **Boards**, **Calendar**, **Insights** (**Alt+1…6** inside the panel). Switching destinations keeps the tab, filters and drafts. **Wiki** opens the wiki's real homepage (`content.homepage`, else `index.md`) in the editor; nothing is generated. The Home opens by itself the first time the NoteSpace sidebar is shown with no editor open (`notespace.home.openOnStartup`). With several wikis, a selector in the navigation picks the wiki.
+**Open NoteSpace** (the NoteSpace icon in the activity bar, the status bar, or the Command Palette) opens one editor tab that works like a small website. Its navigation has five sections (**Alt+1…5**):
+
+- **Home** — today's tasks, the calendar, recent pages and boards.
+- **Wiki** — the pages, read in place MkDocs-style: the page tree on the left (folders are sections; a folder's `index.md` or `README.md` is the section's page; notebooks and canvases are listed too), the page with breadcrumbs, previous/next and backlinks, and its outline on the right. Links stay in the panel; **Edit** opens the Markdown file, **Open in Reader** opens the Reader beside. The tree is the wiki's file manager: right-click (or Shift+F10) a page or folder to edit, rename, move, duplicate, copy its link, add it to Favorites (listed at the top), see its history or delete it; drag pages and folders onto a folder (or onto the wiki's name for the top level) to move them. The **⋯** menu has the wiki's settings, export, import and removal.
+- **Tasks** — one set of tasks, three pages: **List** (today, upcoming, overdue, inbox, all, completed; list or table), **Boards** (every board and the built-in status board) and **Calendar**.
+- **API** — the API Client; open requests and drafts are kept while you switch.
+- **Insights** — **Overview** (numbers), **Content health** (the full report) and **Link graph**; selecting a page in the graph opens it in the Wiki.
+
+A section opens on the page last shown in it; choosing it again goes to its first page. **Back** and **Forward** (the arrows at the left of the navigation, **Alt+←/→** or the mouse side buttons) move through the places visited. **Search** (or **/**) finds pages, tasks, boards and the panel's own pages. With several wikis, a selector in the navigation picks the wiki. Clicking the NoteSpace icon closes the sidebar to give the tab the space (`notespace.sidebar.openPanel`).
 
 - **Home** — workspace name and description, search, **Create** (wiki page, note, folder, task, board, daily note, page from template), **Today** (overdue and due today, progress, quick add, inline completion), a **calendar preview** (dots for tasks and daily notes, the selected day's tasks, upcoming deadlines; double-click a day to open it), **Continue working** (recently edited pages with their folder and time, favorites) and **My boards** (pinned, then recently used).
 - **Tasks** — Today, Upcoming, Overdue, Inbox, All open and Completed as a list or a table, grouped by board, page, priority or project, filtered by text, board, label, project, assignee and priority. **Saved views** keep a list, layout, grouping and filters under a name.
@@ -125,7 +133,7 @@ view: list | table | gallery
 ```
 ````
 
-Task options: `status` (`open` default, `todo`, `doing`, `blocked`, `done`, `all`), `project`, `tag`, `assignee`, `priority`, `list` (`today`, `upcoming`, `overdue`, `inbox`, `completed`), `page: this`, `links: this` (tasks that link to this page), `search`, `limit`, `title`. Page options: `folder`, `tag`, `view`, `limit`. The **Page** view in the sidebar also lists tasks in the page and tasks elsewhere that link to it. **Search Pages** includes matching tasks.
+Task options: `status` (`open` default, `todo`, `doing`, `blocked`, `done`, `all`), `project`, `tag`, `assignee`, `priority`, `list` (`today`, `upcoming`, `overdue`, `inbox`, `completed`), `page: this`, `links: this` (tasks that link to this page), `search`, `limit`, `title`. Page options: `folder`, `tag`, `view`, `limit`. **Search Pages** includes matching tasks.
 
 With `view: board` the cards can be moved in the reader and in Studio: drag a card to another status column, or focus it and press **Alt+←** / **Alt+→**. The move rewrites only that task's line in its page (Done checks it and adds `done:`, with the next occurrence for recurring tasks; moving out of Done unchecks it and removes `done:`), shows at once and is undone with a message if the line changed meanwhile. Order inside a column follows the task order and is not changed by dragging. Exported pages show the board read-only.
 

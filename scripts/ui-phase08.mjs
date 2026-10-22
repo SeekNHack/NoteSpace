@@ -1,5 +1,6 @@
-// Phase 08 browser journey (workspace navigation): readable labels, index first, folder order,
-// .gitignore, following the active editor, and where pages open — checked in the real UI.
+// Phase 08 browser journey (workspace navigation): the NoteSpace icon opens the workspace tab,
+// the Wiki page tree shows readable labels, a folder's README as the folder's page, folder order
+// and .gitignore, and pages open from the tree as configured — checked in the real UI.
 import assert from 'node:assert/strict';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { createRequire } from 'node:module';
@@ -30,46 +31,41 @@ const setSettings = async (values) => {
   await mkdir(path.dirname(settingsFile), { recursive: true });
   await writeFile(settingsFile, JSON.stringify(values, null, 2));
 };
-const pages = page
-  .locator('.pane', { has: page.locator('.pane-header', { hasText: 'Pages' }) })
-  .first();
-const rows = () => pages.locator('.monaco-list-row').allInnerTexts();
 try {
+  // The activity bar icon opens the NoteSpace tab and gives the sidebar space back.
   await page.locator('.activitybar [aria-label*="NoteSpace"]').first().click();
-  await pages.locator('.monaco-list-row', { hasText: 'Guides' }).waitFor();
-  await pages.locator('.monaco-list-row', { hasText: 'Guides' }).click();
+  const ws = await frameWith(page, '.nav', 'workspace panel');
+  await poll(async () => !(await page.locator('.part.sidebar').isVisible()), 'sidebar closed');
+  await ws.locator('.nav [data-nav=wiki]').click();
+  const tree = ws.locator('.wiki-nav');
+  const guides = tree.locator('.wiki-node.section', { hasText: 'Guides' });
+  await guides.waitFor();
+  await guides.locator('.twisty').click();
+  // Only Guides is expanded: its direct children.
+  const children = async () =>
+    (await tree.locator('li[aria-expanded=true] > ul > li > .wiki-node').allInnerTexts()).map((t) =>
+      t.trim(),
+    );
+  await poll(async () => (await children()).includes('Getting Started'), 'guides expanded');
+  // Readable names; README is the folder's own page; folders before pages; ignored drafts
+  // listed (the setting is off).
+  assert.deepEqual(await children(), ['Advanced', 'Drafts', 'API Reference', 'Getting Started']);
+  await guides.locator('.wiki-link').click();
   await poll(
-    async () => (await rows()).some((r) => r.includes('Getting Started')),
-    'guides expanded',
+    async () => /Guides overview/.test(await ws.locator('.wiki-article').innerText()),
+    'the folder opens its README',
   );
-  // Readable names; README first; folders before pages; ignored drafts listed (the setting is off).
-  let labels = (await rows()).map((r) => r.trim());
-  let guides = labels.slice(labels.indexOf('Guides') + 1);
-  assert.deepEqual(guides.slice(0, 5), [
-    'README',
-    'Advanced',
-    'Drafts',
-    'API Reference',
-    'Getting Started',
-  ]);
-  console.log('PASS phase08: readable names, README first and folders first');
+  console.log('PASS phase08: readable names, README as the folder page and folders first');
 
   // Follow .gitignore and list pages first.
   await setSettings({
     'notespace.respectGitignore': true,
     'notespace.explorer.directorySort': 'files-first',
   });
-  await poll(
-    async () => !(await rows()).some((r) => r.includes('Drafts')),
-    'ignored folder hidden',
-    20000,
-  );
-  labels = (await rows()).map((r) => r.trim());
-  guides = labels.slice(labels.indexOf('Guides') + 1);
-  assert.deepEqual(guides.slice(0, 4), ['README', 'API Reference', 'Getting Started', 'Advanced']);
+  await poll(async () => !(await children()).includes('Drafts'), 'ignored folder hidden', 20000);
+  assert.deepEqual(await children(), ['API Reference', 'Getting Started', 'Advanced']);
   // The workspace Insights numbers follow the same index.
   await runCommand(page, 'NoteSpace: Open Insights');
-  const ws = await frameWith(page, '.nav', 'workspace panel');
   await poll(
     async () =>
       (await ws
@@ -82,40 +78,12 @@ try {
   await page.screenshot({ path: `${shots}/pages-view.png` });
   console.log('PASS phase08: .gitignore and directory order apply without reloading');
 
-  // The Pages view follows the active editor.
-  await runCommand(page, 'Go to File...');
-  await page.keyboard.type('deep-dive.md');
-  await page.waitForTimeout(800);
-  await page.keyboard.press('Enter');
-  await poll(
-    async () =>
-      /Deep Dive/.test(
-        await pages
-          .locator('.monaco-list-row.selected')
-          .innerText()
-          .catch(() => ''),
-      ),
-    'active page revealed',
-  );
-  // Turned off, the selection stays where it was.
-  await setSettings({
-    'notespace.respectGitignore': true,
-    'notespace.explorer.autoReveal': false,
-  });
+  // Where pages open from the tree's Edit.
+  await setSettings({ 'notespace.respectGitignore': true, 'notespace.openPagesIn': 'code' });
   await page.waitForTimeout(1500);
-  await runCommand(page, 'Go to File...');
-  await page.keyboard.type('index.md');
-  await page.waitForTimeout(800);
-  await page.keyboard.press('Enter');
-  await page.waitForTimeout(2000);
-  assert.match(await pages.locator('.monaco-list-row.selected').innerText(), /Deep Dive/);
-  console.log('PASS phase08: the Pages view follows the active page unless autoReveal is off');
-
-  // Where pages open from the Pages view.
-  await setSettings({ 'notespace.openPagesIn': 'code' });
-  await page.waitForTimeout(1500);
-  await runCommand(page, 'View: Close All Editors');
-  await pages.locator('.monaco-list-row', { hasText: 'Getting Started' }).click();
+  await ws.locator('.nav [data-nav=wiki]').click();
+  await tree.locator('.wiki-node.page', { hasText: 'Getting Started' }).click({ button: 'right' });
+  await ws.locator('.menu .item', { hasText: 'Edit' }).first().click();
   await poll(
     async () => (await page.locator('.tab.active', { hasText: 'getting-started.md' }).count()) > 0,
     'opened',
@@ -124,25 +92,19 @@ try {
     async () => (await page.locator('.monaco-editor .view-lines').count()) > 0,
     'text editor',
   );
-  await setSettings({ 'notespace.openPagesIn': 'preview' });
-  await page.waitForTimeout(1500);
-  await pages.locator('.monaco-list-row', { hasText: 'API Reference' }).click();
-  await poll(
-    async () => (await page.locator('.tab', { hasText: /Preview/ }).count()) > 0,
-    'preview opened',
-  );
-  console.log('PASS phase08: notespace.openPagesIn opens pages in Code or the preview');
+  console.log('PASS phase08: Edit from the Wiki tree opens pages as notespace.openPagesIn says');
 
-  await page.evaluate(axeSource);
-  const violations = await page.evaluate(async () =>
+  await page.locator('.tab', { hasText: 'NoteSpace' }).first().click();
+  await ws.evaluate(axeSource);
+  const violations = await ws.evaluate(async () =>
     // eslint-disable-next-line no-undef
     (
-      await axe.run(document.querySelector('.pane-body'), { runOnly: ['wcag2a', 'wcag2aa'] })
+      await axe.run(document.querySelector('.wiki-nav'), { runOnly: ['wcag2a', 'wcag2aa'] })
     ).violations
       .filter((v) => v.impact === 'serious' || v.impact === 'critical')
       .map((v) => v.id),
   );
-  console.log(`axe pages view: ${violations.length} serious/critical`);
+  console.log(`axe wiki tree: ${violations.length} serious/critical`);
   assert.deepEqual(violations, []);
   console.log('NoteSpace phase 08 journey passed on code-server.');
 } catch (error) {

@@ -20,10 +20,24 @@ import { contentHealth } from './core/quality';
 import { plannerCss } from './planner-css';
 import { WikiActivity } from './activity';
 import { posix } from './core/paths';
+import { navOrder, navTree } from './core/nav-tree';
+import { defaultAcronyms, DirectorySort, isFolderIndex } from './core/titles';
+import { escapeHtml, pageCss, safeExternal } from './core/render';
+import { fonts, resolveAppearance, widths } from './core/themes';
+import type { Page } from './core/model';
+import { resolveAttachment } from './assets';
+import { richTabsScript } from './core/reader-interactions';
+import { tokensCss } from './core/design';
+import { apiClientCss } from './api-client-css';
+import type { HttpBlocks } from './http-blocks';
 
 /** Destinations of the workspace panel; the old Planner views are kept as aliases. */
 export type PlannerView =
   | 'home'
+  | 'wiki'
+  | 'api'
+  | 'health'
+  | 'graph'
   | 'tasks'
   | 'boards'
   | 'board'
@@ -37,6 +51,10 @@ export type PlannerView =
   | 'table';
 export const plannerViews: PlannerView[] = [
   'home',
+  'wiki',
+  'api',
+  'health',
+  'graph',
   'tasks',
   'boards',
   'board',
@@ -49,7 +67,17 @@ export const plannerViews: PlannerView[] = [
   'completed',
   'table',
 ];
-type Destination = 'home' | 'tasks' | 'boards' | 'board' | 'calendar' | 'insights';
+type Destination =
+  | 'home'
+  | 'wiki'
+  | 'api'
+  | 'health'
+  | 'graph'
+  | 'tasks'
+  | 'boards'
+  | 'board'
+  | 'calendar'
+  | 'insights';
 type TaskList = 'today' | 'upcoming' | 'overdue' | 'inbox' | 'all' | 'completed';
 interface SavedView {
   name: string;
@@ -70,10 +98,23 @@ interface Prefs {
   pinned: string[];
   recentBoards: string[];
   savedViews: SavedView[];
+  /** The page shown in the Wiki destination (a path in the current wiki). */
+  wikiPage?: string;
 }
 
 const lists: TaskList[] = ['today', 'upcoming', 'overdue', 'inbox', 'all', 'completed'];
-const destinations: Destination[] = ['home', 'tasks', 'boards', 'board', 'calendar', 'insights'];
+const destinations: Destination[] = [
+  'home',
+  'wiki',
+  'api',
+  'health',
+  'graph',
+  'tasks',
+  'boards',
+  'board',
+  'calendar',
+  'insights',
+];
 
 /** Subtasks: following tasks of the same page that are indented deeper. */
 function subtaskCounts(tasks: Task[]): Map<string, { total: number; done: number }> {
@@ -146,7 +187,8 @@ const boardDto = (board: Board, tasks: Task[], nested: Set<string>) => {
 
 /**
  * The NoteSpace workspace panel: Home, Tasks, Boards, Calendar and Insights over the same
- * task lines (PlannerService) and board pages (BoardService). Wiki opens the real homepage.
+ * task lines (PlannerService) and board pages (BoardService). Wiki reads the pages in place,
+ * with an MkDocs-style navigation.
  */
 export class PlannerPanel implements vscode.Disposable {
   private panel?: vscode.WebviewPanel;
@@ -155,6 +197,30 @@ export class PlannerPanel implements vscode.Disposable {
   private queue: Promise<void> = Promise.resolve();
   private readonly subscriptions: vscode.Disposable[];
   readonly boards: BoardService;
+  /** Renders a page body for a webview (set by the extension; shared with the Reader). */
+  reader?: (
+    page: Page,
+    webview: vscode.Webview,
+    href: (target: Page, anchor?: string) => string,
+  ) => Promise<string>;
+  /** The API Client, shown as the API destination (set by the extension). */
+  api?: { receive(message: Record<string, unknown>): void; hostClosed(): void };
+  /** Content health and the link graph, shown as Insights pages (set by the extension). */
+  pages?: {
+    frameDocument(
+      kind: 'health' | 'graph',
+      rootId?: string,
+    ): Promise<{ title: string; css: string; body: string; scripts: string[] }>;
+    handleFrame(message: unknown, openInPanel: (page: Page) => Promise<void>): Promise<void>;
+  };
+  /** Notebooks and canvases of a wiki, listed with its pages (set by the extension). */
+  files?: (rootId: string) => Array<{ path: string; uri: string; file: 'notebook' | 'canvas' }>;
+  /** Frame documents last sent, so unchanged pages are not reloaded. */
+  private frameSent = new Map<string, string>();
+  /** ```http blocks of wiki pages (set by the extension; shared with the Reader). */
+  http?: HttpBlocks;
+  /** Text of the page last sent to the Wiki destination, to re-render only on change. */
+  private wikiShown?: string;
   constructor(
     private readonly workspace: WikiWorkspace,
     private readonly planner: PlannerService,
@@ -164,7 +230,15 @@ export class PlannerPanel implements vscode.Disposable {
     private readonly activity?: WikiActivity,
   ) {
     this.boards = new BoardService(workspace, planner);
-    this.subscriptions = [planner.onDidChange(() => this.schedule())];
+    this.subscriptions = [
+      planner.onDidChange(() => this.schedule()),
+      workspace.onDidChange(() => {
+        const destination = this.prefs().destination;
+        if (!this.panel) return;
+        if (destination === 'wiki') void this.sendWikiPage();
+        if (destination === 'health' || destination === 'graph') void this.sendFrame(destination);
+      }),
+    ];
   }
   get visible(): boolean {
     return !!this.panel;
@@ -215,6 +289,7 @@ export class PlannerPanel implements vscode.Disposable {
       pinned: strings(stored.pinned),
       recentBoards: strings(stored.recentBoards),
       savedViews: Array.isArray(stored.savedViews) ? stored.savedViews.slice(0, 30) : [],
+      wikiPage: typeof stored.wikiPage === 'string' ? stored.wikiPage : undefined,
     };
   }
   private async setPrefs(next: Partial<Prefs>): Promise<void> {
@@ -254,7 +329,13 @@ export class PlannerPanel implements vscode.Disposable {
         {
           enableScripts: true,
           retainContextWhenHidden: true,
-          localResourceRoots: [this.extensionUri],
+          // Wiki images and media are served from the wiki folders.
+          localResourceRoots: [
+            this.extensionUri,
+            ...this.workspace.roots.flatMap((r) =>
+              r.projectUri ? [r.uri, r.projectUri] : [r.uri],
+            ),
+          ],
         },
       );
       this.panel.iconPath = {
@@ -265,8 +346,13 @@ export class PlannerPanel implements vscode.Disposable {
       const script = this.panel.webview.asWebviewUri(
         vscode.Uri.joinPath(this.extensionUri, 'dist', 'planner.js'),
       );
-      this.panel.webview.html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'"><title>NoteSpace</title><style>${plannerCss}</style></head><body><div id="app"></div><script nonce="${nonce}" src="${script}"></script></body></html>`;
-      this.panel.onDidDispose(() => (this.panel = undefined));
+      this.panel.webview.html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}'; style-src 'unsafe-inline'; img-src ${this.panel.webview.cspSource} data:; media-src ${this.panel.webview.cspSource}; base-uri 'none'; form-action 'none'"><title>NoteSpace</title><style>${plannerCss}\n${pageCss}</style></head><body><div id="app"></div><script nonce="${nonce}">${richTabsScript}</script><script nonce="${nonce}" src="${script}"></script></body></html>`;
+      this.panel.onDidDispose(() => {
+        this.panel = undefined;
+        this.wikiShown = undefined;
+        this.api?.hostClosed();
+        this.frameSent.clear();
+      });
       // Messages are handled one at a time: two quick edits of the same page must not both
       // compute their change from the same text.
       this.panel.webview.onDidReceiveMessage((message) => {
@@ -280,6 +366,80 @@ export class PlannerPanel implements vscode.Disposable {
         );
       });
     } else this.panel.reveal();
+  }
+
+  /** A message for the API Client frame. */
+  postApi(message: unknown): Thenable<boolean> {
+    return (
+      this.panel?.webview.postMessage({ type: 'frame', frame: 'api', message }) ??
+      Promise.resolve(false)
+    );
+  }
+
+  /** Sends a frame's document (the API Client once; Insights pages again when they change). */
+  private async sendFrame(frame: 'api' | 'health' | 'graph'): Promise<void> {
+    const panel = this.panel;
+    if (!panel) return;
+    let doc: { title: string; css: string; body: string; scripts: string[] } | undefined;
+    if (frame === 'api') {
+      if (this.frameSent.has('api')) return;
+      const code = await vscode.workspace.fs.readFile(
+        vscode.Uri.joinPath(this.extensionUri, 'dist', 'api-client.js'),
+      );
+      doc = {
+        title: 'API Client',
+        css: `${tokensCss}${apiClientCss}`,
+        body: '<div id="app"></div>',
+        scripts: [new TextDecoder().decode(code)],
+      };
+    } else doc = await this.pages?.frameDocument(frame, this.root()?.id);
+    if (!doc || this.panel !== panel) return;
+    const key = frame === 'api' ? 'sent' : doc.body;
+    if (this.frameSent.get(frame) === key) return;
+    this.frameSent.set(frame, key);
+    void panel.webview.postMessage({ type: 'frameDoc', frame, doc });
+  }
+
+  /**
+   * Shows the Wiki destination: a page (by id or path), a section (expanded, with its own page
+   * when it has one) or the page filter.
+   */
+  async showWiki(target: {
+    path?: string;
+    id?: string;
+    root?: string;
+    section?: string;
+    filter?: boolean;
+  }): Promise<void> {
+    this.show('wiki');
+    const byId = target.id ? this.workspace.index.pages.get(target.id) : undefined;
+    const rootId = byId?.root || target.root;
+    if (rootId && this.workspace.roots.some((r) => r.id === rootId)) this.rootId = rootId;
+    const root = this.root();
+    const pages = root ? this.wikiPages(root) : [];
+    const section = target.section?.replace(/\/?$/, '/');
+    const page =
+      byId ||
+      (target.path ? pages.find((p) => p.path === target.path) : undefined) ||
+      (section
+        ? pages.find(
+            (p) =>
+              p.path.startsWith(section) &&
+              isFolderIndex(p.path) &&
+              !p.path.slice(section.length).includes('/'),
+          )
+        : undefined);
+    if (page) await this.setPrefs({ destination: 'wiki', wikiPage: page.path });
+    else await this.setPrefs({ destination: 'wiki' });
+    this.post(false, { destination: 'wiki', ...(page ? { wikiPage: page.path } : {}) });
+    await this.sendWikiPage(undefined, true);
+    if (section || target.filter)
+      void this.panel?.webview.postMessage({ type: 'wikiReveal', section, filter: target.filter });
+  }
+
+  /** Sends the state again (a list it shows changed elsewhere). */
+  refresh(): void {
+    this.schedule();
   }
 
   private schedule(): void {
@@ -393,6 +553,8 @@ export class PlannerPanel implements vscode.Disposable {
       workspace: {
         name: root.config?.wiki.title || root.name,
         description: root.config?.wiki.description || '',
+        icon: root.config?.wiki.icon,
+        color: root.config?.wiki.color,
         homepage: pages.some((p) => p.path === homepage) ? homepage : undefined,
         boardsFolder: vscode.workspace
           .getConfiguration('notespace', root.folder.uri)
@@ -422,20 +584,137 @@ export class PlannerPanel implements vscode.Disposable {
         dailyNote: notes.includes(today),
       },
       insights: prefs.destination === 'insights' ? this.insights(root, tasks, today) : undefined,
+      wiki: { tree: this.wikiTree(root) },
+    });
+    // After an error the page is sent again too, undoing a checkbox that did not save.
+    if (prefs.destination === 'wiki' || go?.destination === 'wiki')
+      void this.sendWikiPage(undefined, force);
+    const page = go?.destination || prefs.destination;
+    if (page === 'health' || page === 'graph') void this.sendFrame(page);
+  }
+
+  /** Pages the Wiki destination lists: published pages, without archived versions or translations. */
+  private wikiPages(root: WikiRoot): Page[] {
+    return this.workspace.index
+      .all(root.id)
+      .filter((p) => !this.workspace.isArchived(p) && !this.workspace.isVariant(p));
+  }
+  /** The Wiki destination's page tree (also used by tests). */
+  wikiTree(root: WikiRoot) {
+    const settings = vscode.workspace.getConfiguration('notespace.explorer', root.folder.uri);
+    const files = (this.files?.(root.id) || []).map((f) => ({
+      id: f.uri,
+      path: f.path,
+      title: posix.basename(f.path),
+      uri: f.uri,
+      file: f.file,
+    }));
+    return navTree([...this.wikiPages(root), ...files], {
+      sort: root.config?.navigation.sort || 'filename',
+      directorySort: settings.get<DirectorySort>('directorySort', 'folders-first'),
+      readable: settings.get<boolean>('humanizeNames', true),
+      acronyms: settings.get<string[]>('acronyms', defaultAcronyms),
+    });
+  }
+  /** The page of the Wiki destination: the one last read, else the homepage, else the first. */
+  private wikiPage(root: WikiRoot): Page | undefined {
+    const pages = this.wikiPages(root);
+    const wanted = this.prefs().wikiPage;
+    const homepage = root.config?.content.homepage || 'index.md';
+    return (
+      (wanted && pages.find((p) => p.path === wanted)) ||
+      pages.find((p) => p.path === homepage) ||
+      pages.find((p) => /^(index|home|readme)\.md$/i.test(p.path)) ||
+      navOrder(this.wikiTree(root))
+        .map((n) => pages.find((p) => p.id === n.id))
+        .find(Boolean)
+    );
+  }
+  /** Renders the current wiki page into the panel when it (or the page) changed. */
+  private async sendWikiPage(anchor?: string, force = false): Promise<void> {
+    const panel = this.panel;
+    const root = this.root();
+    if (!panel || !root) return;
+    const page = this.wikiPage(root);
+    if (!page) {
+      this.wikiShown = undefined;
+      void panel.webview.postMessage({ type: 'wikiPage', page: undefined });
+      return;
+    }
+    const key = `${page.uri}\0${page.text}\0${vscode.window.activeColorTheme.kind}`;
+    if (!force && !anchor && key === this.wikiShown) return;
+    this.wikiShown = key;
+    const href = (p: Page, a?: string) =>
+      p.id === page.id && a
+        ? `#${a}`
+        : `#wiki:${encodeURIComponent(p.id)}${a ? `?anchor=${encodeURIComponent(a)}` : ''}`;
+    const body = this.reader
+      ? await this.reader(page, panel.webview, href)
+      : `<pre>${escapeHtml(page.body)}</pre>`;
+    const backlinks = this.workspace.index
+      .backlinks(page)
+      .filter(
+        (b, i, all) => b.page.id !== page.id && all.findIndex((x) => x.page.id === b.page.id) === i,
+      )
+      .map((b) => ({ id: b.page.id, title: b.page.title, path: b.page.path }));
+    const look = resolveAppearance(root.config?.appearance);
+    if (this.panel !== panel) return;
+    void panel.webview.postMessage({
+      type: 'wikiPage',
+      anchor,
+      page: {
+        id: page.id,
+        uri: page.uri,
+        path: page.path,
+        title: page.title,
+        tags: page.tags,
+        draft: page.draft,
+        modified: this.workspace.modifiedAt(page.uri),
+        headings:
+          root.config?.features.tableOfContents === false
+            ? []
+            : page.headings
+                .filter((h) => h.level > 1 && h.level < 5)
+                .map((h) => ({ level: h.level, text: h.text, slug: h.slug })),
+        backlinks,
+        html: body,
+        font: root.config ? fonts[look.font] : undefined,
+        width: root.config ? widths[look.width] : undefined,
+      },
     });
   }
 
-  private async onMessage(message: unknown): Promise<void> {
+  /** A message from the panel's webview (also used by tests). */
+  async onMessage(message: unknown): Promise<void> {
     if (!message || typeof message !== 'object') return;
     const m = message as Record<string, unknown>;
     const root = this.root();
     const key = typeof m.key === 'string' ? m.key : '';
     const str = (v: unknown, max = 200) => (typeof v === 'string' ? v.slice(0, max) : undefined);
     const boardId = str(m.boardId, 80) || '';
+    // Blocks of the wiki page: embedded boards and ```http requests, as in the Reader.
+    const panel = this.panel;
+    const reply = (message: unknown) =>
+      panel?.webview.postMessage(message) ?? Promise.resolve(false);
+    if (await this.planner.handleMove(m, reply)) return;
+    if (this.http && (await this.http.handle(m, reply))) return;
     switch (m.type) {
       case 'ready':
         this.post();
         return;
+      case 'frameDoc':
+        // The API Client and the Insights pages run in same-origin frames of this webview
+        // (their styles and shortcuts stay their own).
+        if (m.frame === 'api' || m.frame === 'health' || m.frame === 'graph')
+          await this.sendFrame(m.frame);
+        return;
+      case 'frame': {
+        if (!m.message || typeof m.message !== 'object') return;
+        if (m.frame === 'api') this.api?.receive(m.message as Record<string, unknown>);
+        else if (m.frame === 'health' || m.frame === 'graph')
+          await this.pages?.handleFrame(m.message, (page) => this.showWiki({ id: page.id }));
+        return;
+      }
       case 'setRoot':
         if (typeof m.id === 'string') this.rootId = m.id;
         this.post();
@@ -465,6 +744,9 @@ export class PlannerPanel implements vscode.Disposable {
         if (['month', 'week', 'day'].includes(p.calendar as string)) next.calendar = p.calendar;
         if (Array.isArray(p.savedViews)) next.savedViews = p.savedViews.slice(0, 30);
         await this.setPrefs(next);
+        if (next.destination === 'wiki') void this.sendWikiPage(undefined, true);
+        if (next.destination === 'health' || next.destination === 'graph')
+          void this.sendFrame(next.destination);
         if (next.destination === 'insights' || next.board) this.post();
         return;
       }
@@ -684,9 +966,190 @@ export class PlannerPanel implements vscode.Disposable {
         if (root && typeof m.date === 'string')
           await this.open(await this.planner.ensureDaily(root, m.date));
         return;
-      case 'openWiki':
-        await vscode.commands.executeCommand('notespace.openWikiHome', root?.id);
+      case 'wikiOpen': {
+        // A page of the Wiki destination, by path (navigation) or id (links in a page).
+        if (!root) return;
+        const id = str(m.id, 2000);
+        const path = str(m.path, 1000);
+        const page = id
+          ? this.workspace.index.pages.get(id)
+          : this.wikiPages(root).find((p) => p.path === path);
+        if (!page || page.root !== root.id) return;
+        if (typeof m.offset === 'number') {
+          await this.open(vscode.Uri.parse(page.uri), m.offset);
+          return;
+        }
+        await this.setPrefs({ destination: 'wiki', wikiPage: page.path });
+        await this.activity?.opened(page);
+        await this.sendWikiPage(str(m.anchor, 200), true);
         return;
+      }
+      case 'wikiAction': {
+        // Page and folder actions of the Wiki tree run the same commands as the editor menus.
+        if (!root) return;
+        const commands: Record<string, string> = {
+          edit: 'openPage',
+          openToSide: 'openToSide',
+          preview: 'preview',
+          newPage: 'newPage',
+          newSection: 'newSection',
+          toggleFavorite: 'toggleFavorite',
+          copyLink: 'copyLink',
+          pageProperties: 'pageProperties',
+          pageHistory: 'pageHistory',
+          renamePage: 'renamePage',
+          movePage: 'movePage',
+          duplicatePage: 'duplicatePage',
+          deletePage: 'deletePage',
+          renameSection: 'renameSection',
+          deleteSection: 'deleteSection',
+          revealInExplorer: 'revealInExplorer',
+        };
+        const name = str(m.action, 40) || '';
+        const uri = str(m.uri, 2000);
+        const prefix = str(m.prefix, 1000);
+        // Wiki-wide actions: those that manage the wiki get it as the target, the others
+        // (export, validate, import) choose it themselves.
+        const forWiki = [
+          'renameWiki',
+          'editWikiDescription',
+          'setWikiIcon',
+          'setWikiColor',
+          'openWikiSettings',
+          'setDefaultWiki',
+          'removeWiki',
+          'deleteWiki',
+        ];
+        const global = [
+          'export',
+          'exportPdf',
+          'exportEpub',
+          'validate',
+          'themeBuilder',
+          'importProject',
+          'importObsidian',
+          'buildWiki',
+        ];
+        if (name.startsWith('wiki:')) {
+          const command = name.slice(5);
+          if (forWiki.includes(command))
+            await vscode.commands.executeCommand(`notespace.${command}`, {
+              label: root.name,
+              root: root.id,
+              prefix: '',
+            });
+          else if (global.includes(command))
+            await vscode.commands.executeCommand(`notespace.${command}`);
+          return;
+        }
+        if (name === 'openFile') {
+          const file = uri && this.files?.(root.id).find((f) => f.uri === uri);
+          if (!file) return;
+          if (file.file === 'notebook')
+            await vscode.commands.executeCommand(
+              'notespace.openNotebook',
+              vscode.Uri.parse(file.uri),
+            );
+          else
+            await vscode.commands.executeCommand(
+              'vscode.openWith',
+              vscode.Uri.parse(file.uri),
+              'notespace.canvas',
+            );
+          return;
+        }
+        const command = commands[name];
+        if (!command) return;
+        const page = uri ? this.workspace.index.byUri(uri) : undefined;
+        if (name === 'revealInExplorer' && uri && !page) {
+          if (this.files?.(root.id).some((f) => f.uri === uri))
+            await vscode.commands.executeCommand('revealInExplorer', vscode.Uri.parse(uri));
+          return;
+        }
+        if (command === 'openPage') {
+          if (page) await vscode.commands.executeCommand('notespace.openPage', page.uri);
+          return;
+        }
+        const node = page
+          ? { label: page.title, root: page.root, page }
+          : prefix !== undefined
+            ? {
+                label: posix.basename(prefix.replace(/\/$/, '')) || root.name,
+                root: root.id,
+                prefix,
+              }
+            : undefined;
+        if (node) await vscode.commands.executeCommand(`notespace.${command}`, node);
+        return;
+      }
+      case 'wikiMove': {
+        // Drag and drop in the Wiki tree: a page or a folder into a folder ('' is the top level).
+        if (!root) return;
+        const to = (str(m.to, 1000) || '').replace(/\/$/, '');
+        const uri = str(m.uri, 2000);
+        const prefix = str(m.prefix, 1000);
+        const page = uri ? this.workspace.index.byUri(uri) : undefined;
+        if (page && page.root === root.id) {
+          const target = posix.join(to, posix.basename(page.path));
+          if (target === page.path) return;
+          const moved = await this.workspace.renamePage(page, target);
+          if (this.prefs().wikiPage === page.path) {
+            const next = this.workspace.index.byUri(moved.toString());
+            if (next) await this.setPrefs({ wikiPage: next.path });
+          }
+        } else if (prefix) {
+          const from = prefix.replace(/\/$/, '');
+          const target = posix.join(to, posix.basename(from));
+          if (target !== from && !`${to}/`.startsWith(`${from}/`))
+            await this.workspace.moveSection(root, prefix, target);
+        }
+        this.post();
+        return;
+      }
+      case 'wikiEdit': {
+        const uri = str(m.uri, 2000);
+        const page = uri && this.workspace.index.byUri(uri);
+        if (!page) return;
+        const heading =
+          typeof m.anchor === 'string' ? page.headings.find((h) => h.slug === m.anchor) : undefined;
+        await this.open(vscode.Uri.parse(page.uri), heading?.offset);
+        return;
+      }
+      case 'wikiReader': {
+        const uri = str(m.uri, 2000);
+        const page = uri && this.workspace.index.byUri(uri);
+        if (page)
+          await vscode.commands.executeCommand('notespace.preview', {
+            label: page.title,
+            root: page.root,
+            page,
+          });
+        return;
+      }
+      case 'wikiAsset':
+      case 'wikiCode': {
+        const uri = str(m.uri, 2000);
+        const target = str(m.target, 1024);
+        const page = uri && this.workspace.index.byUri(uri);
+        if (!page || !target) return;
+        if (m.type === 'wikiCode')
+          await vscode.commands.executeCommand('notespace.openCodeRef', page.uri, target);
+        else {
+          const file = await resolveAttachment(
+            this.workspace,
+            this.workspace.rootFor(page),
+            page,
+            target,
+          );
+          if (file) await vscode.commands.executeCommand('vscode.open', file);
+        }
+        return;
+      }
+      case 'external': {
+        const href = str(m.href, 2000);
+        if (href && safeExternal(href)) await vscode.env.openExternal(vscode.Uri.parse(href));
+        return;
+      }
       case 'search':
         await vscode.commands.executeCommand('notespace.advancedSearch', str(m.query, 500) || '');
         return;

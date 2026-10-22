@@ -12,6 +12,7 @@ import { notebookCss } from './notebook';
 import { canvasCss } from './canvas';
 import { apiCss } from './openapi';
 import { parseCodeRef } from './code-refs';
+import { parseTasks, daysBetween } from './tasks';
 import { dashboardCss } from './dashboard';
 import { httpBlockCss, renderHttpBlock } from './http/render';
 import hljs from 'highlight.js/lib/core';
@@ -78,6 +79,120 @@ export interface RenderOptions {
   dashboard?: (source: string) => string;
   /** Renders ```http blocks interactively; without it they are static request cards. */
   http?: (source: string) => string;
+  /** Today in the wiki's time zone: due dates read as Today, Tomorrow or overdue. */
+  today?: string;
+  /**
+   * The planner key of the task written on a body line; tasks with a key get a checkbox that
+   * can be clicked (`.task-check[data-task-key]`), the others a read-only one.
+   */
+  taskKey?: (bodyLine: number, raw: string) => string | undefined;
+}
+
+/** Task metadata written as plain words (`due:`, `priority:`, `@person`, `^id`…). */
+const taskWords =
+  /(^|\s)(?:(?:due|start|done|priority|status|repeat|project|order|board|col):\S+|@[\p{L}\p{N}_.-]+|\^[A-Za-z0-9-]{1,32}|#([\p{L}\p{N}_/-]+))(?=\s|$)/gu;
+
+/**
+ * Task list items: a checkbox instead of `[ ]`, and the metadata words as badges (due date,
+ * priority, person, project, repeat, status) instead of raw text. Tags become chips.
+ */
+function taskListPlugin(md: MarkdownIt, body: string, options: RenderOptions) {
+  const lines = body.split('\n');
+  md.core.ruler.push('task_lists', (state) => {
+    const tokens = state.tokens;
+    for (let i = 0; i < tokens.length - 2; i++) {
+      const item = tokens[i];
+      const inline = tokens[i + 2];
+      if (item.type !== 'list_item_open' || inline.type !== 'inline' || !item.map) continue;
+      const box = /^\[([ xX])\]\s+/.exec(inline.content);
+      const first = inline.children?.[0];
+      if (!box || !first || first.type !== 'text' || !first.content.startsWith(box[0].trimEnd()))
+        continue;
+      const raw = (lines[item.map[0]] || '').replace(/\r$/, '');
+      const task = parseTasks({ id: '', path: '', title: '', text: raw })[0];
+      if (!task) continue;
+      first.content = first.content.slice(box[0].trimEnd().length).replace(/^\s+/, '');
+      // Metadata words leave the text; tags stay as chips.
+      const children: typeof inline.children = [];
+      for (const child of inline.children!) {
+        if (child.type !== 'text') {
+          children.push(child);
+          continue;
+        }
+        let last = 0;
+        for (const m of child.content.matchAll(taskWords)) {
+          const start = m.index! + m[1].length;
+          const before = new state.Token('text', '', 0);
+          before.content = child.content.slice(last, m.index! + m[1].length);
+          children.push(before);
+          if (m[2]) {
+            const tag = new state.Token('html_inline', '', 0);
+            tag.content = `<span class="task-tag">#${escapeHtml(m[2])}</span>`;
+            children.push(tag);
+          }
+          last = start + m[0].length - m[1].length;
+        }
+        const rest = new state.Token('text', '', 0);
+        rest.content = child.content.slice(last);
+        children.push(rest);
+      }
+      while (children.length && children[children.length - 1].type === 'text') {
+        const end = children[children.length - 1];
+        end.content = end.content.replace(/\s+$/, '');
+        if (end.content) break;
+        children.pop();
+      }
+      const key = options.taskKey?.(item.map[0], raw);
+      const done = task.status === 'done';
+      const open = new state.Token('html_inline', '', 0);
+      open.content = `<input type="checkbox" class="task-check"${done ? ' checked' : ''}${key ? ` data-task-key="${escapeHtml(encodeURIComponent(key))}"` : ' disabled'} aria-label="${escapeHtml(task.title || 'Task')}"><span class="task-text">`;
+      const badges: string[] = [];
+      if (task.due) {
+        const diff = options.today ? daysBetween(options.today, task.due.slice(0, 10)) : NaN;
+        const label =
+          diff === 0
+            ? 'Today'
+            : diff === 1
+              ? 'Tomorrow'
+              : diff === -1
+                ? 'Yesterday'
+                : task.due.slice(0, 10);
+        const time = task.due.length > 10 ? ` ${task.due.slice(11)}` : '';
+        badges.push(
+          `<span class="task-badge due${!done && diff < 0 ? ' overdue" data-tone="red' : !done && diff === 0 ? ' today" data-tone="orange' : ''}" title="Due ${escapeHtml(task.due)}">${escapeHtml(label + time)}</span>`,
+        );
+      }
+      if (task.priority)
+        badges.push(
+          `<span class="task-badge priority ${task.priority}" data-tone="${{ high: 'red', medium: 'orange', low: 'blue' }[task.priority]}" title="Priority">${task.priority}</span>`,
+        );
+      if (task.status === 'doing' || task.status === 'blocked')
+        badges.push(
+          `<span class="task-badge status ${task.status}" data-tone="${task.status === 'doing' ? 'blue' : 'red'}">${task.status === 'doing' ? 'In progress' : 'Blocked'}</span>`,
+        );
+      if (task.assignee)
+        badges.push(`<span class="task-badge person">@${escapeHtml(task.assignee)}</span>`);
+      if (task.project)
+        badges.push(`<span class="task-badge project">${escapeHtml(task.project)}</span>`);
+      if (task.repeat)
+        badges.push(
+          `<span class="task-badge repeat" title="Repeats">↻ ${escapeHtml(task.repeat)}</span>`,
+        );
+      const close = new state.Token('html_inline', '', 0);
+      close.content = `</span>${badges.length ? `<span class="task-badges">${badges.join('')}</span>` : ''}`;
+      inline.children = [open, ...children, close];
+      item.attrJoin('class', `task-list-item${done ? ' done' : ''}`);
+      for (let j = i - 1; j >= 0; j--)
+        if (
+          (tokens[j].type === 'bullet_list_open' || tokens[j].type === 'ordered_list_open') &&
+          tokens[j].level === item.level - 1
+        ) {
+          if (!tokens[j].attrGet('class')?.includes('contains-task-list'))
+            tokens[j].attrJoin('class', 'contains-task-list');
+          break;
+        }
+    }
+  });
 }
 export function renderPage(page: Page, index: WikiIndex, options: RenderOptions): string {
   const contentPage = pageWithIncludes(page, index, options.includeWarning);
@@ -87,6 +202,7 @@ export function renderPage(page: Page, index: WikiIndex, options: RenderOptions)
   wikiPlugin(md);
   richInlinePlugin(md);
   richBlockPlugin(md);
+  taskListPlugin(md, body, options);
   md.renderer.rules.wiki_link = (tokens, i) => {
     const t = tokens[i],
       r = index.resolve(page, t.meta.target);
@@ -226,18 +342,20 @@ export function renderPage(page: Page, index: WikiIndex, options: RenderOptions)
   };
   return md.render(body, {});
 }
-/** Base page styles plus the shared design system; used by the reader, dashboard and export. */
-export const contentCss = `${tokensCss}
-html{background:var(--ws-bg)}
-body{margin:0;background:var(--ws-bg);color:var(--ws-fg);font-family:var(--ws-font);font-size:var(--ws-ui-size);line-height:1.5;-webkit-font-smoothing:antialiased}
-.muted{color:var(--ws-muted)}
-${documentCss}
+/** Styles of a rendered page (`.doc`) and its embedded blocks, without page chrome. */
+export const pageCss = `${documentCss}
 ${chartCss}
 ${notebookCss}
 ${canvasCss}
 ${apiCss}
 ${dashboardCss}
 ${httpBlockCss}`;
+/** Base page styles plus the shared design system; used by the reader, dashboard and export. */
+export const contentCss = `${tokensCss}
+html{background:var(--ws-bg)}
+body{margin:0;background:var(--ws-bg);color:var(--ws-fg);font-family:var(--ws-font);font-size:var(--ws-ui-size);line-height:1.5;-webkit-font-smoothing:antialiased}
+.muted{color:var(--ws-muted)}
+${pageCss}`;
 export function htmlDocument(title: string, content: string, css = contentCss): string {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"><title>${escapeHtml(title)}</title><style>${css}</style></head><body><main class="doc">${content}</main></body></html>`;
 }

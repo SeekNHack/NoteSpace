@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { randomBytes } from 'node:crypto';
 import { WikiRoot, WikiWorkspace } from './workspace';
 import { contentCss, escapeHtml, renderPage, safeExternal } from './core/render';
-import { isExternal, posix, splitTarget, uriPath } from './core/paths';
+import { isExternal, posix, uriPath } from './core/paths';
 import { Page } from './core/model';
 import { showPage } from './views';
 import { resolveImage, resolveAttachment, resolveMedia } from './assets';
@@ -13,7 +13,6 @@ import { WikiActivity } from './activity';
 import { pageWithIncludes } from './core/includes';
 import { icon, IconName } from './core/icons';
 import type { PlannerService } from './planner';
-import { compareTasks, inList } from './core/tasks';
 import { chartRenderer } from './chart-data';
 import { canvasRenderer } from './canvas-editor';
 import { dashboardRenderer } from './dashboards';
@@ -85,29 +84,8 @@ main.reader{max-width:none;padding:0}
 .dash-head p{margin:0;color:var(--ws-muted)}
 .dash-head .actions{display:flex;flex-wrap:wrap;gap:6px}
 .dash-head select{height:26px;border-radius:var(--ws-r1);border:1px solid var(--ws-border);background:var(--vscode-dropdown-background,var(--ws-bg));padding:0 6px;margin-top:6px}
-.continue{display:flex;align-items:center;gap:var(--ws-s4);padding:14px 16px;margin-bottom:var(--ws-s5);border:1px solid var(--ws-hairline);border-radius:var(--ws-r3);background:var(--ws-surface)}
-.continue .text{flex:1;min-width:0}
-.continue h2{margin:2px 0;font-size:16px;font-weight:600}
-.continue p{margin:0;color:var(--ws-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.today{margin-bottom:var(--ws-s5)}.today h2{display:flex;align-items:center;gap:8px;margin:0 0 6px;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ws-muted)}.today h2 .count{font-weight:500;text-transform:none;letter-spacing:0}.today .end.overdue{color:var(--ws-red)}.today-actions{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 0}
-.dash-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--ws-s5) var(--ws-s6)}
-.dash-grid section h2{display:flex;align-items:center;justify-content:space-between;margin:0 0 6px;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ws-muted)}
-.dash-grid section h2 .count{font-weight:500}
-.rows{list-style:none;margin:0;padding:0}
-.rows li{margin:0}
-.row{display:flex;align-items:center;gap:10px;width:100%;min-height:32px;padding:4px 8px;margin:0 -8px;border:0;border-radius:var(--ws-r1);background:none;color:var(--ws-fg);text-align:left;cursor:pointer;text-decoration:none}
-a.row:hover,button.row:hover{background:var(--ws-hover);text-decoration:none}
-.row .icon{color:var(--ws-muted)}
-.row .title{flex:none;max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.row .meta{flex:1;min-width:0;color:var(--ws-muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.row .end{color:var(--ws-muted);font-size:12px;white-space:nowrap}
-.row .num{font-variant-numeric:tabular-nums;font-weight:600;min-width:2ch;text-align:right}
-.row.good .num{color:var(--ws-green)}.row.warn .num{color:var(--ws-orange)}.row.bad .num{color:var(--ws-red)}
 .empty{padding:10px 12px;border:1px dashed var(--ws-border);border-radius:var(--ws-r2);color:var(--ws-muted)}
 .empty p{margin:0 0 8px}
-.subrows{margin:2px 0 6px 26px;padding:0;list-style:none;font-size:12.5px}
-.subrows a{display:block;padding:2px 0;color:var(--ws-muted)}
-.subrows a:hover{color:var(--ws-accent)}
 /* Content health */
 .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:var(--ws-s5)}
 .tile{padding:10px 12px;border:1px solid var(--ws-hairline);border-radius:var(--ws-r2);background:var(--ws-surface)}
@@ -131,7 +109,7 @@ a.row:hover,button.row:hover{background:var(--ws-hover);text-decoration:none}
 .welcome h1{font-size:22px;margin:8px 0}
 .welcome p{color:var(--ws-muted)}
 .welcome .actions{display:flex;justify-content:center;gap:8px;margin-top:16px}
-@media(max-width:760px){main{padding:var(--ws-s4)}.dash-grid{grid-template-columns:minmax(0,1fr)}.continue{flex-wrap:wrap}}
+@media(max-width:760px){main{padding:var(--ws-s4)}}
 /* Graph */
 .graph{width:100%;height:auto;min-height:220px;aspect-ratio:900/460;border:1px solid var(--ws-hairline);border-radius:var(--ws-r2);background:var(--ws-surface)}
 svg.graph text{fill:var(--ws-fg);font-size:11px}svg.graph line{stroke:var(--ws-fg);opacity:.18}svg.graph circle{fill:var(--ws-accent)}
@@ -144,43 +122,12 @@ svg.graph .graph-node.center circle{fill:var(--ws-orange)}
 .stats{display:flex;flex-wrap:wrap;gap:var(--ws-s5);margin:var(--ws-s3) 0}.stat strong{font-size:18px;display:block}
 #empty{padding:30px;text-align:center}`;
 
-const relativeTime = (at: number | undefined): string => {
-  if (!at) return '';
-  const minutes = Math.round((Date.now() - at) / 60000);
-  if (minutes < 1) return 'just now';
-  if (minutes < 60) return `${minutes} min ago`;
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours} h ago`;
-  const days = Math.round(hours / 24);
-  return days === 1 ? 'yesterday' : `${days} days ago`;
-};
 const svgIcon = (name: IconName, size = 16) => icon(name, size);
-const excerptOf = (page: Page) =>
-  page.body
-    .replace(/^---[\s\S]*?---/, '')
-    .replace(/^#{1,6}\s+.*$/gm, '')
-    .replace(/^:::.*$/gm, '')
-    .replace(/```[\s\S]*?```/g, '')
-    .replace(/<\/?[a-z][^>]*>/gi, '')
-    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
-    .replace(/\[\[([^\]|]*\|)?([^\]]*)\]\]/g, '$2')
-    .replace(/[*_`>#|-]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, 160);
-
 export class WikiPanels implements vscode.Disposable {
   private preview?: vscode.WebviewPanel;
-  private graph?: vscode.WebviewPanel;
-  private health?: vscode.WebviewPanel;
   private healthRoot?: string;
-  private healthHtml?: string;
-  private home?: vscode.WebviewPanel;
-  private homeHtml?: string;
-  private homeRoot?: string;
   private previewUri?: string;
   private previewFingerprint?: string;
-  private graphRoot?: string;
   private timer?: ReturnType<typeof setTimeout>;
   private revision = 0;
   private readonly subscriptions: vscode.Disposable[];
@@ -217,9 +164,6 @@ export class WikiPanels implements vscode.Disposable {
       light: vscode.Uri.joinPath(this.extensionUri, 'media', 'notespace-light.svg'),
       dark: vscode.Uri.joinPath(this.extensionUri, 'media', 'notespace-dark.svg'),
     };
-  }
-  get homeOpen(): boolean {
-    return !!this.home;
   }
   /** Re-renders the reader after a file it embeds changed (an API description, for example). */
   refreshEmbeds(): void {
@@ -259,73 +203,7 @@ export class WikiPanels implements vscode.Disposable {
     this.preview.reveal(vscode.ViewColumn.Beside, true);
     this.schedule();
   }
-  openGraph(root?: string): void {
-    this.graphRoot = root;
-    if (!this.graph) {
-      this.graph = vscode.window.createWebviewPanel(
-        'notespace.graph',
-        'Wiki Link Graph',
-        vscode.ViewColumn.Active,
-        { enableScripts: true, localResourceRoots: [this.extensionUri] },
-      );
-      this.graph.iconPath = this.icon();
-      this.graph.onDidDispose(() => {
-        this.graph = undefined;
-      });
-      this.graph.webview.onDidReceiveMessage((message) => {
-        void this.onMessage(message).catch((e) => this.workspace.log.appendLine(String(e)));
-      });
-    }
-    this.graph.reveal();
-    this.schedule();
-  }
-  /** Content health: links, structure, metadata, translations and API coverage. */
-  openHealth(root?: string): void {
-    if (root) this.healthRoot = root;
-    if (!this.health) {
-      this.health = vscode.window.createWebviewPanel(
-        'notespace.health',
-        'Content Health',
-        vscode.ViewColumn.Active,
-        { enableScripts: true, localResourceRoots: [this.extensionUri] },
-      );
-      this.health.iconPath = this.icon();
-      this.health.onDidDispose(() => {
-        this.health = undefined;
-        this.healthHtml = undefined;
-      });
-      this.health.webview.onDidReceiveMessage((message) => {
-        void this.onMessage(message).catch((e) => this.workspace.log.appendLine(String(e)));
-      });
-    }
-    this.health.reveal();
-    this.schedule();
-  }
-  /** The workspace dashboard. It never renders the wiki's own index page. */
-  openHome(root?: string): void {
-    if (root) this.homeRoot = root;
-    if (!this.home) {
-      this.home = vscode.window.createWebviewPanel(
-        'notespace.home',
-        'NoteSpace',
-        vscode.ViewColumn.Active,
-        { enableScripts: true, localResourceRoots: [this.extensionUri] },
-      );
-      this.home.iconPath = this.icon();
-      this.home.onDidDispose(() => {
-        this.home = undefined;
-        this.homeHtml = undefined;
-      });
-      this.home.webview.onDidReceiveMessage((message) => {
-        void this.onMessage(message).catch((e) => this.workspace.log.appendLine(String(e)));
-      });
-    }
-    this.home.reveal();
-    this.schedule();
-  }
   private dashboardRoot(): WikiRoot | undefined {
-    const chosen = this.workspace.roots.find((r) => r.id === this.homeRoot);
-    if (chosen) return chosen;
     const active = this.activity?.activeUri && this.workspace.index.byUri(this.activity.activeUri);
     return active ? this.workspace.rootFor(active) : this.workspace.roots[0];
   }
@@ -404,14 +282,12 @@ export class WikiPanels implements vscode.Disposable {
         );
       return;
     }
-    if (m.type === 'showLog') {
-      this.workspace.log.show();
+    if (m.type === 'complete' && typeof m.key === 'string' && this.planner) {
+      await this.planner.complete(m.key, m.done !== false);
       return;
     }
-    if (m.type === 'switchWiki' && typeof m.id === 'string') {
-      this.homeRoot = m.id;
-      this.homeHtml = undefined;
-      await this.refresh();
+    if (m.type === 'showLog') {
+      this.workspace.log.show();
       return;
     }
     if (m.type === 'revealSection' && typeof m.root === 'string' && typeof m.prefix === 'string') {
@@ -524,121 +400,6 @@ export class WikiPanels implements vscode.Disposable {
     // Inline styles are allowed so theme-aware Mermaid SVG can style itself; scripts stay nonce-only.
     return `<!doctype html><html lang="${escapeHtml(language)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${panel.webview.cspSource} data:; media-src ${panel.webview.cspSource}; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; base-uri 'none'; form-action 'none'"><title>${escapeHtml(title)}</title><style>${contentCss}\n${panelCss}</style></head><body>${content}<script nonce="${nonce}" id="wiki-data" type="application/json">${payload}</script><script nonce="${nonce}" src="${boards}"></script><script nonce="${nonce}" src="${script}"></script><script nonce="${nonce}">${readerInteractions}</script></body></html>`;
   }
-  private dashboard(): string {
-    const roots = this.workspace.roots;
-    const root = this.dashboardRoot();
-    if (!root) {
-      return `<main class="welcome"><div class="eyebrow">NoteSpace</div><h1>Start a documentation wiki</h1><p>NoteSpace keeps every page as a local Markdown file. Create a new wiki, or import an existing Markdown or MkDocs project.</p><div class="actions"><button class="btn primary" data-action="createWiki">${svgIcon('plus')} Create wiki</button><button class="btn" data-action="importProject">Import project</button></div></main>`;
-    }
-    const { pages, unlinkedOk } = this.currentPages(root);
-    const recent = (this.activity?.recentPages() || []).filter((p) => p.root === root.id);
-    const favorites = (this.activity?.favoritePages() || []).filter((p) => p.root === root.id);
-    const homepage = this.homepageOf(root);
-    const link = (page: Page, inner: string, cls = 'row') =>
-      `<a class="${cls}" href="#wiki:${encodeURIComponent(page.id)}">${inner}</a>`;
-    const pageRow = (page: Page, end = '') =>
-      `<li>${link(page, `${svgIcon(this.activity?.isFavorite(page) ? 'star' : 'file')}<span class="title">${escapeHtml(page.title)}</span><span class="meta">${escapeHtml(page.path)}</span>${end ? `<span class="end">${escapeHtml(end)}</span>` : ''}`)}</li>`;
-    // Health is computed from the same resolver as diagnostics.
-    const broken: Array<{ page: Page; offset: number; target: string }> = [];
-    const linked = new Set<string>();
-    for (const page of pages)
-      for (const l of page.links) {
-        if (l.kind === 'image' || isExternal(l.target)) continue;
-        if (l.kind === 'markdown') {
-          const path = splitTarget(l.target).path;
-          if (/\.[a-z\d]+$/i.test(path) && !/\.md$/i.test(path)) continue;
-        }
-        const result = this.workspace.index.resolve(page, l.target, l.kind);
-        if (result.error) broken.push({ page, offset: l.start, target: l.target });
-        if (result.page && result.page.id !== page.id) linked.add(result.page.id);
-      }
-    // Journals, the planner inbox and language homepages are not expected to have incoming links.
-    const orphans = pages.filter(
-      (p) => !linked.has(p.id) && p.id !== homepage?.id && !unlinkedOk(p),
-    );
-    const drafts = pages.filter((p) => p.draft);
-    const warnings = this.workspace.issues.length;
-    const quality = contentHealth(
-      this.workspace.index,
-      pages,
-      homepage?.path,
-      (p) => this.workspace.index.scope?.(p) ?? '',
-      this.rulesOf(root),
-    );
-    const qualityIssues =
-      quality.duplicateHeadings.length +
-      quality.duplicateTitles.length +
-      quality.metadata.length +
-      quality.empty.length +
-      quality.structure.length +
-      quality.rules.length;
-    const health = (
-      name: IconName,
-      label: string,
-      count: number,
-      tone: 'good' | 'warn' | 'bad',
-      action: string,
-      details = '',
-    ) =>
-      `<li><button class="row ${count ? tone : 'good'}" ${action}>${svgIcon(name)}<span class="title">${label}</span><span class="meta"></span><span class="num">${count}</span></button>${details}</li>`;
-    const brokenDetails = broken.length
-      ? `<ul class="subrows">${broken
-          .slice(0, 4)
-          .map(
-            (b) =>
-              `<li><a href="#wiki:${encodeURIComponent(b.page.id)}?offset=${b.offset}">${escapeHtml(b.page.title)} → <code>${escapeHtml(b.target)}</code></a></li>`,
-          )
-          .join('')}</ul>`
-      : '';
-    const orphanDetails = orphans.length
-      ? `<ul class="subrows">${orphans
-          .slice(0, 4)
-          .map(
-            (p) =>
-              `<li><a href="#wiki:${encodeURIComponent(p.id)}">${escapeHtml(p.title)}</a></li>`,
-          )
-          .join(
-            '',
-          )}${orphans.length > 4 ? `<li class="muted">and ${orphans.length - 4} more</li>` : ''}</ul>`
-      : '';
-    const sections = new Map<string, number>();
-    for (const page of pages) {
-      const top = page.path.includes('/') ? page.path.split('/')[0] : '';
-      sections.set(top, (sections.get(top) || 0) + 1);
-    }
-    const structure = [...sections.entries()]
-      .sort((a, b) => (a[0] ? (b[0] ? a[0].localeCompare(b[0]) : 1) : -1))
-      .slice(0, 10)
-      .map(([section, count]) =>
-        section
-          ? `<li><button class="row" data-reveal="${escapeHtml(section)}/">${svgIcon('folder')}<span class="title">${escapeHtml(section)}</span><span class="meta"></span><span class="end">${count} page${count === 1 ? '' : 's'}</span></button></li>`
-          : `<li><div class="row" style="cursor:default">${svgIcon('file')}<span class="title">Top level</span><span class="meta"></span><span class="end">${count} page${count === 1 ? '' : 's'}</span></div></li>`,
-      )
-      .join('');
-    const last = recent[0];
-    const continueCard = last
-      ? `<section class="continue" aria-label="Continue writing"><div class="text"><div class="eyebrow">Continue writing · ${escapeHtml(relativeTime(this.activity?.visitedAt(last)) || 'recently')}</div><h2>${escapeHtml(last.title)}</h2><p>${escapeHtml(excerptOf(last) || last.path)}</p></div>${link(last, `${svgIcon('edit')} Open`, 'btn primary')}</section>`
-      : '';
-    const switcher =
-      roots.length > 1
-        ? `<select id="wiki-switch" aria-label="Wiki">${roots.map((r) => `<option value="${escapeHtml(r.id)}"${r.id === root.id ? ' selected' : ''}>${escapeHtml(r.name)}</option>`).join('')}</select>`
-        : '';
-    const empty = (text: string, button = '') => `<div class="empty"><p>${text}</p>${button}</div>`;
-    return `<main class="dash"><header class="dash-head"><div><div class="eyebrow">NoteSpace · Dashboard</div><h1>${escapeHtml(root.config?.wiki.title || root.name)}</h1><p>${escapeHtml(root.config?.wiki.description || `${root.uri.path.split('/').slice(-2).join('/')}`)}</p>${switcher}</div><div class="actions"><button class="btn primary" data-action="newPage">${svgIcon('plus')} New page</button><button class="btn" data-action="newFromTemplate">${svgIcon('template')} From template</button><button class="btn" data-action="search" title="Search pages (Ctrl+Alt+W)">${svgIcon('search')} Search</button>${homepage ? link(homepage, `${svgIcon('home')} Open index page`, 'btn') : ''}</div></header>${continueCard}${this.todaySection(root, pages)}<div class="dash-grid"><section aria-labelledby="recent-h"><h2 id="recent-h">Recent pages <span class="count">${recent.length}</span></h2>${
-      recent.length
-        ? `<ul class="rows">${recent
-            .slice(0, 8)
-            .map((p) => pageRow(p, relativeTime(this.activity?.visitedAt(p))))
-            .join('')}</ul>`
-        : empty(
-            'Pages you open appear here.',
-            pages.length
-              ? '<button class="btn" data-action="search">Find a page</button>'
-              : '<button class="btn primary" data-action="newPage">Create the first page</button>',
-          )
-    }</section><section aria-labelledby="fav-h"><h2 id="fav-h">Favorites <span class="count">${favorites.length}</span></h2>${favorites.length ? `<ul class="rows">${favorites.map((p) => pageRow(p)).join('')}</ul>` : empty('Star important pages from the Wiki Explorer or the page menu to pin them here.')}</section><section aria-labelledby="health-h"><h2 id="health-h">Wiki health <span class="count">${pages.length} page${pages.length === 1 ? '' : 's'}</span></h2><ul class="rows">${health('unlinkPage', 'Broken links', broken.length, 'bad', 'data-action="validate"', brokenDetails)}${health('link', 'Pages without incoming links', orphans.length, 'warn', 'data-action="graph"', orphanDetails)}${health('edit', 'Drafts', drafts.length, 'warn', 'data-action="filterPages"')}${health('alert', 'Content issues', qualityIssues, 'warn', 'data-action="contentHealth"')}${health('alert', 'Indexing warnings', warnings, 'bad', 'data-show-log')}</ul><p style="margin-top:8px"><button class="btn ghost" data-action="contentHealth">${svgIcon('check')} Content health report</button></p></section><section aria-labelledby="structure-h"><h2 id="structure-h">Structure <span class="count">${sections.size} section${sections.size === 1 ? '' : 's'}</span></h2>${pages.length ? `<ul class="rows">${structure}</ul>` : empty('This wiki has no pages yet.', '<button class="btn primary" data-action="newPage">New page</button>')}<p style="margin-top:8px"><button class="btn ghost" data-action="newSection">${svgIcon('folder')} New folder</button> <button class="btn ghost" data-action="graph">${svgIcon('layout')} Link graph</button></p></section></div></main>`;
-  }
-  /** Pages of the current version, plus the private pages (journals, inbox) that need no incoming links. */
   private currentPages(root: WikiRoot): { pages: Page[]; unlinkedOk: (page: Page) => boolean } {
     const pages = this.workspace.index
       .all(root.id)
@@ -909,57 +670,123 @@ export class WikiPanels implements vscode.Disposable {
         : ''
     }${translations}${api}</main>`;
   }
-  /** Today's work from the planner: due and overdue tasks, today's note and the journal streak. */
-  private todaySection(root: WikiRoot, pages: Page[]): string {
-    if (!this.planner) return '';
-    const today = this.planner.today(root);
-    const tasks = this.planner
-      .tasks(root.id)
-      .filter((t) => inList(t, 'today', today))
-      .sort(compareTasks);
-    const overdue = tasks.filter((t) => t.due && t.due.slice(0, 10) < today).length;
-    const note = this.planner.dailyNotes(root).get(today);
-    const streak = this.planner.streak(root);
-    const rows = tasks
-      .slice(0, 6)
-      .map((t) => {
-        const page = pages.find((p) => p.id === t.pageId);
-        const offset = page
-          ? page.text.split('\n').slice(0, t.line).join('\n').length + (t.line ? 1 : 0)
-          : 0;
-        return page
-          ? `<li><a class="row" href="#wiki:${encodeURIComponent(page.id)}?offset=${offset}">${svgIcon('task')}<span class="title">${escapeHtml(t.title)}</span><span class="meta">${escapeHtml(page.title)}</span><span class="end${t.due && t.due.slice(0, 10) < today ? ' overdue' : ''}">${t.due ? escapeHtml(t.due.slice(0, 10) === today ? 'today' : t.due) : ''}</span></a></li>`
-          : '';
-      })
-      .join('');
-    return `<section class="today" aria-labelledby="today-h"><h2 id="today-h">Today <span class="count">${tasks.length} task${tasks.length === 1 ? '' : 's'}${overdue ? `, ${overdue} overdue` : ''} · ${streak}-day journal streak</span></h2>${rows ? `<ul class="rows">${rows}</ul>` : '<p class="muted">Nothing due today.</p>'}<p class="today-actions"><button class="btn" data-action="dailyNote">${svgIcon('calendar')} ${note ? "Open today's note" : "Start today's note"}</button> <button class="btn" data-action="addTask">${svgIcon('plus')} Add task</button> <button class="btn ghost" data-action="planner">${svgIcon('task')} Open Planner</button></p></section>`;
+  /**
+   * The rendered body of a page for a webview: includes expanded, images and media as webview
+   * URIs, attachments as `#asset:` links, rich blocks and diagrams rendered.
+   */
+  async renderBody(
+    page: Page,
+    webview: vscode.Webview,
+    href: (target: Page, anchor?: string) => string,
+  ): Promise<string> {
+    const root = this.workspace.rootFor(page),
+      images = new Map<string, string>(),
+      media = new Map<string, string>(),
+      attachments = new Map<string, string>();
+    const contentPage = pageWithIncludes(page, this.workspace.index);
+    // Body lines map to page lines after the front matter; a line pulled in by an include does
+    // not match its page line and stays read-only.
+    const textLines = page.text.split('\n');
+    const frontMatter =
+      page.text.slice(0, page.text.length - page.body.length).split('\n').length - 1;
+    const tasks = this.planner?.tasks(page.root).filter((t) => t.pageId === page.id) || [];
+    const taskKey = (bodyLine: number, raw: string) => {
+      const line = bodyLine + frontMatter;
+      if ((textLines[line] || '').replace(/\r$/, '') !== raw) return undefined;
+      return tasks.find((t) => t.line === line)?.key;
+    };
+    for (const l of contentPage.links.filter((l) => l.kind === 'image')) {
+      if (isExternal(l.target)) continue;
+      const isMedia = /\.(?:mp4|webm|mp3|ogg)(?:[#?].*)?$/i.test(l.target);
+      const uri = isMedia
+        ? await resolveMedia(this.workspace, root, page, l.target)
+        : await resolveImage(this.workspace, root, page, l.target);
+      if (uri)
+        (isMedia ? media : images).set(
+          markdown.normalizeLink(l.target),
+          webview.asWebviewUri(uri).toString(),
+        );
+    }
+    for (const link of contentPage.links.filter((l) => l.kind === 'markdown')) {
+      const uri = await resolveAttachment(this.workspace, root, page, link.target);
+      if (uri)
+        attachments.set(
+          markdown.normalizeLink(link.target),
+          `#asset:${encodeURIComponent(link.target)}`,
+        );
+    }
+    return renderDiagrams(
+      renderPage(contentPage, this.workspace.index, {
+        pageHref: href,
+        today: this.planner?.today(root),
+        taskKey,
+        imageHref: (target) => images.get(target),
+        mediaHref: (target) => media.get(target),
+        assetHref: (target) => attachments.get(target),
+        codeHref: (target) => `#code:${encodeURIComponent(target)}`,
+        collection: this.planner?.collection(page, (target) => href(target), true, true),
+        chart: await chartRenderer(this.workspace, page, this.planner),
+        notebook: await notebookRenderer(this.workspace, page),
+        openapi: await openApiRenderer(this.workspace, page),
+        dashboard: await dashboardRenderer(vscode.Uri.parse(page.uri), page.text),
+        http: this.http ? await this.http.renderer(page.text) : undefined,
+        canvas: await canvasRenderer(this.workspace, page, (file) => {
+          const target = this.workspace.index.all(page.root).find((p) => p.path === file);
+          return target ? href(target) : undefined;
+        }),
+      }),
+    );
+  }
+  /**
+   * Content health or the link graph as a page of the workspace panel, which shows it in a
+   * same-origin frame: scripts are inlined there because frames cannot load webview files.
+   */
+  async frameDocument(
+    kind: 'health' | 'graph',
+    rootId?: string,
+  ): Promise<{ title: string; css: string; body: string; scripts: string[] }> {
+    const root = this.workspace.roots.find((r) => r.id === rootId) || this.dashboardRoot();
+    let title = 'Link Graph',
+      content: string,
+      data: unknown;
+    if (kind === 'health') {
+      title = 'Content Health';
+      if (root) this.healthRoot = root.id;
+      content = root ? await this.healthReport(root) : '<main><p>No wiki is open.</p></main>';
+      data = { mode: 'health', root: root?.id };
+    } else ({ html: content, data } = this.graphView(root?.id));
+    const payload = JSON.stringify(data ?? {}).replace(/</g, '\\u003c');
+    this.frameScripts ??= Promise.all(
+      [
+        vscode.Uri.joinPath(this.extensionUri, 'dist', 'task-board.js'),
+        vscode.Uri.joinPath(this.extensionUri, 'media', 'webview.js'),
+      ].map(async (uri) => new TextDecoder().decode(await vscode.workspace.fs.readFile(uri))),
+    ).then((code) => [...code, readerInteractions]);
+    return {
+      title,
+      css: `${contentCss}\n${panelCss}`,
+      body: `${content}<script id="wiki-data" type="application/json">${payload}</script>`,
+      scripts: await this.frameScripts,
+    };
+  }
+  private frameScripts?: Promise<string[]>;
+  /** A message from a panel frame; opening a page shows it in the panel's Wiki. */
+  async handleFrame(message: unknown, openInPanel: (page: Page) => Promise<void>): Promise<void> {
+    if (!message || typeof message !== 'object') return;
+    const m = message as Record<string, unknown>;
+    if (
+      m.type === 'open' &&
+      typeof m.id === 'string' &&
+      typeof m.offset !== 'number' &&
+      !m.anchor
+    ) {
+      const page = this.workspace.index.pages.get(m.id);
+      if (page) return openInPanel(page);
+    }
+    await this.onMessage(m);
   }
   async refresh(): Promise<void> {
     const revision = ++this.revision;
-    if (this.health) {
-      const panel = this.health;
-      const root =
-        this.workspace.roots.find((r) => r.id === this.healthRoot) || this.dashboardRoot();
-      const html = root ? await this.healthReport(root) : '<main><p>No wiki is open.</p></main>';
-      if (revision === this.revision && this.health === panel && html !== this.healthHtml) {
-        panel.webview.html = this.document(panel, 'Content Health', html, {
-          mode: 'health',
-          root: root?.id,
-        });
-        this.healthHtml = html;
-      }
-    }
-    if (this.home) {
-      const homePanel = this.home;
-      const html = this.dashboard();
-      if (revision === this.revision && this.home === homePanel && html !== this.homeHtml) {
-        homePanel.webview.html = this.document(homePanel, 'NoteSpace', html, {
-          mode: 'home',
-          root: this.dashboardRoot()?.id,
-        });
-        this.homeHtml = html;
-      }
-    }
     if (this.preview) {
       const panel = this.preview,
         page = this.previewUri && this.workspace.index.byUri(this.previewUri);
@@ -971,10 +798,7 @@ export class WikiPanels implements vscode.Disposable {
           '<main class="welcome"><h1>Nothing to preview</h1><p>Open a wiki page to read it here. The previous page may have been moved or deleted.</p></main>',
         );
       } else {
-        const root = this.workspace.rootFor(page),
-          images = new Map<string, string>(),
-          media = new Map<string, string>(),
-          attachments = new Map<string, string>();
+        const root = this.workspace.rootFor(page);
         const contentPage = pageWithIncludes(page, this.workspace.index);
         const fingerprint = JSON.stringify({
           page: page.text,
@@ -992,49 +816,11 @@ export class WikiPanels implements vscode.Disposable {
             .map((p) => [p.path, p.title, p.order, p.draft]),
         });
         if (fingerprint !== this.previewFingerprint) {
-          for (const l of contentPage.links.filter((l) => l.kind === 'image')) {
-            if (isExternal(l.target)) continue;
-            const isMedia = /\.(?:mp4|webm|mp3|ogg)(?:[#?].*)?$/i.test(l.target);
-            const uri = isMedia
-              ? await resolveMedia(this.workspace, root, page, l.target)
-              : await resolveImage(this.workspace, root, page, l.target);
-            if (uri)
-              (isMedia ? media : images).set(
-                markdown.normalizeLink(l.target),
-                panel.webview.asWebviewUri(uri).toString(),
-              );
-          }
-          for (const link of contentPage.links.filter((l) => l.kind === 'markdown')) {
-            const uri = await resolveAttachment(this.workspace, root, page, link.target);
-            if (uri)
-              attachments.set(
-                markdown.normalizeLink(link.target),
-                `#asset:${encodeURIComponent(link.target)}`,
-              );
-          }
           const href = (p: Page, anchor?: string) =>
             p.id === page.id && anchor
               ? `#${anchor}`
               : `#wiki:${encodeURIComponent(p.id)}${anchor ? `?anchor=${encodeURIComponent(anchor)}` : ''}`;
-          const body = await renderDiagrams(
-            renderPage(contentPage, this.workspace.index, {
-              pageHref: href,
-              imageHref: (target) => images.get(target),
-              mediaHref: (target) => media.get(target),
-              assetHref: (target) => attachments.get(target),
-              codeHref: (target) => `#code:${encodeURIComponent(target)}`,
-              collection: this.planner?.collection(page, (target) => href(target), true, true),
-              chart: await chartRenderer(this.workspace, page, this.planner),
-              notebook: await notebookRenderer(this.workspace, page),
-              openapi: await openApiRenderer(this.workspace, page),
-              dashboard: await dashboardRenderer(vscode.Uri.parse(page.uri), page.text),
-              http: this.http ? await this.http.renderer(page.text) : undefined,
-              canvas: await canvasRenderer(this.workspace, page, (file) => {
-                const target = this.workspace.index.all(page.root).find((p) => p.path === file);
-                return target ? href(target) : undefined;
-              }),
-            }),
-          );
+          const body = await this.renderBody(page, panel.webview, href);
           const backlinks = this.workspace.index
             .backlinks(page)
             .filter(
@@ -1125,42 +911,39 @@ export class WikiPanels implements vscode.Disposable {
         }
       }
     }
-    if (this.graph) {
-      const full = this.workspace.index.graph(this.graphRoot);
-      const archived = new Set(
-        [...this.workspace.index.pages.values()]
-          .filter((p) => this.workspace.isArchived(p))
-          .map((p) => p.id),
-      );
-      const active = this.activity?.activeUri
-        ? this.workspace.index.byUri(this.activity.activeUri)
-        : undefined;
-      const graph = {
-        nodes: full.nodes.filter((n) => !archived.has(n.id)),
-        edges: full.edges.filter((e) => !archived.has(e.source) && !archived.has(e.target)),
-        focus:
-          active && !archived.has(active.id) && (!this.graphRoot || active.root === this.graphRoot)
-            ? { id: active.id, title: active.title }
-            : undefined,
-      };
-      const linked = new Set(graph.edges.flatMap((e) => [e.source, e.target]));
-      const controls = graph.focus
-        ? `<fieldset class="graph-mode"><legend class="eyebrow">Show</legend><label><input type="radio" name="graph-mode" value="all"> All pages</label><label><input type="radio" name="graph-mode" value="local"> Around “${escapeHtml(graph.focus.title)}”</label><label>Distance <select id="graph-depth"><option value="1">1 link</option><option value="2">2 links</option></select></label></fieldset>`
-        : '';
-      this.graph.webview.html = this.document(
-        this.graph,
-        'Wiki Link Graph',
-        `<main><div class="eyebrow">NoteSpace · Connections</div><h1 style="margin:4px 0 0;font-size:22px">Link graph</h1><div class="stats"><span class="stat"><strong>${graph.nodes.length}</strong>pages</span><span class="stat"><strong>${graph.edges.length}</strong>links</span><span class="stat"><strong>${graph.nodes.filter((n) => !linked.has(n.id)).length}</strong>unlinked</span></div>${controls}<label for="filter" class="eyebrow">Find a page</label><p><input id="filter" type="search" placeholder="Filter by title or path" autocomplete="off"></p><p class="muted">Select a page to open it. The diagram shows up to 150 matching pages; the list includes all matches.</p><svg class="graph" viewBox="0 0 900 460" role="group" aria-label="Wiki page connections"></svg><p id="empty" hidden>No matching pages.</p><ul class="page-list" aria-label="Pages"></ul></main>`,
-        graph,
-      );
-    }
+  }
+  /** The link graph: pages and links of a wiki (or all), centred on the active page when shown. */
+  private graphView(root?: string): { html: string; data: unknown } {
+    const full = this.workspace.index.graph(root);
+    const archived = new Set(
+      [...this.workspace.index.pages.values()]
+        .filter((p) => this.workspace.isArchived(p))
+        .map((p) => p.id),
+    );
+    const active = this.activity?.activeUri
+      ? this.workspace.index.byUri(this.activity.activeUri)
+      : undefined;
+    const graph = {
+      nodes: full.nodes.filter((n) => !archived.has(n.id)),
+      edges: full.edges.filter((e) => !archived.has(e.source) && !archived.has(e.target)),
+      focus:
+        active && !archived.has(active.id) && (!root || active.root === root)
+          ? { id: active.id, title: active.title }
+          : undefined,
+    };
+    const linked = new Set(graph.edges.flatMap((e) => [e.source, e.target]));
+    const controls = graph.focus
+      ? `<fieldset class="graph-mode"><legend class="eyebrow">Show</legend><label><input type="radio" name="graph-mode" value="all"> All pages</label><label><input type="radio" name="graph-mode" value="local"> Around “${escapeHtml(graph.focus.title)}”</label><label>Distance <select id="graph-depth"><option value="1">1 link</option><option value="2">2 links</option></select></label></fieldset>`
+      : '';
+    return {
+      html: `<main><div class="eyebrow">NoteSpace · Connections</div><h1 style="margin:4px 0 0;font-size:22px">Link graph</h1><div class="stats"><span class="stat"><strong>${graph.nodes.length}</strong>pages</span><span class="stat"><strong>${graph.edges.length}</strong>links</span><span class="stat"><strong>${graph.nodes.filter((n) => !linked.has(n.id)).length}</strong>unlinked</span></div>${controls}<label for="filter" class="eyebrow">Find a page</label><p><input id="filter" type="search" placeholder="Filter by title or path" autocomplete="off"></p><p class="muted">Select a page to open it. The diagram shows up to 150 matching pages; the list includes all matches.</p><svg class="graph" viewBox="0 0 900 460" role="group" aria-label="Wiki page connections"></svg><p id="empty" hidden>No matching pages.</p><ul class="page-list" aria-label="Pages"></ul></main>`,
+      data: graph,
+    };
   }
   dispose(): void {
     if (this.timer) clearTimeout(this.timer);
     this.revision++;
     this.preview?.dispose();
-    this.graph?.dispose();
-    this.home?.dispose();
     this.subscriptions.forEach((s) => s.dispose());
   }
 }

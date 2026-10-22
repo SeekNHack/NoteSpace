@@ -2,7 +2,7 @@
 
 NoteSpace includes an HTTP client (in the spirit of Postman, Bruno or Thunder Client) that keeps everything in your workspace: requests and collections are small JSON files you can review and commit, environments are files too, and secret values stay in VS Code's SecretStorage. Pages can contain ` ```http ` blocks that readers send from the documentation itself — only when they press **Send**.
 
-Open it with **NoteSpace: Open API Client**, the **API** destination of the NoteSpace workspace (Alt+7) or **API Client** in the Workspace view.
+Open it with **NoteSpace: Open API Client** or the **API** section of the NoteSpace tab (Alt+4).
 
 ## Requests
 

@@ -19,7 +19,22 @@ declare function acquireVsCodeApi(): {
   getState(): unknown;
   setState(s: unknown): void;
 };
-const vscode = acquireVsCodeApi();
+// Inside the workspace panel the client runs in a same-origin frame and talks through the
+// panel's bridge; in its own tab it owns the VS Code API (its parent is then cross-origin).
+type Bridge = ReturnType<typeof acquireVsCodeApi>;
+const bridge = (() => {
+  try {
+    const name = (window.frameElement as HTMLElement | null)?.dataset.frame;
+    return name
+      ? (window.parent as unknown as { notespaceBridge?: (n: string) => Bridge }).notespaceBridge?.(
+          name,
+        )
+      : undefined;
+  } catch {
+    return undefined;
+  }
+})();
+const vscode = bridge || acquireVsCodeApi();
 const post = (m: unknown) => vscode.postMessage(m);
 
 interface TreeNode {

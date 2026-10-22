@@ -1,7 +1,17 @@
 /* The webview sends typed messages. The only workspace write is `taskMove` (a board embedded in a
    page changes a task's status), which the host validates and applies to the task's line. */
 (() => {
-  const vscode = acquireVsCodeApi();
+  // In the workspace panel this page runs in a same-origin frame and talks through the panel's
+  // bridge; in its own tab it owns the VS Code API (its parent is then cross-origin).
+  const bridge = (() => {
+    try {
+      const name = window.frameElement?.dataset.frame;
+      return name ? window.parent.notespaceBridge?.(name) : undefined;
+    } catch {
+      return undefined;
+    }
+  })();
+  const vscode = bridge || acquireVsCodeApi();
   const state = vscode.getState() || {};
   const data = JSON.parse(document.getElementById('wiki-data').textContent);
   document
@@ -64,6 +74,17 @@
     });
     apply();
   }
+  // Task checkboxes write the task line (the page re-renders from the file).
+  document.addEventListener('change', (event) => {
+    const box = event.target;
+    if (!box.matches?.('.task-check[data-task-key]')) return;
+    box.disabled = true;
+    vscode.postMessage({
+      type: 'complete',
+      key: decodeURIComponent(box.dataset.taskKey),
+      done: box.checked,
+    });
+  });
   document.addEventListener('click', (event) => {
     const anchor = event.target.closest?.('a');
     if (!anchor) return;
@@ -121,122 +142,11 @@
         vscode.setState(state);
       },
     });
-  // Interactive ```http blocks: nothing is sent until Send; responses are shown as text.
-  document.addEventListener(
-    'click',
-    (event) => {
-      const send = event.target.closest && event.target.closest('.http-block .http-send');
-      if (send) {
-        event.preventDefault();
-        const block = send.closest('.http-block');
-        send.disabled = true;
-        send.textContent = 'Sending…';
-        block.querySelector('.http-response').replaceChildren();
-        vscode.postMessage({
-          type: 'httpSend',
-          id: block.id,
-          source: block.dataset.source,
-          url: block.querySelector('input.http-url')?.value,
-          body: block.querySelector('textarea.http-body')?.value,
-          environment: block.querySelector('.http-env')?.value,
-        });
-        return;
-      }
-      const link = event.target.closest && event.target.closest('.http-link[data-collection]');
-      if (link) {
-        event.preventDefault();
-        event.stopPropagation();
-        vscode.postMessage({ type: 'httpOpen', collection: link.dataset.collection });
-      }
-    },
-    true,
-  );
-  window.addEventListener('message', (event) => {
-    const m = event.data;
-    if (!m || m.type !== 'httpResponse') return;
-    const block = document.getElementById(m.id);
-    if (!block) return;
-    const send = block.querySelector('.http-send');
-    send.disabled = false;
-    send.textContent = 'Send';
-    const out = block.querySelector('.http-response');
-    const el = (tag, cls, text) => {
-      const e = document.createElement(tag);
-      e.className = cls;
-      e.textContent = text;
-      return e;
-    };
-    out.replaceChildren();
-    if (m.error) return out.append(el('p', 'http-status bad', m.error));
-    const line = document.createElement('p');
-    line.append(
-      el(
-        'span',
-        'http-status ' + (m.status < 400 ? 'ok' : 'bad'),
-        m.status + ' ' + (m.statusText || ''),
-      ),
-      el(
-        'span',
-        'http-note',
-        ' ' + m.ms + ' ms · ' + m.size + ' B' + (m.truncated ? ' (truncated)' : ''),
-      ),
-    );
-    out.append(line);
-    if (m.missing && m.missing.length)
-      out.append(
-        el(
-          'p',
-          'http-note',
-          'No value for ' +
-            m.missing.map((x) => '{{' + x + '}}').join(', ') +
-            ': choose an environment.',
-        ),
-      );
-    for (const t of m.tests || [])
-      out.append(
-        el(
-          'p',
-          'http-status ' + (t.pass ? 'ok' : 'bad'),
-          (t.pass ? '✓ ' : '✗ ') + t.source + ' — ' + t.message,
-        ),
-      );
-    const pre = document.createElement('pre');
-    pre.append(
-      el(
-        'code',
-        '',
-        m.binary
-          ? 'Binary response: open it in the API Client to download it.'
-          : m.text || '(empty body)',
-      ),
-    );
-    out.append(pre);
-  });
-  document.querySelectorAll('.copy-code').forEach((button) =>
-    button.addEventListener('click', async () => {
-      const code = button.parentElement.querySelector('code')?.textContent || '';
-      try {
-        await navigator.clipboard.writeText(code);
-        button.textContent = 'Copied';
-        setTimeout(() => (button.textContent = 'Copy'), 1800);
-      } catch {
-        button.textContent = 'Unavailable';
-      }
-    }),
-  );
-  // Large diagrams: click to toggle between fit-to-width and actual size (scrollable).
-  document.querySelectorAll('.diagram[data-diagram-zoom]').forEach((figure) => {
-    figure.tabIndex = 0;
-    figure.title = 'Click to toggle actual size';
-    const toggle = () => figure.classList.toggle('actual-size');
-    figure.addEventListener('click', toggle);
-    figure.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        toggle();
-      }
-    });
-  });
+  // Interactive ```http blocks, Copy on code blocks and diagram zoom (dist/task-board.js).
+  if (window.wikiReaderBlocks) {
+    window.wikiReaderBlocks((message) => vscode.postMessage(message));
+    window.wikiEnhanceBlocks(document);
+  }
   const svg = document.querySelector('svg.graph');
   if (!svg) {
     requestAnimationFrame(() => window.scrollTo(0, state.scroll || 0));

@@ -138,7 +138,7 @@
       },
       {
         "command": "notespace.openWiki",
-        "title": "Open Wiki Index Page",
+        "title": "Open Wiki",
         "category": "NoteSpace",
         "icon": "$(book)"
       },
@@ -258,13 +258,13 @@
       },
       {
         "command": "notespace.filterPages",
-        "title": "Filter Wiki Explorer",
+        "title": "Filter Wiki Pages",
         "category": "NoteSpace",
         "icon": "$(filter)"
       },
       {
         "command": "notespace.home",
-        "title": "Open Home",
+        "title": "Open NoteSpace",
         "category": "NoteSpace",
         "icon": "$(home)"
       },
@@ -276,7 +276,7 @@
       },
       {
         "command": "notespace.revealSection",
-        "title": "Reveal Section in Wiki Explorer",
+        "title": "Reveal Section in Wiki",
         "category": "NoteSpace",
         "icon": "$(folder)"
       },
@@ -706,375 +706,18 @@
     "views": {
       "notespace": [
         {
-          "id": "notespace.pages",
-          "name": "Pages"
-        },
-        {
-          "id": "notespace.planner",
-          "name": "Workspace"
-        },
-        {
-          "id": "notespace.context",
-          "name": "Page",
-          "visibility": "collapsed"
+          "id": "notespace.start",
+          "name": "NoteSpace"
         }
       ]
     },
     "viewsWelcome": [
       {
-        "view": "notespace.pages",
-        "contents": "NoteSpace keeps documentation as local Markdown files.\n[Create Wiki](command:notespace.createWiki)\n[Import Markdown or MkDocs Project](command:notespace.importProject)\nAlready have Markdown in a folder named `wiki`? [New Page](command:notespace.newPage) creates the first one.",
-        "when": "!notespace.hasPages"
-      },
-      {
-        "view": "notespace.context",
-        "contents": "Open a wiki page to see its outline, backlinks, links and properties here.\nTip: drag this view to the Secondary Side Bar to keep it beside your editor."
-      },
-      {
-        "view": "notespace.planner",
-        "contents": "Home, tasks, boards and calendar for this wiki.\n[Open Home](command:notespace.home)"
+        "view": "notespace.start",
+        "contents": "NoteSpace opens in an editor tab: wiki, tasks, boards, calendar and the API client, with one navigation.\n[Open NoteSpace](command:notespace.home)\n[Create Wiki](command:notespace.createWiki)\n[Import Markdown or MkDocs Project](command:notespace.importProject)"
       }
     ],
     "menus": {
-      "view/title": [
-        {
-          "command": "notespace.newPage",
-          "when": "view == notespace.pages",
-          "group": "navigation@1"
-        },
-        {
-          "command": "notespace.newSection",
-          "when": "view == notespace.pages",
-          "group": "navigation@2"
-        },
-        {
-          "command": "notespace.filterPages",
-          "when": "view == notespace.pages",
-          "group": "navigation@4"
-        },
-        {
-          "command": "notespace.home",
-          "when": "view == notespace.pages",
-          "group": "navigation@5"
-        },
-        {
-          "command": "notespace.search",
-          "when": "view == notespace.pages",
-          "group": "navigation@3"
-        },
-        {
-          "command": "notespace.advancedSearch",
-          "when": "view == notespace.pages",
-          "group": "navigation@3"
-        },
-        {
-          "command": "notespace.newFromTemplate",
-          "when": "view == notespace.pages",
-          "group": "2_create@1"
-        },
-        {
-          "command": "notespace.dailyNote",
-          "when": "view == notespace.pages",
-          "group": "2_create@2"
-        },
-        {
-          "command": "notespace.graph",
-          "when": "view == notespace.pages",
-          "group": "3_wiki@1"
-        },
-        {
-          "command": "notespace.validate",
-          "when": "view == notespace.pages",
-          "group": "3_wiki@2"
-        },
-        {
-          "command": "notespace.restorePage",
-          "when": "view == notespace.pages",
-          "group": "3_wiki@3"
-        },
-        {
-          "command": "notespace.settings",
-          "when": "view == notespace.pages",
-          "group": "3_wiki@4"
-        },
-        {
-          "command": "notespace.buildWiki",
-          "when": "view == notespace.pages",
-          "group": "4_publish@1"
-        },
-        {
-          "command": "notespace.export",
-          "when": "view == notespace.pages",
-          "group": "4_publish@2"
-        },
-        {
-          "command": "notespace.createWiki",
-          "when": "view == notespace.pages",
-          "group": "5_project@1"
-        },
-        {
-          "command": "notespace.importProject",
-          "when": "view == notespace.pages",
-          "group": "5_project@2"
-        },
-        {
-          "command": "notespace.refresh",
-          "when": "view == notespace.pages",
-          "group": "5_project@3"
-        },
-        {
-          "command": "notespace.pageProperties",
-          "when": "view == notespace.context",
-          "group": "navigation"
-        },
-        {
-          "command": "notespace.addTask",
-          "when": "view == notespace.planner",
-          "group": "navigation@1"
-        },
-        {
-          "command": "notespace.planner",
-          "when": "view == notespace.planner",
-          "group": "navigation@2"
-        },
-        {
-          "command": "notespace.dailyNoteForDate",
-          "when": "view == notespace.planner",
-          "group": "navigation@3"
-        },
-        {
-          "command": "notespace.importNotebook",
-          "when": "view == notespace.pages",
-          "group": "5_project@4"
-        },
-        {
-          "command": "notespace.newCanvas",
-          "when": "view == notespace.pages",
-          "group": "2_create@3"
-        }
-      ],
-      "view/item/context": [
-        {
-          "command": "notespace.addFavorite",
-          "when": "view == notespace.pages && viewItem == wikiPage",
-          "group": "inline"
-        },
-        {
-          "command": "notespace.removeFavorite",
-          "when": "view == notespace.pages && viewItem == wikiFavoritePage",
-          "group": "inline"
-        },
-        {
-          "command": "notespace.newPage",
-          "when": "view == notespace.pages && viewItem =~ /^wiki(Folder|Root)$/",
-          "group": "inline@1"
-        },
-        {
-          "command": "notespace.newSection",
-          "when": "view == notespace.pages && viewItem =~ /^wiki(Folder|Root)$/",
-          "group": "inline@2"
-        },
-        {
-          "command": "notespace.visual",
-          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
-          "group": "1_open@1"
-        },
-        {
-          "command": "notespace.source",
-          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
-          "group": "1_open@2"
-        },
-        {
-          "command": "notespace.openToSide",
-          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
-          "group": "1_open@3"
-        },
-        {
-          "command": "notespace.preview",
-          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
-          "group": "1_open@4"
-        },
-        {
-          "command": "notespace.renamePage",
-          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
-          "group": "2_edit@1"
-        },
-        {
-          "command": "notespace.movePage",
-          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
-          "group": "2_edit@2"
-        },
-        {
-          "command": "notespace.duplicatePage",
-          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
-          "group": "2_edit@3"
-        },
-        {
-          "command": "notespace.pageProperties",
-          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
-          "group": "2_edit@4"
-        },
-        {
-          "command": "notespace.copyLink",
-          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
-          "group": "3_link@1"
-        },
-        {
-          "command": "notespace.addFavorite",
-          "when": "view == notespace.pages && viewItem == wikiPage",
-          "group": "3_link@2"
-        },
-        {
-          "command": "notespace.removeFavorite",
-          "when": "view == notespace.pages && viewItem == wikiFavoritePage",
-          "group": "3_link@2"
-        },
-        {
-          "command": "notespace.importImage",
-          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
-          "group": "4_assets@1"
-        },
-        {
-          "command": "notespace.browseImages",
-          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
-          "group": "4_assets@2"
-        },
-        {
-          "command": "notespace.importAttachment",
-          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
-          "group": "4_assets@3"
-        },
-        {
-          "command": "notespace.importMedia",
-          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
-          "group": "4_assets@4"
-        },
-        {
-          "command": "notespace.revealInExplorer",
-          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
-          "group": "8_reveal@1"
-        },
-        {
-          "command": "notespace.deletePage",
-          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
-          "group": "9_delete@1"
-        },
-        {
-          "command": "notespace.newPage",
-          "when": "view == notespace.pages && viewItem =~ /^wiki(Folder|Root)$/",
-          "group": "1_create@1"
-        },
-        {
-          "command": "notespace.newFromTemplate",
-          "when": "view == notespace.pages && viewItem =~ /^wiki(Folder|Root)$/",
-          "group": "1_create@2"
-        },
-        {
-          "command": "notespace.newSection",
-          "when": "view == notespace.pages && viewItem =~ /^wiki(Folder|Root)$/",
-          "group": "1_create@3"
-        },
-        {
-          "command": "notespace.renameSection",
-          "when": "view == notespace.pages && viewItem == wikiFolder",
-          "group": "2_edit@1"
-        },
-        {
-          "command": "notespace.revealInExplorer",
-          "when": "view == notespace.pages && viewItem =~ /^wiki(Folder|Root)$/",
-          "group": "8_reveal@1"
-        },
-        {
-          "command": "notespace.deleteSection",
-          "when": "view == notespace.pages && viewItem == wikiFolder",
-          "group": "9_delete@1"
-        },
-        {
-          "command": "notespace.renameWiki",
-          "when": "view == notespace.pages && viewItem == wikiRoot",
-          "group": "2_edit@1"
-        },
-        {
-          "command": "notespace.editWikiDescription",
-          "when": "view == notespace.pages && viewItem == wikiRoot",
-          "group": "2_edit@2"
-        },
-        {
-          "command": "notespace.setWikiIcon",
-          "when": "view == notespace.pages && viewItem == wikiRoot",
-          "group": "2_edit@3"
-        },
-        {
-          "command": "notespace.setWikiColor",
-          "when": "view == notespace.pages && viewItem == wikiRoot",
-          "group": "2_edit@4"
-        },
-        {
-          "command": "notespace.setDefaultWiki",
-          "when": "view == notespace.pages && viewItem == wikiRoot",
-          "group": "3_wiki@1"
-        },
-        {
-          "command": "notespace.openWikiSettings",
-          "when": "view == notespace.pages && viewItem == wikiRoot",
-          "group": "3_wiki@2"
-        },
-        {
-          "command": "notespace.removeWiki",
-          "when": "view == notespace.pages && viewItem == wikiRoot",
-          "group": "9_delete@1"
-        },
-        {
-          "command": "notespace.deleteWiki",
-          "when": "view == notespace.pages && viewItem == wikiRoot",
-          "group": "9_delete@2"
-        },
-        {
-          "command": "notespace.openNotebook",
-          "when": "view == notespace.pages && viewItem == wikiNotebook",
-          "group": "1_open@1"
-        },
-        {
-          "command": "notespace.notebookPreview",
-          "when": "view == notespace.pages && viewItem == wikiNotebook",
-          "group": "1_open@2"
-        },
-        {
-          "command": "notespace.notebookToMarkdown",
-          "when": "view == notespace.pages && viewItem == wikiNotebook",
-          "group": "2_edit@1"
-        },
-        {
-          "command": "notespace.revealInExplorer",
-          "when": "view == notespace.pages && viewItem == wikiNotebook",
-          "group": "8_reveal@1"
-        },
-        {
-          "command": "notespace.revealInExplorer",
-          "when": "view == notespace.pages && viewItem == wikiCanvas",
-          "group": "8_reveal@1"
-        },
-        {
-          "command": "notespace.createTranslation",
-          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
-          "group": "2_edit@9"
-        },
-        {
-          "command": "notespace.pageHistory",
-          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
-          "group": "1_open@5"
-        },
-        {
-          "command": "notespace.compareWithGitVersion",
-          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
-          "group": "1_open@6"
-        },
-        {
-          "command": "notespace.exportPdf",
-          "when": "view == notespace.pages && viewItem =~ /^wiki(Page|FavoritePage)$/",
-          "group": "7_export@1"
-        }
-      ],
       "editor/title": [
         {
           "command": "notespace.visual",
@@ -1170,6 +813,42 @@
         },
         {
           "command": "notespace.openCodeRef",
+          "when": "false"
+        },
+        {
+          "command": "notespace.planner",
+          "when": "false"
+        },
+        {
+          "command": "notespace.kanban",
+          "when": "false"
+        },
+        {
+          "command": "notespace.boards",
+          "when": "false"
+        },
+        {
+          "command": "notespace.calendar",
+          "when": "false"
+        },
+        {
+          "command": "notespace.openWikiHome",
+          "when": "false"
+        },
+        {
+          "command": "notespace.focusContext",
+          "when": "false"
+        },
+        {
+          "command": "notespace.filterPages",
+          "when": "false"
+        },
+        {
+          "command": "notespace.renameSection",
+          "when": "false"
+        },
+        {
+          "command": "notespace.deleteSection",
           "when": "false"
         }
       ],
@@ -1359,12 +1038,6 @@
           "scope": "resource",
           "markdownDescription": "Order of folders and pages in the Pages view. A folder's `index.md` or `README.md` is always listed first; within groups, `navigation.sort` in wiki.yaml applies."
         },
-        "notespace.explorer.autoReveal": {
-          "type": "boolean",
-          "default": true,
-          "scope": "resource",
-          "description": "Select the active page in the Pages view when you switch editors."
-        },
         "notespace.diagnostics": {
           "type": "boolean",
           "default": true,
@@ -1438,11 +1111,6 @@
           "minimum": 0,
           "maximum": 5000,
           "description": "How many sent requests the API history keeps (0 keeps none). History stores method, redacted address, status, time and size; never bodies or credentials."
-        },
-        "notespace.home.openOnStartup": {
-          "type": "boolean",
-          "default": true,
-          "description": "Open the NoteSpace Home when the NoteSpace sidebar opens and no editor is open."
         },
         "notespace.boards.folder": {
           "type": "string",
@@ -1546,6 +1214,11 @@
           "type": "string",
           "default": "",
           "markdownDescription": "Path to a Chromium-based browser (Chrome, Edge, Chromium, Brave) used in headless mode to create PDFs. Empty: detect an installed one. Without a browser, **Export PDF** saves a print-ready HTML page instead."
+        },
+        "notespace.sidebar.openPanel": {
+          "type": "boolean",
+          "default": true,
+          "description": "Clicking the NoteSpace icon in the activity bar opens the NoteSpace tab and closes the sidebar."
         }
       }
     },

@@ -106,7 +106,7 @@ Reload the window afterwards. Requires VS Code 1.96 or later.
 ## Getting started
 
 1. Open a folder and run **NoteSpace: Create Wiki** (or **Import Markdown or MkDocs Project** for existing docs).
-2. Click the **NoteSpace** icon in the activity bar. **Pages** lists your pages; **Workspace** opens Home, Tasks, Boards, Calendar, Insights and the API Client.
+2. Click the **NoteSpace** icon in the activity bar (or run **NoteSpace: Open NoteSpace**). One tab opens with **Home**, **Wiki**, **Tasks**, **API** and **Insights**; press **/** in it to find any page, task or board.
 3. Click a page to edit it in **Studio**; **Ctrl/Cmd+Alt+E** switches between Studio and Code.
 4. Type `/` in Studio to insert blocks: callouts, tables, diagrams, charts, task boards, HTTP requests and more.
 5. Add tasks anywhere: `- [ ] Call Bob due:tomorrow priority:high #sales`.

@@ -60,7 +60,7 @@ const lineOf = async (name, needle) =>
 const plannerFrame = () => frameWith(page, '.nav', 'workspace panel');
 try {
   await runCommand(page, 'NoteSpace: Refresh Index');
-  await runCommand(page, 'NoteSpace: Open Planner');
+  await runCommand(page, 'NoteSpace: Open Tasks');
   let planner = await plannerFrame();
   await poll(async () => (await planner.locator('.row').count()) >= 3, 'today list');
   assert.deepEqual(
@@ -119,8 +119,10 @@ try {
   );
 
   // Board: drag between columns and keyboard moves.
-  await runCommand(page, 'NoteSpace: Open Kanban Board');
+  await runCommand(page, 'NoteSpace: Open Tasks');
   planner = await plannerFrame();
+  await planner.locator('.subnav [data-nav=boards]').click();
+  await planner.locator('.board-card[data-board=status] a.open').click();
   await planner.locator('.board-switcher').selectOption('status');
   const card = planner.locator('.card', { hasText: 'Record the demo video' });
   await card.dragTo(planner.locator('.column[data-column="blocked"]'));
@@ -145,7 +147,7 @@ try {
   console.log('PASS planner: board drag and keyboard moves change status in the page');
 
   // Calendar: month grid, keyboard navigation, drag to reschedule.
-  await planner.locator('.nav [data-nav=calendar]').click();
+  await planner.locator('.subnav [data-nav=calendar]').click();
   await planner.locator(`.day[data-date="${today}"]`).waitFor();
   assert.equal(
     await planner.locator(`.day[data-date="${day(-1)}"] .note`).count(),
@@ -191,7 +193,7 @@ try {
   await planner.getByRole('button', { name: 'Table', exact: true }).click();
   await page.waitForTimeout(400);
   await runCommand(page, 'View: Close All Editors');
-  await runCommand(page, 'NoteSpace: Open Planner');
+  await runCommand(page, 'NoteSpace: Open Tasks');
   planner = await plannerFrame();
   await poll(
     async () =>
@@ -256,7 +258,7 @@ try {
   await page.keyboard.press('Escape');
   // Dashboard Today section.
   // Home Today section.
-  await runCommand(page, 'NoteSpace: Open Home');
+  await runCommand(page, 'NoteSpace: Open NoteSpace');
   const dash = await frameWith(page, '.home-grid', 'home today');
   assert.match(
     await dash.locator('.home-card', { hasText: 'Today' }).first().innerText(),

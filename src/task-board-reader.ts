@@ -1,4 +1,10 @@
-// Reader bundle for boards embedded in pages; media/webview.js owns the VS Code API and calls it.
+// Reader bundle for boards embedded in pages and the other interactive blocks; media/webview.js
+// owns the VS Code API and calls them.
 import { wireTaskBoards } from './task-board-ui';
+import { enhanceReaderBlocks, wireReaderBlocks } from './reader-blocks';
 
-(window as unknown as { wikiTaskBoards: typeof wireTaskBoards }).wikiTaskBoards = wireTaskBoards;
+Object.assign(window, {
+  wikiTaskBoards: wireTaskBoards,
+  wikiReaderBlocks: wireReaderBlocks,
+  wikiEnhanceBlocks: enhanceReaderBlocks,
+});

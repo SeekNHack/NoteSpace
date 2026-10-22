@@ -133,6 +133,18 @@ export const documentCss = `.doc{font-family:var(--ws-font);font-size:var(--ws-t
 .doc ul[data-type=taskList] li>div>p{margin:0}
 .doc ul[data-type=taskList] li[data-checked=true]>div{color:var(--ws-muted);text-decoration:line-through;text-decoration-color:var(--ws-faint)}
 .doc input[type=checkbox]{width:15px;height:15px;margin:0;accent-color:var(--ws-accent);cursor:pointer}
+.doc li.task-list-item{margin:.15em 0}
+.doc li.task-list-item>.task-check{margin:0 .55em 0 0;vertical-align:-2px}
+.doc li.task-list-item>p>.task-check{margin:0 .55em 0 0;vertical-align:-2px}
+.doc .task-check:disabled{cursor:default}
+.doc li.task-list-item.done>.task-text,.doc li.task-list-item.done>p>.task-text{color:var(--ws-muted);text-decoration:line-through;text-decoration-color:var(--ws-faint)}
+.doc li.task-list-item>ul,.doc li.task-list-item>ol{margin-top:.1em}
+.doc .task-badges{display:inline-flex;flex-wrap:wrap;gap:4px;margin-left:.5em;vertical-align:1px}
+.doc .task-badge,.doc .task-tag{display:inline-block;font-size:.75em;line-height:1.6;padding:0 .55em;border-radius:999px;background:var(--ws-surface-2);color:var(--ws-muted);white-space:nowrap}
+.doc .task-tag{margin:0 .1em}
+.doc .task-badge[data-tone]{color:var(--ws-fg);background:color-mix(in srgb,var(--tone) 16%,transparent)}
+.doc .task-badge[data-tone]::before{content:"";display:inline-block;width:.5em;height:.5em;border-radius:50%;background:var(--tone);margin-right:.35em;vertical-align:.05em}
+.doc .task-badge[data-tone=red]{--tone:var(--ws-red)}.doc .task-badge[data-tone=orange]{--tone:var(--ws-orange)}.doc .task-badge[data-tone=blue]{--tone:var(--ws-blue)}
 .doc a{color:var(--ws-accent);text-decoration:none;border-radius:2px}
 .doc .code-ref{font-family:var(--ws-mono);font-size:.9em}
 .doc :is(p,li,td,th,dd,dt,blockquote,figcaption,.footnotes) a:not(.doc-button):not(.permalink){text-decoration:underline;text-decoration-thickness:1px;text-decoration-color:color-mix(in srgb,currentColor 45%,transparent);text-underline-offset:2px}

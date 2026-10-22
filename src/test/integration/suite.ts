@@ -21,7 +21,7 @@ import path from 'node:path';
 import type { WikiStudioApi } from '../../extension';
 import { createConfig, defaultConfig, parseConfig, updateConfig } from '../../core/config';
 import { importImage, importAttachment } from '../../assets';
-import { showPage, WikiTree } from '../../views';
+import { showPage } from '../../views';
 import { importMarkdownProject } from '../../import-project';
 import { addDays } from '../../core/tasks';
 import { uriPath } from '../../core/paths';
@@ -133,24 +133,14 @@ export async function run(): Promise<void> {
     await assert.rejects(ws.createSection(other, 'projects'), /letter case/);
     assert.match(Buffer.from(await vscode.workspace.fs.readFile(existing)).toString(), /Existing/);
   });
-  await test('dropping on empty Explorer space uses the dragged page’s wiki root', async () => {
+  await test('dropping a page on the wiki’s top level moves it within its own wiki', async () => {
     const source = await ws.createPage(other, 'nested/MoveMe', '# Move me\n');
-    const page = ws.index.byUri(source.toString())!;
-    const tree = new WikiTree(ws, 'pages', api.activity);
-    try {
-      const transfer = new vscode.DataTransfer();
-      tree.handleDrag([{ label: page.title, root: page.root, page }], transfer);
-      await tree.handleDrop(undefined, transfer);
-      const destination = vscode.Uri.joinPath(other.uri, 'MoveMe.md');
-      assert.ok(ws.index.byUri(destination.toString()));
-      assert.equal(ws.index.byUri(source.toString()), undefined);
-      assert.equal(
-        ws.index.byUri(vscode.Uri.joinPath(root.uri, 'MoveMe.md').toString()),
-        undefined,
-      );
-    } finally {
-      tree.dispose();
-    }
+    await api.plannerPanel.onMessage({ type: 'setRoot', id: other.id });
+    await api.plannerPanel.onMessage({ type: 'wikiMove', uri: source.toString(), to: '' });
+    const destination = vscode.Uri.joinPath(other.uri, 'MoveMe.md');
+    assert.ok(ws.index.byUri(destination.toString()));
+    assert.equal(ws.index.byUri(source.toString()), undefined);
+    assert.equal(ws.index.byUri(vscode.Uri.joinPath(root.uri, 'MoveMe.md').toString()), undefined);
   });
   await test('resolves links through the real definition, references, hover and completion APIs', async () => {
     const doc = await vscode.workspace.openTextDocument(home);
@@ -274,15 +264,18 @@ export async function run(): Promise<void> {
       return input instanceof vscode.TabInputCustom && input.uri.toString() === home.toString();
     }, 'wiki-link page opens in Studio');
     await vscode.commands.executeCommand('notespace.preview');
-    api.panels.openGraph(root.id);
+    await vscode.commands.executeCommand('notespace.graph');
     await api.panels.refresh();
     await waitFor(() => {
       const tabs = vscode.window.tabGroups.all.flatMap((g) => g.tabs);
+      // The link graph is a page of the NoteSpace tab (Insights), not a tab of its own.
       return (
-        tabs.some((t) => t.label === 'Preview: Home') &&
-        tabs.some((t) => t.label === 'Wiki Link Graph')
+        tabs.some((t) => t.label === 'Preview: Home') && tabs.some((t) => t.label === 'NoteSpace')
       );
     }, 'webview tab titles');
+    const graph = await api.panels.frameDocument('graph', root.id);
+    assert.match(graph.body, /Link graph/);
+    assert.ok(graph.scripts.length >= 2, 'reader scripts are inlined for the frame');
   });
   await test('mode switching replaces the tab in place and keeps unsaved edits', async () => {
     const tabsFor = (uri: vscode.Uri) =>
@@ -2312,51 +2305,40 @@ export async function run(): Promise<void> {
       await write(rootIgnore, `${wikiRel}/nav/private/\n`);
       await waitFor(() => indexed(primary).includes('nav/ignored.md'), '.gitignore change applied');
 
-      const tree = new WikiTree(ws, 'pages', api.activity);
-      try {
-        const labels = async () => {
-          const roots = await tree.getChildren();
-          const wiki = roots.find((n) => n.root === primary.id && n.prefix === '')!;
-          const folder = (await tree.getChildren(wiki)).find((n) => n.prefix === 'nav/')!;
-          return {
-            folder: folder.label,
-            children: (await tree.getChildren(folder)).map((n) => n.label),
-          };
-        };
-        assert.deepEqual(await labels(), {
-          folder: 'Nav',
-          children: ['README', 'Sub', 'Custom Title', 'Getting Started', 'Ignored', 'Late'],
-        });
-        await explorerSettings.update(
-          'directorySort',
-          'files-first',
-          vscode.ConfigurationTarget.WorkspaceFolder,
-        );
-        assert.deepEqual((await labels()).children, [
-          'README',
-          'Custom Title',
-          'Getting Started',
-          'Ignored',
-          'Late',
-          'Sub',
-        ]);
-        await explorerSettings.update(
-          'humanizeNames',
-          false,
-          vscode.ConfigurationTarget.WorkspaceFolder,
-        );
-        assert.deepEqual(await labels(), {
-          folder: 'nav',
-          children: ['README', 'Custom Title', 'getting-started', 'Ignored', 'Late', 'sub'],
-        });
-      } finally {
-        tree.dispose();
-      }
-
-      // Following the active editor needs a rendered tree: covered by test:phase08 (browser).
+      // The Wiki page tree: folders are sections (README is the section's page), names are
+      // humanized and ordered as configured.
+      const labels = () => {
+        const folder = api.plannerPanel.wikiTree(primary).find((n) => n.path === 'nav/')!;
+        return { folder: folder.title, children: (folder.children || []).map((n) => n.title) };
+      };
+      assert.deepEqual(labels(), {
+        folder: 'Nav',
+        children: ['Sub', 'Custom Title', 'Getting Started', 'Ignored', 'Late'],
+      });
+      await explorerSettings.update(
+        'directorySort',
+        'files-first',
+        vscode.ConfigurationTarget.WorkspaceFolder,
+      );
+      assert.deepEqual(labels().children, [
+        'Custom Title',
+        'Getting Started',
+        'Ignored',
+        'Late',
+        'Sub',
+      ]);
+      await explorerSettings.update(
+        'humanizeNames',
+        false,
+        vscode.ConfigurationTarget.WorkspaceFolder,
+      );
+      assert.deepEqual(labels(), {
+        folder: 'nav',
+        children: ['Custom Title', 'getting-started', 'Ignored', 'Late', 'sub'],
+      });
     } finally {
       await vscode.commands.executeCommand('workbench.action.closeAllEditors');
-      for (const key of ['directorySort', 'humanizeNames', 'autoReveal'])
+      for (const key of ['directorySort', 'humanizeNames'])
         await explorerSettings.update(key, undefined, vscode.ConfigurationTarget.WorkspaceFolder);
       await settings.update(
         'respectGitignore',

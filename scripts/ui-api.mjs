@@ -220,6 +220,36 @@ try {
     'PASS api: ```http blocks in the reader send only on Send, with approval and the edited body',
   );
 
+  // 4b. The same block in the workspace panel's Wiki sends too, without leaving the panel.
+  await runCommand(page, 'NoteSpace: Open NoteSpace');
+  const ws = await frameWith(page, '.nav', 'workspace panel');
+  await ws.locator('.nav [data-nav=wiki]').click();
+  await poll(
+    async () => (await ws.locator('.wiki-article .http-block.interactive').count()) === 1,
+    'http block in the panel',
+  );
+  const sent = received.length;
+  await ws.locator('.wiki-article .http-send').click();
+  await dialog.waitFor();
+  if (/Allow requests/.test(await dialog.innerText())) {
+    await dialog.getByRole('button', { name: 'Allow' }).click();
+    await dialog.waitFor();
+  }
+  assert.match(await dialog.innerText(), /Send POST/);
+  await dialog.getByRole('button', { name: 'Send', exact: true }).click();
+  await poll(
+    async () =>
+      /201/.test(
+        await ws
+          .locator('.wiki-article .http-response')
+          .innerText()
+          .catch(() => ''),
+      ),
+    'panel response',
+  );
+  assert.equal(received.length, sent + 1);
+  console.log('PASS api: ```http blocks send from the Wiki in the workspace panel');
+
   // 5. The same block is interactive in Studio.
   await runCommand(page, 'View: Close All Editors');
   await page
@@ -245,38 +275,39 @@ try {
   await page.screenshot({ path: `${shots}/studio-block.png` });
   console.log('PASS api: ```http blocks are interactive in Studio');
 
-  // 6. Wiki management from the Pages view: remove from NoteSpace keeps the files; restore.
-  await page.locator('.activitybar [aria-label*="NoteSpace"]').first().click();
-  const notesRoot = page.locator('.monaco-list-row', { hasText: 'Notes Wiki' }).first();
-  await notesRoot.waitFor();
-  await notesRoot.click({ button: 'right' });
-  const menu = page.locator('.context-view .monaco-menu');
-  await menu.waitFor();
-  const items = await menu.locator('.action-label').allInnerTexts();
+  // 6. Wiki management from the Wiki's menu: remove from NoteSpace keeps the files; restore.
+  await runCommand(page, 'NoteSpace: Open NoteSpace');
+  const home = await frameWith(page, '.nav', 'workspace panel');
+  const wikis = () => home.locator('.nav select[aria-label=Wiki] option').allInnerTexts();
+  await poll(async () => (await wikis()).includes('Notes Wiki'), 'two wikis');
+  await home.locator('.nav select[aria-label=Wiki]').selectOption({ label: 'Notes Wiki' });
+  await home.locator('.nav [data-nav=wiki]').click();
+  await poll(
+    async () => (await home.locator('.wiki-name').textContent()) === 'Notes Wiki',
+    'Notes Wiki shown',
+  );
+  await home.locator('.wiki-side-head [aria-label="Wiki actions"]').click();
+  const items = await home.locator('.menu .item').allInnerTexts();
   for (const label of [
-    'Remove Wiki from NoteSpace',
+    'Remove from NoteSpace…',
     'Delete Wiki Files…',
     'Rename Wiki…',
     'Set as Default Wiki',
-    'Open Wiki Settings',
+    'Wiki Settings',
   ])
-    assert.ok(items.includes(label), `${label} in ${items.join(', ')}`);
-  await menu.locator('.action-label', { hasText: 'Remove Wiki from NoteSpace' }).hover();
-  await page.keyboard.press('Enter');
+    assert.ok(
+      items.some((i) => i.includes(label)),
+      `${label} in ${items.join(', ')}`,
+    );
+  await home.locator('.menu .item', { hasText: 'Remove from NoteSpace' }).click();
   await dialog.waitFor();
   await dialog.getByRole('button', { name: 'Remove from NoteSpace' }).click();
-  await poll(
-    async () => (await page.locator('.monaco-list-row', { hasText: 'Notes Wiki' }).count()) === 0,
-    'wiki removed',
-  );
+  await poll(async () => !(await wikis()).includes('Notes Wiki'), 'wiki removed');
   assert.match(await readFile(path.join(workspace, 'notes/pages/index.md'), 'utf8'), /# Notes/);
   await runCommand(page, 'NoteSpace: Restore Removed Wikis');
   await page.locator('.quick-input-widget').waitFor();
   await page.keyboard.press('Enter');
-  await poll(
-    async () => (await page.locator('.monaco-list-row', { hasText: 'Notes Wiki' }).count()) === 1,
-    'wiki restored',
-  );
+  await poll(async () => (await wikis()).includes('Notes Wiki'), 'wiki restored');
   console.log('PASS api: wikis are removed from NoteSpace without touching files and restored');
   console.log('NoteSpace API journey passed on code-server.');
 } catch (error) {

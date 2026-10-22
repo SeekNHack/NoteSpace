@@ -39,7 +39,25 @@ export interface BoardDto extends BoardConfig {
   open: number;
   inProgress: number;
 }
-export type Destination = 'home' | 'tasks' | 'boards' | 'board' | 'calendar' | 'insights';
+export type Destination =
+  | 'home'
+  | 'wiki'
+  | 'api'
+  | 'health'
+  | 'graph'
+  | 'tasks'
+  | 'boards'
+  | 'board'
+  | 'calendar'
+  | 'insights';
+/** The five sections of the navigation; Tasks and Insights have pages of their own. */
+export type Section = 'home' | 'wiki' | 'tasks' | 'api' | 'insights';
+export const sectionOf = (d: Destination): Section =>
+  d === 'boards' || d === 'board' || d === 'calendar'
+    ? 'tasks'
+    : d === 'health' || d === 'graph'
+      ? 'insights'
+      : d;
 export type TaskList = 'today' | 'upcoming' | 'overdue' | 'inbox' | 'all' | 'completed';
 export interface SavedView {
   name: string;
@@ -60,6 +78,37 @@ export interface Prefs {
   pinned: string[];
   recentBoards: string[];
   savedViews: SavedView[];
+  wikiPage?: string;
+}
+export interface NavNode {
+  kind: 'page' | 'section' | 'file';
+  title: string;
+  path: string;
+  id?: string;
+  uri?: string;
+  file?: 'notebook' | 'canvas';
+  draft?: boolean;
+  children?: NavNode[];
+}
+export interface WikiPageDto {
+  id: string;
+  uri: string;
+  path: string;
+  title: string;
+  tags: string[];
+  draft?: boolean;
+  modified?: number;
+  headings: Array<{ level: number; text: string; slug: string }>;
+  backlinks: Array<{ id: string; title: string; path: string }>;
+  html: string;
+  font?: string;
+  width?: string;
+}
+/** A place in the panel, for Back and Forward. */
+export interface Location {
+  destination: Destination;
+  board?: string;
+  wikiPage?: string;
 }
 export interface PageDto {
   title: string;
@@ -90,6 +139,9 @@ export interface State {
   workspace: {
     name: string;
     description: string;
+    /** wiki.yaml's icon (a codicon name) and color, shown in the header. */
+    icon?: string;
+    color?: string;
     homepage?: string;
     boardsFolder: string;
     notesFolder: string;
@@ -105,6 +157,7 @@ export interface State {
   inbox: string;
   home: { recent: PageDto[]; favorites: PageDto[]; dailyNote: boolean };
   insights?: Insights;
+  wiki: { tree: NavNode[] };
 }
 export interface UiState {
   filter?: {
@@ -119,6 +172,14 @@ export interface UiState {
   selected?: string;
   sort?: { column: string; descending: boolean };
   homeDate?: string;
+  /** The page last shown in each section, reopened when the section is chosen. */
+  sections?: Partial<Record<Section, Destination>>;
+  wikiExpanded?: string[];
+  wikiFilter?: string;
+  wikiNavHidden?: boolean;
+  history?: { entries: Location[]; at: number };
+  /** Saved state of the pages shown in frames (the API Client keeps its tabs in the host). */
+  frames?: Record<string, unknown>;
 }
 
 const vscode = acquireVsCodeApi();
@@ -275,6 +336,12 @@ export const byDue = (a: TaskDto, b: TaskDto) =>
 export const byPriority = (a: TaskDto, b: TaskDto) =>
   (a.priority ? rank[a.priority] : 3) - (b.priority ? rank[b.priority] : 3) || byDue(a, b);
 
+/** A task's title as shown next to its chips: `#tags` are chips of their own. */
+export const shownTitle = (t: { title: string }) =>
+  t.title
+    .replace(/(^|\s)#[\p{L}\p{N}_/-]+/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim() || t.title;
 /** Board configuration by id, including the built-in status board. */
 export const boardById = (
   id: string,
