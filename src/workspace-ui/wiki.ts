@@ -1,6 +1,22 @@
 // Wiki destination: an MkDocs-style reader inside the workspace panel. The navigation tree is
 // on the left, the page in the middle and its outline on the right; links stay in the panel.
-import { ago, button, emptyState, h, menuAt, post, S, save, store, svg, ui } from './core';
+import {
+  ago,
+  button,
+  emptyState,
+  h,
+  iconButton,
+  menuAt,
+  post,
+  S,
+  save,
+  setPrefs,
+  store,
+  svg,
+  ui,
+} from './core';
+import { iconPaths } from '../core/icons';
+import type { IconName } from '../core/icons';
 import type { MenuItem } from './core';
 import { enhanceReaderBlocks } from '../reader-blocks';
 import type { NavNode, WikiPageDto } from './core';
@@ -18,6 +34,69 @@ const readingOrder = (nodes: NavNode[]): NavNode[] =>
   );
 const expanded = () => new Set(ui.wikiExpanded || []);
 
+/** A page's icon: one of the panel's icons by name, or an emoji. */
+export function pageIconEl(icon: string | undefined, size = 14): Element | undefined {
+  if (!icon) return undefined;
+  if (/^[a-z][a-zA-Z0-9-]*$/.test(icon)) {
+    const name = namedIcon(icon);
+    return name ? svg(name, size) : undefined;
+  }
+  return h('span', { class: 'page-emoji', text: icon, 'aria-hidden': 'true' });
+}
+// Other common icon names (VS Code's codicons among them) for the closest panel icon.
+const iconAliases: Record<string, IconName> = {
+  'graduation-cap': 'graduation',
+  tools: 'wrench',
+  organization: 'users',
+  people: 'users',
+  library: 'book',
+  beaker: 'example',
+  notebook: 'note',
+  project: 'layout',
+  gear: 'settings',
+  bulb: 'lightbulb',
+  'book-open': 'book',
+  warning: 'warning',
+};
+/** The panel icon for an icon name, if there is one. */
+export const namedIcon = (name: string): IconName | undefined =>
+  name in iconPaths ? (name as IconName) : iconAliases[name];
+const statusLabel: Record<string, string> = {
+  new: 'New',
+  updated: 'Updated',
+  beta: 'Beta',
+  deprecated: 'Deprecated',
+  draft: 'Draft',
+};
+export const statusBadge = (status: string | undefined) =>
+  status
+    ? h('span', {
+        class: `status-badge status-${status}`,
+        text: statusLabel[status] || status,
+        title: `Status: ${statusLabel[status] || status}`,
+      })
+    : undefined;
+
+/** Shows the tag index: every tag, or the pages of one tag. */
+export function showTags(tag = '') {
+  ui.wikiTags = tag;
+  save();
+  if (store.prefs?.destination !== 'wiki') setPrefs({ destination: 'wiki' });
+  else store.render();
+  window.scrollTo(0, 0);
+}
+
+/** Opens a page of the wiki at random (pages only, not notebooks or the section pages). */
+export function randomPage() {
+  const pages = allNodes(S().wiki.tree).filter(
+    (n) => n.kind === 'page' && n.id && n.id !== page?.id,
+  );
+  const pick = pages[Math.floor(Math.random() * pages.length)];
+  if (!pick) return;
+  if (store.prefs?.destination !== 'wiki') setPrefs({ destination: 'wiki' });
+  openWikiPage({ id: pick.id });
+}
+
 /** Opens a page of the wiki in the panel (by path from the tree, or by id from a link). */
 export function openWikiPage(target: { path?: string; id?: string; anchor?: string }) {
   const node = allNodes(S().wiki.tree).find(
@@ -29,6 +108,11 @@ export function openWikiPage(target: { path?: string; id?: string; anchor?: stri
   if (path && store.prefs) store.prefs = { ...store.prefs, destination: 'wiki', wikiPage: path };
   if (node) revealPath(node.kind === 'section' ? node.path : node.path);
   pendingAnchor = target.anchor || undefined;
+  if (ui.wikiTags !== undefined) {
+    ui.wikiTags = undefined;
+    save();
+    store.render();
+  }
   post({ type: 'wikiOpen', ...(id ? { id } : { path: target.path }), anchor: target.anchor });
 }
 
@@ -44,6 +128,7 @@ function revealPath(path: string) {
 
 /** A page arrived from the host. */
 export function receiveWikiPage(next: WikiPageDto | undefined, anchor?: string) {
+  hidePreview();
   const changed = next?.id !== page?.id;
   page = next;
   article = undefined;
@@ -257,12 +342,13 @@ function treeView(nodes: NavNode[], filter: string, depth = 0): HTMLElement | un
         isOpen ? 'chevron' : 'chevronRight',
         { 'aria-label': `${isOpen ? 'Collapse' : 'Expand'} ${n.title}` },
       );
-      const label = h('button', {
-        type: 'button',
-        class: 'wiki-link',
-        text: n.title,
-        'aria-keyshortcuts': 'Shift+F10',
-      });
+      const label = h(
+        'button',
+        { type: 'button', class: 'wiki-link', 'aria-keyshortcuts': 'Shift+F10' },
+        pageIconEl(n.icon, 13),
+        h('span', { class: 'title', text: n.title }),
+        statusBadge(n.status),
+      );
       label.addEventListener('click', () => {
         if (n.id) openWikiPage({ id: n.id });
         else twisty.click();
@@ -288,9 +374,13 @@ function treeView(nodes: NavNode[], filter: string, depth = 0): HTMLElement | un
           title: file ? `${n.path} — opens in the ${n.file} editor` : n.path,
           'aria-keyshortcuts': 'Shift+F10',
         },
-        file ? svg(n.file === 'notebook' ? 'code' : 'layout', 13) : undefined,
-        h('span', { text: n.title }),
-        n.draft ? h('span', { class: 'chip', text: 'Draft' }) : undefined,
+        file ? svg(n.file === 'notebook' ? 'code' : 'layout', 13) : pageIconEl(n.icon, 13),
+        h('span', { class: 'title', text: n.title }),
+        n.status
+          ? statusBadge(n.status)
+          : n.draft
+            ? h('span', { class: 'chip', text: 'Draft' })
+            : undefined,
       );
       const items = () => (file ? fileMenu(n) : pageMenu(n));
       b.addEventListener('click', () =>
@@ -351,6 +441,8 @@ function sidebar(): HTMLElement {
         title: 'New folder',
       },
     ),
+    iconButton('badge', 'Tags', () => showTags('')),
+    iconButton('refresh', 'Random page', () => randomPage()),
     button('', (e) => menuAt(e, wikiMenu(), 'Wiki'), 'btn ghost icon-only', 'more', {
       'aria-label': 'Wiki actions',
       title: 'Wiki settings, export, import',
@@ -370,6 +462,7 @@ function sidebar(): HTMLElement {
 }
 
 function onArticleClick(event: MouseEvent) {
+  hidePreview();
   const anchor = (event.target as HTMLElement).closest?.('a');
   if (!anchor || !page) return;
   const href = anchor.getAttribute('href') || '';
@@ -440,6 +533,7 @@ function content(): HTMLElement {
     'div',
     { class: 'wiki-head' },
     crumbs,
+    statusBadge(p.status),
     h('span', { class: 'spacer' }),
     button('', () => post({ type: 'wikiReader', uri: p.uri }), 'btn ghost icon-only', 'preview', {
       'aria-label': 'Open in Reader',
@@ -455,15 +549,28 @@ function content(): HTMLElement {
     article.innerHTML = p.html;
     enhanceReaderBlocks(article);
     (window as unknown as { wikiRichTabs?: (root: ParentNode) => void }).wikiRichTabs?.(article);
+    const icon = pageIconEl(p.icon, 30);
+    if (icon) article.querySelector('h1')?.prepend(h('span', { class: 'title-icon' }, icon));
     if (p.tags.length)
       article.prepend(
         h(
           'div',
           { class: 'tags' },
-          ...p.tags.map((t) => h('span', { class: 'tag', text: `#${t}` })),
+          ...p.tags.map((t) => {
+            const b = h('button', {
+              type: 'button',
+              class: 'tag',
+              text: `#${t}`,
+              title: `Pages tagged ${t}`,
+            });
+            b.addEventListener('click', () => showTags(t));
+            return b;
+          }),
         ),
       );
+    if (p.cover) article.prepend(h('img', { class: 'wiki-cover', src: p.cover, alt: '' }));
     article.addEventListener('click', onArticleClick);
+    wirePreviews(article);
     // Task checkboxes write the task line; the page comes back rendered from the file.
     article.addEventListener('change', (event) => {
       const box = event.target as HTMLInputElement;
@@ -524,6 +631,53 @@ function content(): HTMLElement {
         )
       : h('p', { class: 'muted small', text: 'No pages link here yet.' }),
   );
+  const mentions = p.mentions.length
+    ? h(
+        'section',
+        { class: 'wiki-mentions', 'aria-labelledby': 'wiki-mentions-head' },
+        h(
+          'h2',
+          { id: 'wiki-mentions-head' },
+          svg('unlink', 13),
+          h('span', { text: `Unlinked mentions · ${p.mentions.length}` }),
+        ),
+        h(
+          'ul',
+          {},
+          ...p.mentions.map((m) => {
+            const open = h('button', {
+              type: 'button',
+              class: 'link',
+              text: m.title,
+              title: m.path,
+            });
+            open.addEventListener('click', () => openWikiPage({ id: m.id }));
+            const link = button(
+              'Link',
+              () => {
+                link.setAttribute('disabled', '');
+                post({
+                  type: 'linkMention',
+                  id: m.id,
+                  target: p.id,
+                  offset: m.offset,
+                  length: m.length,
+                });
+              },
+              'btn small',
+              'link',
+              { title: `Turn “${p.title}” in ${m.title} into a link to this page` },
+            );
+            return h(
+              'li',
+              {},
+              h('div', { class: 'mention-head' }, open, h('span', { class: 'spacer' }), link),
+              h('p', { class: 'muted small', text: m.excerpt }),
+            );
+          }),
+        ),
+      )
+    : undefined;
   const style = [p.font ? `--ws-font:${p.font}` : '', p.width ? `--ws-doc-width:${p.width}` : '']
     .filter(Boolean)
     .join(';');
@@ -534,7 +688,158 @@ function content(): HTMLElement {
     article,
     updated,
     backlinks,
+    mentions,
     pager,
+  );
+}
+
+// Hovering a link to another page shows a preview card (title, status, summary, tags).
+interface Preview {
+  id: string;
+  title: string;
+  path: string;
+  excerpt: string;
+  status?: string;
+  icon?: string;
+  tags: string[];
+}
+const previews = new Map<string, Preview>();
+let previewTimer = 0;
+let previewFor: HTMLElement | undefined;
+function hidePreview() {
+  window.clearTimeout(previewTimer);
+  previewFor = undefined;
+  document.querySelector('.wiki-preview')?.remove();
+}
+function showPreview(anchor: HTMLElement, p: Preview) {
+  if (previewFor !== anchor || !anchor.isConnected) return;
+  document.querySelector('.wiki-preview')?.remove();
+  const card = h(
+    'div',
+    { class: 'wiki-preview', role: 'tooltip' },
+    h(
+      'div',
+      { class: 'preview-head' },
+      pageIconEl(p.icon, 15),
+      h('strong', { text: p.title }),
+      statusBadge(p.status),
+    ),
+    h('p', { class: 'preview-path', text: p.path }),
+    p.excerpt ? h('p', { text: p.excerpt }) : h('p', { class: 'muted', text: 'No text yet.' }),
+    p.tags.length
+      ? h('p', { class: 'preview-tags', text: p.tags.map((t) => `#${t}`).join(' ') })
+      : undefined,
+  );
+  document.body.append(card);
+  const r = anchor.getBoundingClientRect();
+  const width = Math.min(360, window.innerWidth - 24);
+  card.style.width = `${width}px`;
+  card.style.left = `${Math.max(12, Math.min(r.left, window.innerWidth - width - 12))}px`;
+  const below = r.bottom + 8 + card.offsetHeight < window.innerHeight;
+  card.style.top = `${below ? r.bottom + 6 : Math.max(8, r.top - card.offsetHeight - 6)}px`;
+}
+/** The host answered a preview request. */
+export function receivePreview(p: Preview) {
+  previews.set(p.id, p);
+  if (previewFor?.dataset.previewId === p.id) showPreview(previewFor, p);
+}
+function wirePreviews(root: HTMLElement) {
+  root.addEventListener('mouseover', (event) => {
+    const a = (event.target as HTMLElement).closest?.('a[href^="#wiki:"]') as HTMLElement | null;
+    if (!a || a === previewFor) return;
+    hidePreview();
+    const id = decodeURIComponent((a.getAttribute('href') || '').slice(6).split('?')[0]);
+    if (!id || id === page?.id) return;
+    previewFor = a;
+    a.dataset.previewId = id;
+    previewTimer = window.setTimeout(() => {
+      const known = previews.get(id);
+      if (known) showPreview(a, known);
+      else post({ type: 'wikiPreview', id });
+    }, 400);
+  });
+  root.addEventListener('mouseout', (event) => {
+    const to = (event as MouseEvent).relatedTarget as Node | null;
+    if (previewFor && (!to || !previewFor.contains(to))) hidePreview();
+  });
+  root.addEventListener('focusin', (event) => {
+    const a = (event.target as HTMLElement).closest?.('a[href^="#wiki:"]');
+    if (!a) hidePreview();
+  });
+}
+window.addEventListener('scroll', hidePreview, { passive: true });
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') hidePreview();
+});
+
+/** The tag index: all tags with their page counts, or the pages of one tag. */
+function tagsView(): HTMLElement {
+  const tag = ui.wikiTags || '';
+  const pages = allNodes(S().wiki.tree).filter((n) => n.id && n.kind !== 'file' && n.tags?.length);
+  const counts = new Map<string, number>();
+  for (const n of pages) for (const t of n.tags || []) counts.set(t, (counts.get(t) || 0) + 1);
+  const tags = [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  const crumbs = h('nav', { class: 'wiki-crumbs', 'aria-label': 'Breadcrumb' });
+  const all = h('button', { type: 'button', class: 'crumb', text: 'Tags' });
+  all.addEventListener('click', () => showTags(''));
+  crumbs.append(all);
+  if (tag) crumbs.append(svg('chevronRight', 12), h('span', { text: `#${tag}` }));
+  const cloud = h(
+    'div',
+    { class: 'tag-cloud' },
+    ...tags.map(([t, n]) => {
+      const b = h(
+        'button',
+        {
+          type: 'button',
+          class: 'tag',
+          'aria-pressed': String(t === tag),
+        },
+        h('span', { text: `#${t}` }),
+        h('span', { class: 'count', text: String(n) }),
+      );
+      b.addEventListener('click', () => showTags(t === tag ? '' : t));
+      return b;
+    }),
+  );
+  const shown = tag ? pages.filter((n) => n.tags?.includes(tag)) : [];
+  const list = tag
+    ? h(
+        'ul',
+        { class: 'tag-pages' },
+        ...shown.map((n) => {
+          const b = h(
+            'button',
+            { type: 'button', class: 'tag-page' },
+            pageIconEl(n.icon, 14) || svg(n.kind === 'section' ? 'folder' : 'file', 14),
+            h('span', { class: 'title', text: n.title }),
+            statusBadge(n.status),
+            h('span', { class: 'muted small', text: n.path }),
+          );
+          b.addEventListener('click', () => openWikiPage({ id: n.id }));
+          return h('li', {}, b);
+        }),
+      )
+    : undefined;
+  return h(
+    'div',
+    { class: 'wiki-content' },
+    h('div', { class: 'wiki-head' }, crumbs),
+    h(
+      'article',
+      { class: 'doc wiki-article' },
+      h('h1', { text: tag ? `#${tag}` : 'Tags' }),
+      h('p', {
+        class: 'muted',
+        text: tag
+          ? `${shown.length} page${shown.length === 1 ? '' : 's'} tagged ${tag}.`
+          : tags.length
+            ? 'Every tag in the wiki. Choose one to see its pages.'
+            : 'No page has tags yet. Add tags: [a, b] to a page’s front matter.',
+      }),
+      cloud,
+      list,
+    ),
   );
 }
 
@@ -589,6 +894,14 @@ window.addEventListener('scroll', () => {
 });
 
 export function wikiView(): HTMLElement {
+  if (ui.wikiTags !== undefined)
+    return h(
+      'div',
+      { class: `wiki${ui.wikiNavHidden ? ' nav-hidden' : ''}` },
+      sidebar(),
+      tagsView(),
+      h('div', { class: 'wiki-toc' }),
+    );
   const toc = outline();
   if (toc) requestAnimationFrame(followOutline);
   return h(

@@ -50,7 +50,9 @@ Pages live under the content root. The `assets/images` directory is beside `docs
 title: Installation
 description: Install the product
 order: 1
-icon: download
+icon: download # an icon name (rocket, book, globe, download…) or an emoji
+status: new # new, updated, beta, deprecated or draft: a badge in the navigation
+cover: ../assets/images/install.png # a banner above the title in the Wiki
 draft: false
 tags: [guide]
 translated_from: 8c3f0a1b2d4e5f60 # set on translations by Create Translation
@@ -59,4 +61,4 @@ translated_from: 8c3f0a1b2d4e5f60 # set on translations by Create Translation
 # Installation
 ```
 
-`order` sorts pages when navigation sort is `order`; section order can be set on its `index.md` page. `draft: true` hides a page from static export. **Edit Page Properties and Order** offers guided inputs. Legacy folders configured with `notespace.root` remain readable when no `wiki.yaml` is found.
+`icon`, `status` and `cover` are shown in the Wiki of the NoteSpace tab: the icon and status badge in the page tree and above the title, the cover as a banner. Tags open the tag index (**Tags** in the Wiki's page tree or Find). `order` sorts pages when navigation sort is `order`; section order can be set on its `index.md` page. `draft: true` hides a page from static export. **Edit Page Properties and Order** offers guided inputs. Legacy folders configured with `notespace.root` remain readable when no `wiki.yaml` is found.

@@ -12,7 +12,26 @@ export interface NavPage {
   uri?: string;
   /** A notebook or canvas file listed with the pages (opened in its own editor). */
   file?: 'notebook' | 'canvas';
+  tags?: string[];
+  /** Front matter values: `status` and `icon` are shown in the navigation. */
+  properties?: Record<string, string>;
 }
+/** Page statuses shown as badges (front matter `status:`). */
+export const pageStatuses = ['new', 'updated', 'beta', 'deprecated', 'draft'] as const;
+export type PageStatus = (typeof pageStatuses)[number];
+export const pageStatus = (p: { properties?: Record<string, string> }): PageStatus | undefined => {
+  const value = p.properties?.status?.trim().toLowerCase();
+  return (pageStatuses as readonly string[]).includes(value || '')
+    ? (value as PageStatus)
+    : undefined;
+};
+/** A page's icon: an icon name or a short emoji (front matter `icon:`). */
+export const pageIcon = (p: { properties?: Record<string, string> }): string | undefined => {
+  const value = p.properties?.icon?.trim();
+  if (!value) return undefined;
+  if (/^[a-z][a-zA-Z0-9-]{0,39}$/.test(value)) return value;
+  return [...value].length <= 4 && !/[\w\s<>&"']/.test(value) ? value : undefined;
+};
 export interface NavNode {
   kind: 'page' | 'section' | 'file';
   title: string;
@@ -23,6 +42,9 @@ export interface NavNode {
   uri?: string;
   file?: 'notebook' | 'canvas';
   draft?: boolean;
+  status?: PageStatus;
+  icon?: string;
+  tags?: string[];
   children?: NavNode[];
 }
 export interface NavOptions {
@@ -38,6 +60,11 @@ export interface NavOptions {
  */
 export function navTree(pages: NavPage[], options: NavOptions, prefix = ''): NavNode[] {
   const name = (text: string) => (options.readable ? humanize(text, options.acronyms) : text);
+  const meta = (p: NavPage) => ({
+    status: pageStatus(p),
+    icon: pageIcon(p),
+    tags: p.tags?.length ? p.tags : undefined,
+  });
   const byPath = new Map(pages.map((p) => [p.path, p]));
   const nodes: Array<NavNode & { order?: number }> = [];
   const dirs = new Set<string>();
@@ -65,6 +92,7 @@ export function navTree(pages: NavPage[], options: NavOptions, prefix = ''): Nav
         id: index?.id,
         children,
         order: index?.order,
+        ...(index ? meta(index) : {}),
       });
     } else
       nodes.push({
@@ -76,6 +104,7 @@ export function navTree(pages: NavPage[], options: NavOptions, prefix = ''): Nav
         file: page.file,
         draft: page.draft || undefined,
         order: page.order,
+        ...meta(page),
       });
   }
   const kind = (n: NavNode) =>

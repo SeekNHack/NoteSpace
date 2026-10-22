@@ -18,7 +18,7 @@ import type { NavNode, PageDto } from './core';
 import { listOf, quickAdd, row } from './tasks';
 import { createBoardDialog, openBoard } from './boards';
 import { openDay, tasksOn } from './calendar';
-import { openWikiPage, revealInWiki } from './wiki';
+import { openWikiPage, randomPage, revealInWiki, showTags } from './wiki';
 import { openFinder } from './finder';
 
 /** Quick Create: every way to start something, one menu. */
@@ -279,12 +279,55 @@ export function homeView(): HTMLElement {
           button('New board', () => createBoardDialog(), 'btn', 'plus'),
         ),
   );
+  // Pages that need attention: broken links and pages nothing links to.
+  const ins = s.insights;
+  const fix = (items: Array<{ title: string; path: string; uri: string; target?: string }>) =>
+    items.slice(0, 4).map((i) => {
+      const b = h(
+        'button',
+        { type: 'button', class: 'page-line' },
+        svg(i.target ? 'unlinkPage' : 'file', 13),
+        h('span', { class: 'title', text: i.title }),
+        h('span', { class: 'muted', text: i.target ? `→ ${i.target}` : i.path }),
+      );
+      b.addEventListener('click', () => {
+        setPrefs({ destination: 'wiki' });
+        openWikiPage({ path: i.path });
+      });
+      return h('li', {}, b);
+    });
+  const attention =
+    ins && (ins.brokenCount || ins.orphanCount)
+      ? section(
+          'Needs attention',
+          button('Content health', () => setPrefs({ destination: 'health' }), 'btn ghost small'),
+          ins.brokenCount
+            ? h('h3', { class: 'alert', text: `Broken links · ${ins.brokenCount}` })
+            : undefined,
+          ins.brokenCount ? h('ul', { class: 'page-list' }, ...fix(ins.broken)) : undefined,
+          ins.orphanCount
+            ? h('h3', { text: `Not linked from any page · ${ins.orphanCount}` })
+            : undefined,
+          ins.orphanCount ? h('ul', { class: 'page-list' }, ...fix(ins.orphans)) : undefined,
+        )
+      : undefined;
+  const discover = section(
+    'Discover',
+    undefined,
+    h(
+      'div',
+      { class: 'discover' },
+      button('Random page', () => randomPage(), 'btn', 'refresh'),
+      button('Tags', () => showTags(''), 'btn', 'badge'),
+      button('Link graph', () => setPrefs({ destination: 'graph' }), 'btn', 'link'),
+    ),
+  );
   wrap.append(
     h(
       'div',
       { class: 'home-grid' },
       h('div', { class: 'home-col main-col' }, todayCard, recent, explore),
-      h('div', { class: 'home-col side-col' }, weekCard, favorites, myBoards),
+      h('div', { class: 'home-col side-col' }, weekCard, favorites, myBoards, attention, discover),
     ),
   );
   return wrap;

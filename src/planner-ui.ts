@@ -25,8 +25,11 @@ import {
 } from './workspace-ui/core';
 import {
   openWikiPage,
+  receivePreview,
   receiveWikiPage,
   revealInWiki,
+  showTags,
+  namedIcon,
   toggleWikiNav,
   wikiView,
 } from './workspace-ui/wiki';
@@ -79,7 +82,12 @@ const goSection = (section: Section) =>
 const here = (): Location => ({
   destination: P().destination,
   board: P().destination === 'board' ? P().board : undefined,
-  wikiPage: P().destination === 'wiki' ? P().wikiPage : undefined,
+  wikiPage:
+    P().destination !== 'wiki'
+      ? undefined
+      : ui.wikiTags !== undefined
+        ? `#tags:${ui.wikiTags}`
+        : P().wikiPage,
 });
 const same = (a?: Location, b?: Location) =>
   !!a && !!b && a.destination === b.destination && a.board === b.board && a.wikiPage === b.wikiPage;
@@ -104,7 +112,9 @@ function travel(step: -1 | 1) {
   if (!history || !target) return;
   history.at += step;
   save();
-  if (target.destination === 'wiki' && target.wikiPage) {
+  if (target.destination === 'wiki' && target.wikiPage?.startsWith('#tags:')) {
+    showTags(target.wikiPage.slice(6));
+  } else if (target.destination === 'wiki' && target.wikiPage) {
     // Destination and page change together, so the move is not recorded as a new place.
     openWikiPage({ path: target.wikiPage });
     requestRender();
@@ -115,16 +125,6 @@ function travel(step: -1 | 1) {
     });
 }
 
-// wiki.yaml's icon is a codicon name; the ones with a matching panel icon are shown as such.
-const brandIcons: Record<string, IconName> = {
-  code: 'code',
-  star: 'star',
-  project: 'layout',
-  notebook: 'note',
-  lightbulb: 'tip',
-  database: 'blocks',
-  heart: 'star',
-};
 const brandColors: Record<string, string> = {
   blue: 'var(--vscode-charts-blue,#3794ff)',
   green: 'var(--vscode-charts-green,#89d185)',
@@ -152,7 +152,7 @@ function nav(): HTMLElement {
   const brand = h(
     'button',
     { type: 'button', class: 'brand', title: `${ws.name} — Home` },
-    h('span', { class: 'brand-mark' }, svg(brandIcons[ws.icon || ''] || 'preview', 16)),
+    h('span', { class: 'brand-mark' }, svg(namedIcon(ws.icon || '') || 'preview', 16)),
     h('span', { class: 'brand-name', text: ws.name }),
   );
   brand.addEventListener('click', () => go('home'));
@@ -360,6 +360,7 @@ window.addEventListener('message', (event) => {
       ui.selected = undefined;
     requestRender();
   } else if (m.type === 'wikiPage') receiveWikiPage(m.page, m.anchor);
+  else if (m.type === 'wikiPreview') receivePreview(m);
   else if (m.type === 'frame') toFrame(m.frame, m.message);
   else if (m.type === 'frameDoc') setFrameDoc(m.frame, m.doc);
   else if (m.type === 'wikiReveal') revealInWiki(m.section, m.filter);

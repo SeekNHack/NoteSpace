@@ -88,6 +88,10 @@ export interface NavNode {
   uri?: string;
   file?: 'notebook' | 'canvas';
   draft?: boolean;
+  /** Front matter `status` (new, updated, beta, deprecated, draft) and `icon`. */
+  status?: string;
+  icon?: string;
+  tags?: string[];
   children?: NavNode[];
 }
 export interface WikiPageDto {
@@ -97,6 +101,20 @@ export interface WikiPageDto {
   title: string;
   tags: string[];
   draft?: boolean;
+  status?: string;
+  icon?: string;
+  /** The cover image (`cover:` in the front matter) as a webview URI. */
+  cover?: string;
+  description?: string;
+  /** Pages that write this page's title without linking to it. */
+  mentions: Array<{
+    id: string;
+    title: string;
+    path: string;
+    excerpt: string;
+    offset: number;
+    length: number;
+  }>;
   modified?: number;
   headings: Array<{ level: number; text: string; slug: string }>;
   backlinks: Array<{ id: string; title: string; path: string }>;
@@ -177,6 +195,8 @@ export interface UiState {
   wikiExpanded?: string[];
   wikiFilter?: string;
   wikiNavHidden?: boolean;
+  /** The Wiki shows the tag index (all tags, or the pages of one tag) instead of a page. */
+  wikiTags?: string;
   history?: { entries: Location[]; at: number };
   /** Saved state of the pages shown in frames (the API Client keeps its tabs in the host). */
   frames?: Record<string, unknown>;

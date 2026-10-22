@@ -20,6 +20,8 @@ const files = {
     'schemaVersion: 1\nwiki:\n  title: Acme Docs\n  description: Product and team notes\ncontent:\n  root: docs\n  homepage: index.md\n',
   'docs/index.md':
     '# Acme Docs\n\nWelcome to the docs. Start with [[Setup]].\n\n## Overview\n\n:::tabs\n:::tab "Mac"\nUse brew.\n:::\n:::tab "Linux"\nUse apt.\n:::\n:::\n\n## More\n\n- [ ] Draft welcome\n\n```tasks\npage: this\nview: board\n```\n',
+  'docs/guide/deploy.md':
+    '---\nstatus: deprecated\nicon: rocket\ntags: [ops]\n---\n# Deploy\n\nFinish the setup before you ship.\n',
   'docs/guide/setup.md': `# Setup\n\n- [ ] Write install guide due:${today} priority:high #docs\n- [ ] Review API page\n- [ ] Check links\n`,
 };
 
@@ -156,6 +158,66 @@ try {
       /Setup/.test(await f.locator('.wiki-article').innerText()),
     'back from API to the wiki page',
   );
+  // Status badges and icons from the front matter; unlinked mentions become links on request.
+  assert.match(
+    await f.locator('.wiki-node.page', { hasText: 'Deploy' }).locator('.status-badge').innerText(),
+    /Deprecated/,
+  );
+  assert.equal(await f.locator('.wiki-node.page', { hasText: 'Deploy' }).locator('svg').count(), 1);
+  await poll(
+    async () =>
+      /Deploy/.test(
+        await f
+          .locator('.wiki-mentions')
+          .innerText()
+          .catch(() => ''),
+      ),
+    'unlinked mention of Setup in Deploy',
+  );
+  await f
+    .locator('.wiki-mentions li', { hasText: 'Deploy' })
+    .locator('button', { hasText: 'Link' })
+    .click();
+  await poll(
+    async () =>
+      /Finish the \[\[Setup\|setup\]\] before you ship\./.test(await file('guide/deploy.md')),
+    'mention linked in the Markdown file',
+  );
+  await poll(
+    async () =>
+      (await f.locator('.wiki-mentions').count()) === 0 &&
+      /Deploy/.test(await f.locator('.wiki-backlinks').innerText()),
+    'the mention is now a backlink',
+  );
+  // Hovering a link previews the page; tags open the tag index.
+  await f.locator('.wiki-backlinks button', { hasText: 'Deploy' }).click();
+  await poll(
+    async () => /Finish the/.test(await f.locator('.wiki-article').innerText()),
+    'deploy page',
+  );
+  await f.locator('.wiki-article a', { hasText: 'setup' }).hover();
+  await poll(
+    async () =>
+      /Setup[\s\S]*guide\/setup\.md/.test(
+        await f
+          .locator('.wiki-preview')
+          .innerText()
+          .catch(() => ''),
+      ),
+    'link preview',
+  );
+  await f.locator('.wiki-article .tags .tag', { hasText: 'ops' }).click();
+  await poll(
+    async () => /#ops[\s\S]*Deploy/.test(await f.locator('.wiki-content').innerText()),
+    'tag index for ops',
+  );
+  await axe(f, 'tag index');
+  await f.locator('.history button[aria-label^=Back]').click();
+  await poll(
+    async () => /Finish the/.test(await f.locator('.wiki-article').innerText()),
+    'back from the tag index',
+  );
+  console.log('PASS workspace: status, icons, link previews, unlinked mentions and tags');
   await f.locator('.nav [data-nav=home]').click();
   console.log('PASS workspace: Wiki reads pages in the panel with tree, outline, Back and Forward');
   console.log('PASS workspace: API opens inside the panel and Back returns to the page');

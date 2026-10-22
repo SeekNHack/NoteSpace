@@ -20,12 +20,13 @@ import { contentHealth } from './core/quality';
 import { plannerCss } from './planner-css';
 import { WikiActivity } from './activity';
 import { posix } from './core/paths';
-import { navOrder, navTree } from './core/nav-tree';
+import { navOrder, navTree, pageIcon, pageStatus } from './core/nav-tree';
+import { excerptOf, linkMention, unlinkedMentions } from './core/mentions';
 import { defaultAcronyms, DirectorySort, isFolderIndex } from './core/titles';
 import { escapeHtml, pageCss, safeExternal } from './core/render';
 import { fonts, resolveAppearance, widths } from './core/themes';
 import type { Page } from './core/model';
-import { resolveAttachment } from './assets';
+import { resolveAttachment, resolveImage } from './assets';
 import { richTabsScript } from './core/reader-interactions';
 import { tokensCss } from './core/design';
 import { apiClientCss } from './api-client-css';
@@ -583,7 +584,10 @@ export class PlannerPanel implements vscode.Disposable {
           .map(pageDto),
         dailyNote: notes.includes(today),
       },
-      insights: prefs.destination === 'insights' ? this.insights(root, tasks, today) : undefined,
+      insights:
+        prefs.destination === 'insights' || prefs.destination === 'home'
+          ? this.insights(root, tasks, today)
+          : undefined,
       wiki: { tree: this.wikiTree(root) },
     });
     // After an error the page is sent again too, undoing a checkbox that did not save.
@@ -641,7 +645,16 @@ export class PlannerPanel implements vscode.Disposable {
       void panel.webview.postMessage({ type: 'wikiPage', page: undefined });
       return;
     }
-    const key = `${page.uri}\0${page.text}\0${vscode.window.activeColorTheme.kind}`;
+    const backlinks = this.workspace.index
+      .backlinks(page)
+      .filter(
+        (b, i, all) => b.page.id !== page.id && all.findIndex((x) => x.page.id === b.page.id) === i,
+      )
+      .map((b) => ({ id: b.page.id, title: b.page.title, path: b.page.path }));
+    // Linking a mention elsewhere changes this page's backlinks, not its text.
+    const key = `${page.uri}\0${page.text}\0${vscode.window.activeColorTheme.kind}\0${backlinks
+      .map((b) => b.id)
+      .join(',')}`;
     if (!force && !anchor && key === this.wikiShown) return;
     this.wikiShown = key;
     const href = (p: Page, a?: string) =>
@@ -651,13 +664,25 @@ export class PlannerPanel implements vscode.Disposable {
     const body = this.reader
       ? await this.reader(page, panel.webview, href)
       : `<pre>${escapeHtml(page.body)}</pre>`;
-    const backlinks = this.workspace.index
-      .backlinks(page)
-      .filter(
-        (b, i, all) => b.page.id !== page.id && all.findIndex((x) => x.page.id === b.page.id) === i,
-      )
-      .map((b) => ({ id: b.page.id, title: b.page.title, path: b.page.path }));
     const look = resolveAppearance(root.config?.appearance);
+    // Pages that write this page's title without linking to it.
+    const linking = new Set(backlinks.map((b) => b.id));
+    const mentions = unlinkedMentions(page, this.wikiPages(root), (p) => linking.has(p.id), 12).map(
+      (m) => ({
+        id: m.page.id,
+        title: m.page.title,
+        path: m.page.path,
+        excerpt: m.excerpt,
+        offset: m.offset,
+        length: m.length,
+      }),
+    );
+    const coverTarget = page.properties?.cover || page.properties?.image;
+    let cover: string | undefined;
+    if (coverTarget && !/^[a-z][a-z0-9+.-]*:/i.test(coverTarget)) {
+      const uri = await resolveImage(this.workspace, root, page, coverTarget);
+      if (uri) cover = panel.webview.asWebviewUri(uri).toString();
+    }
     if (this.panel !== panel) return;
     void panel.webview.postMessage({
       type: 'wikiPage',
@@ -669,6 +694,11 @@ export class PlannerPanel implements vscode.Disposable {
         title: page.title,
         tags: page.tags,
         draft: page.draft,
+        status: pageStatus(page),
+        icon: pageIcon(page),
+        cover,
+        description: page.description,
+        mentions,
         modified: this.workspace.modifiedAt(page.uri),
         headings:
           root.config?.features.tableOfContents === false
@@ -702,6 +732,47 @@ export class PlannerPanel implements vscode.Disposable {
       case 'ready':
         this.post();
         return;
+      case 'wikiPreview': {
+        const page = root && this.wikiPages(root).find((p) => p.id === str(m.id, 2000));
+        if (page)
+          void reply({
+            type: 'wikiPreview',
+            id: page.id,
+            title: page.title,
+            path: page.path,
+            excerpt: excerptOf(page),
+            status: pageStatus(page),
+            icon: pageIcon(page),
+            tags: page.tags,
+          });
+        return;
+      }
+      case 'linkMention': {
+        const pages = root ? this.wikiPages(root) : [];
+        const from = pages.find((p) => p.id === str(m.id, 2000));
+        const target = pages.find((p) => p.id === str(m.target, 2000));
+        const offset = Number(m.offset);
+        const length = Number(m.length);
+        if (!from || !target || !Number.isInteger(offset) || !Number.isInteger(length)) return;
+        try {
+          const uri = vscode.Uri.parse(from.uri);
+          const document = await vscode.workspace.openTextDocument(uri);
+          const text = document.getText();
+          const next = linkMention(text, offset, length, target.title);
+          const edit = new vscode.WorkspaceEdit();
+          edit.replace(
+            uri,
+            new vscode.Range(document.positionAt(0), document.positionAt(text.length)),
+            next,
+          );
+          if (await vscode.workspace.applyEdit(edit)) await document.save();
+        } catch (error) {
+          void vscode.window.showWarningMessage(
+            error instanceof Error ? error.message : String(error),
+          );
+        }
+        return;
+      }
       case 'frameDoc':
         // The API Client and the Insights pages run in same-origin frames of this webview
         // (their styles and shortcuts stay their own).

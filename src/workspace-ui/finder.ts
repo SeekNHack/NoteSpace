@@ -3,7 +3,7 @@
 import { h, P, S, setPrefs, svg } from './core';
 import type { Destination, NavNode } from './core';
 import type { IconName } from '../core/icons';
-import { openWikiPage } from './wiki';
+import { openWikiPage, randomPage, showTags } from './wiki';
 import { select } from './tasks';
 import { openBoard } from './boards';
 
@@ -43,6 +43,26 @@ function results(query: string): Result[] {
       { label, detail: 'Go to', kind: 'Place', icon, run: () => setPrefs({ destination }) },
       label,
     );
+  add(
+    {
+      label: 'Tags',
+      detail: 'Every tag in the wiki',
+      kind: 'Place',
+      icon: 'badge',
+      run: () => showTags(''),
+    },
+    'Tags',
+  );
+  add(
+    {
+      label: 'Random page',
+      detail: 'Open a page at random',
+      kind: 'Place',
+      icon: 'refresh',
+      run: () => randomPage(),
+    },
+    'Random page',
+  );
   // A board's file is listed as the board.
   const boardFiles = new Set(S().boards.map((b) => b.pagePath));
   const walk = (nodes: NavNode[]) => {
@@ -65,6 +85,26 @@ function results(query: string): Result[] {
     }
   };
   walk(S().wiki.tree);
+  if (words.length) {
+    const tags = new Set<string>();
+    const collect = (nodes: NavNode[]) =>
+      nodes.forEach((n) => {
+        n.tags?.forEach((t) => tags.add(t));
+        collect(n.children || []);
+      });
+    collect(S().wiki.tree);
+    for (const t of tags)
+      add(
+        {
+          label: `#${t}`,
+          detail: 'Pages with this tag',
+          kind: 'Tag',
+          icon: 'badge',
+          run: () => showTags(t),
+        },
+        `#${t} ${t}`,
+      );
+  }
   for (const b of S().boards.filter((b) => !b.archived))
     add(
       {

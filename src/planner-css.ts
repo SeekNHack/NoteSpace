@@ -374,6 +374,39 @@ tbody tr{cursor:pointer}tbody tr:hover{background:var(--ws-hover)}
 .board-line .title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
 .board-dot{width:10px;height:10px;border-radius:3px;background:var(--c)}
 .progress.mini{height:4px}
+/* Page status, icons, cover, tags, mentions and link previews */
+.status-badge{display:inline-flex;align-items:center;flex:none;height:18px;padding:0 7px;border-radius:999px;font-size:10.5px;font-weight:650;letter-spacing:.02em;line-height:1;color:var(--ws-fg);background:color-mix(in srgb,var(--tone,var(--ws-muted)) 18%,transparent);border:1px solid color-mix(in srgb,var(--tone,var(--ws-muted)) 45%,transparent)}
+.status-new{--tone:var(--ws-green)}.status-updated{--tone:var(--ws-blue)}.status-beta{--tone:var(--ws-purple)}.status-deprecated{--tone:var(--ws-red)}.status-draft{--tone:var(--ws-orange)}
+.wiki-node .title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wiki-node.section .wiki-link{display:flex;align-items:center;gap:6px}
+.wiki-node .status-badge{height:16px;padding:0 6px;font-size:10px}
+.page-emoji{display:inline-block;width:1.25em;text-align:center;flex:none;line-height:1}
+.wiki-head .status-badge{margin-left:8px}
+.wiki .wiki-article .title-icon{display:inline-flex;vertical-align:-.12em;margin-right:.35em;color:var(--brand,var(--ws-accent))}
+.wiki .wiki-article .title-icon .page-emoji{width:auto}
+.wiki .wiki-article .wiki-cover{display:block;width:100%;max-height:240px;object-fit:cover;border-radius:12px;margin:0 0 20px}
+.wiki .wiki-article>.tags .tag,.wiki .tag-cloud .tag{border:1px solid transparent;cursor:pointer;font:inherit;font-size:12px}
+.wiki .wiki-article>.tags .tag:hover,.wiki .tag-cloud .tag:hover{color:var(--ws-accent);border-color:color-mix(in srgb,var(--ws-accent) 40%,transparent)}
+.tag-cloud{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 24px}
+.wiki .tag-cloud .tag{display:inline-flex;gap:8px;align-items:center;padding:4px 12px;border-radius:999px;background:var(--ws-surface-2);color:var(--ws-fg)}
+.wiki .tag-cloud .tag .count{font-size:11px;color:var(--ws-muted)}
+.wiki .tag-cloud .tag[aria-pressed=true]{background:color-mix(in srgb,var(--ws-accent) 18%,transparent);border-color:var(--ws-accent)}
+.wiki .wiki-article .tag-pages{list-style:none;padding:0;margin:0;border-top:1px solid var(--ws-hairline)}
+.wiki .wiki-article .tag-pages li{margin:0}
+.tag-page{display:flex;align-items:center;gap:10px;width:100%;padding:10px 6px;border:0;border-bottom:1px solid var(--ws-hairline);background:none;cursor:pointer;text-align:left;color:var(--ws-fg);font:inherit}
+.tag-page:hover .title{color:var(--ws-accent)}
+.tag-page .title{font-weight:600}.tag-page .muted{margin-left:auto}
+.wiki-mentions{margin:16px 0 0;padding-top:16px;border-top:1px solid var(--ws-hairline);font-size:13px}
+.wiki-mentions h2{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--ws-muted);margin:0 0 8px}
+.wiki-mentions ul{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.wiki-mentions li{padding:8px 10px;border:1px solid var(--ws-hairline);border-radius:8px}
+.wiki-mentions .mention-head{display:flex;align-items:center;gap:8px}
+.wiki-mentions p{margin:4px 0 0}
+.wiki-preview{position:fixed;z-index:40;padding:12px 14px;border:1px solid var(--ws-menu-border);border-radius:10px;background:var(--ws-menu-bg);color:var(--ws-menu-fg);box-shadow:var(--ws-shadow);font-size:13px;line-height:1.5;pointer-events:none}
+.wiki-preview .preview-head{display:flex;align-items:center;gap:8px;font-size:14px}
+.wiki-preview p{margin:6px 0 0}
+.wiki-preview .preview-path,.wiki-preview .preview-tags{font-size:11.5px;color:var(--ws-muted);margin-top:2px}
+.discover{display:flex;flex-wrap:wrap;gap:8px}
 /* Find (/) */
 .finder-back{align-items:flex-start!important;padding-top:12vh}
 .finder{width:min(620px,calc(100vw - 32px));background:var(--ws-menu-bg,var(--ws-bg));border:1px solid var(--ws-menu-border,var(--ws-border));border-radius:var(--ws-r3);box-shadow:var(--ws-shadow);overflow:hidden}
