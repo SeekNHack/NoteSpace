@@ -10,6 +10,7 @@ import {
   pagePath,
   posix,
   safeRelative,
+  slug,
   uriPath,
 } from './core/paths';
 import { Page } from './core/model';
@@ -1224,6 +1225,36 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
       const page = workspace.index.byUri(uri.toString());
       if (page) await openPreferred(page);
     } else await createNamedPage(root, value, templates[0].body);
+  });
+  // Blog posts live in blog/ (newest first on blog/index.md, created with the first post).
+  command('newBlogPost', async (rootId?: string) => {
+    const root = await chooseRoot(typeof rootId === 'string' ? rootId : activePage()?.root);
+    if (!root) return;
+    const title = await vscode.window.showInputBox({
+      title: 'New blog post',
+      prompt: 'The post title. It is saved in blog/ with today’s date.',
+      validateInput: (v) => (v.trim() ? undefined : 'Type a title.'),
+    });
+    if (!title?.trim()) return;
+    const date = planner.today(root);
+    const name = slug(title.replace(/\./g, '-')).replace(/-+/g, '-').replace(/^-|-$/g, '') || 'post';
+    try {
+      if (!workspace.index.all(root.id).some((p) => p.path === 'blog/index.md'))
+        await workspace.createPage(
+          root,
+          'blog/index',
+          '# Blog\n\n```collection\nsource: pages\nfolder: blog\nview: posts\n```\n',
+        );
+      const uri = await workspace.createPage(
+        root,
+        `blog/${date}-${name}`,
+        `---\ndate: ${date}\nauthors: []\ntags: []\n---\n\n# ${title.trim()}\n\n`,
+      );
+      const page = workspace.index.byUri(uri.toString());
+      if (page) await openPreferred(page);
+    } catch (error) {
+      void vscode.window.showErrorMessage(error instanceof Error ? error.message : String(error));
+    }
   });
   command('newFromTemplate', async (node?: PageNode) => {
     const active = activePage(node);

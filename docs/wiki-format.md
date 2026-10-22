@@ -8,6 +8,7 @@ wiki:
   title: My Documentation
   description: Created with NoteSpace
   language: en
+  announcement: Version 2 is out — [see what changed](https://example.com/v2) # optional, one line
 content:
   root: docs
   homepage: index.md
@@ -28,6 +29,7 @@ features:
 build:
   output: dist
   basePath: /
+  url: https://docs.example.com/ # optional: canonical links and share previews
 i18n: # optional
   languages: [it, de] # translations live in <content root>/<code>/
 versions: # optional

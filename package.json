@@ -659,6 +659,12 @@
         "icon": "$(trash)"
       },
       {
+        "command": "notespace.newBlogPost",
+        "title": "New Blog Post",
+        "category": "NoteSpace",
+        "icon": "$(rss)"
+      },
+      {
         "command": "notespace.newNote",
         "title": "New Note",
         "category": "NoteSpace",

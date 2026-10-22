@@ -6,7 +6,11 @@ import { Page } from './core/model';
 import { contentCss, escapeHtml, renderPage } from './core/render';
 import { encodePath, insidePath, isExternal, posix, splitTarget, uriPath } from './core/paths';
 import { renderDiagrams } from './diagrams';
-import { resolveAttachment } from './assets';
+import { resolveAttachment, resolveImage } from './assets';
+import MarkdownIt from 'markdown-it';
+import { icon, iconPaths, IconName } from './core/icons';
+import { pageIcon, pageStatus } from './core/nav-tree';
+import { excerptOf } from './core/mentions';
 import { pageWithIncludes } from './core/includes';
 import { readerInteractions } from './core/reader-interactions';
 import type { PlannerService } from './planner';
@@ -91,15 +95,52 @@ export async function exportWiki(
       ? root.config.analytics
       : undefined;
   const analyticsOrigin = analytics ? new URL(analytics.endpoint).origin : '';
+  // The announcement is one line of inline Markdown (links and emphasis; no HTML).
+  const announcement = root.config?.wiki.announcement
+    ? `<div class="site-announcement" role="note">${new MarkdownIt({ html: false, linkify: true }).renderInline(root.config.wiki.announcement)}</div>`
+    : '';
+  const siteUrl = root.config?.build.url;
+  const siteName = root.config?.wiki.title || root.name;
   const sitePage = (
     title: string,
     content: string,
     from: string,
     lang = root.config?.wiki.language || 'en',
+    meta: { description?: string; image?: string } = {},
   ): string => {
     const relative = (file: string) => encodePath(posix.relative(posix.dirname(from), file));
-    return `<!doctype html><html lang="${escapeHtml(lang)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' data:; media-src 'self'; style-src 'self'; script-src 'self'; connect-src 'self'${analyticsOrigin ? ` ${analyticsOrigin}` : ''}; base-uri 'none'; form-action 'none'">${analytics ? `<meta name="wiki-analytics" content="${escapeHtml(JSON.stringify(analytics))}">` : ''}<title>${escapeHtml(title)}</title><link rel="stylesheet" href="${relative('site.css')}"></head><body><div class="site-layout${from === 'index.html' || !content.includes('class="site-nav"') ? ' site-home' : ''}">${content}</div><script defer src="${relative('site.js')}"></script></body></html>`;
+    // Share previews (Open Graph): absolute URLs need build.url; without it the image is omitted.
+    const description = meta.description || root.config?.wiki.description || '';
+    const share = [
+      description ? `<meta name="description" content="${escapeHtml(description)}">` : '',
+      `<meta property="og:type" content="${from === 'index.html' ? 'website' : 'article'}">`,
+      `<meta property="og:site_name" content="${escapeHtml(siteName)}">`,
+      `<meta property="og:title" content="${escapeHtml(title)}">`,
+      description ? `<meta property="og:description" content="${escapeHtml(description)}">` : '',
+      siteUrl ? `<link rel="canonical" href="${escapeHtml(siteUrl + encodePath(from))}">` : '',
+      siteUrl ? `<meta property="og:url" content="${escapeHtml(siteUrl + encodePath(from))}">` : '',
+      siteUrl && meta.image
+        ? `<meta property="og:image" content="${escapeHtml(siteUrl + encodePath(meta.image))}"><meta name="twitter:card" content="summary_large_image">`
+        : '',
+    ].join('');
+    return `<!doctype html><html lang="${escapeHtml(lang)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' data:; media-src 'self'; style-src 'self'; script-src 'self'; connect-src 'self'${analyticsOrigin ? ` ${analyticsOrigin}` : ''}; base-uri 'none'; form-action 'none'">${analytics ? `<meta name="wiki-analytics" content="${escapeHtml(JSON.stringify(analytics))}">` : ''}<title>${escapeHtml(title)}</title>${share}<link rel="stylesheet" href="${relative('site.css')}"></head><body>${announcement}<div class="site-layout${from === 'index.html' || !content.includes('class="site-nav"') ? ' site-home' : ''}">${content}</div><script defer src="${relative('site.js')}"></script></body></html>`;
   };
+  const iconHtml = (p: Page) => {
+    const name = pageIcon(p);
+    if (!name) return '';
+    if (name in iconPaths) return `<span class="page-icon">${icon(name as IconName, 15)}</span>`;
+    return /^[a-z]/.test(name)
+      ? ''
+      : `<span class="page-icon" aria-hidden="true">${escapeHtml(name)}</span>`;
+  };
+  const statusHtml = (p: Page) => {
+    const status = pageStatus(p);
+    return status
+      ? ` <span class="status-badge status-${status}">${status[0].toUpperCase()}${status.slice(1)}</span>`
+      : '';
+  };
+  const tagged = new Map<string, Page[]>();
+  for (const p of pages) for (const t of p.tags) tagged.set(t, [...(tagged.get(t) || []), p]);
   try {
     await vscode.workspace.fs.createDirectory(directory);
     const assets = new Set<string>();
@@ -273,7 +314,33 @@ export async function exportWiki(
           banner = `<p class="archived-banner" role="note">You are reading version ${escapeHtml(v.scope.version)}, an archived version.${latest ? ` <a href="${escapeHtml(href(latest))}">Go to the latest version</a>.` : ''}</p>`;
         }
       }
-      const nav = `<aside class="site-nav"><strong><a href="${encodePath(posix.relative(posix.dirname(outputPath(page)), 'index.html'))}">${escapeHtml(root.config?.wiki.title || root.name)}</a></strong>${switchers}${searchBox}<ul>${scoped.map((p) => `<li><a ${p.id === page.id ? 'aria-current="page"' : ''} href="${escapeHtml(href(p))}">${escapeHtml(p.title)}</a></li>`).join('')}</ul></aside>`;
+      const nav = `<aside class="site-nav"><strong><a href="${encodePath(posix.relative(posix.dirname(outputPath(page)), 'index.html'))}">${escapeHtml(root.config?.wiki.title || root.name)}</a></strong>${switchers}${searchBox}<ul>${scoped.map((p) => `<li><a ${p.id === page.id ? 'aria-current="page"' : ''} href="${escapeHtml(href(p))}">${iconHtml(p)}${escapeHtml(p.title)}</a>${statusHtml(p)}</li>`).join('')}</ul></aside>`;
+      // The cover image (front matter `cover:`) is copied like the page's other images.
+      let cover = '';
+      const coverTarget = page.properties?.cover || page.properties?.image;
+      if (coverTarget && !isExternal(coverTarget)) {
+        const uri = await resolveImage(workspace, root, page, coverTarget);
+        if (uri && /\.(png|jpe?g|gif|webp)$/i.test(uriPath(uri))) {
+          const inRoot = posix.relative(uriPath(root.uri), uriPath(uri));
+          const outputAsset = insidePath(inRoot)
+            ? `assets/${inRoot}`
+            : `assets/covers/${posix.basename(uriPath(uri))}`;
+          if (!assets.has(outputAsset)) {
+            await write(outputAsset, await vscode.workspace.fs.readFile(uri));
+            assets.add(outputAsset);
+          }
+          cover = outputAsset;
+        } else warnings.push(`${page.path}: cover image not found: ${coverTarget}`);
+      }
+      const coverHtml = cover
+        ? `<img class="page-cover" src="${encodePath(posix.relative(posix.dirname(outputPath(page)), cover))}" alt="">`
+        : '';
+      const tagsHtml = page.tags.length
+        ? `<p class="page-tags">${page.tags.map((t) => `<a class="tag" href="${encodePath(posix.relative(posix.dirname(outputPath(page)), 'tags.html'))}#tag-${encodeURIComponent(t)}">#${escapeHtml(t)}</a>`).join('')}</p>`
+        : '';
+      const statusLine = pageStatus(page)
+        ? `<p class="page-status">${statusHtml(page).trim()}</p>`
+        : '';
       const toc =
         root.config?.features.tableOfContents === false
           ? ''
@@ -289,9 +356,12 @@ export async function exportWiki(
         new TextEncoder().encode(
           sitePage(
             page.title,
-            nav + `<main class="doc">${banner}${breadcrumbs}${body}${pager}${footer}</main>` + toc,
+            nav +
+              `<main class="doc">${banner}${breadcrumbs}${coverHtml}${statusLine}${tagsHtml}${body}${pager}${footer}</main>` +
+              toc,
             outputPath(page),
             lang,
+            { description: excerptOf(page, 200), image: cover || undefined },
           ),
         ),
       );
@@ -356,6 +426,19 @@ export async function exportWiki(
         '',
       )}</ul></section>${notebookLinks.length ? `<section aria-label="Notebooks"><h2>Notebooks</h2><ul>${notebookLinks.join('')}</ul></section>` : ''}${plannerExport && options.planner ? '<p><a href="planner.html">Planner snapshot</a></p>' : ''}</main>`;
     await write('index.html', new TextEncoder().encode(sitePage(root.name, listing, 'index.html')));
+    if (tagged.size) {
+      const tags = [...tagged].sort((a, b) => a[0].localeCompare(b[0]));
+      const tagIndex = `<main class="doc"><p class="breadcrumbs"><a href="index.html">${escapeHtml(siteName)}</a></p><h1>Tags</h1><p class="tag-cloud">${tags.map(([t, list]) => `<a class="tag" href="#tag-${encodeURIComponent(t)}">#${escapeHtml(t)} <small>${list.length}</small></a>`).join('')}</p>${tags
+        .map(
+          ([t, list]) =>
+            `<section id="tag-${escapeHtml(encodeURIComponent(t))}"><h2>#${escapeHtml(t)}</h2><ul>${list.map((p) => `<li><a href="${encodePath(outputPath(p))}">${escapeHtml(p.title)}</a>${statusHtml(p)}</li>`).join('')}</ul></section>`,
+        )
+        .join('')}</main>`;
+      await write(
+        'tags.html',
+        new TextEncoder().encode(sitePage(`Tags · ${siteName}`, tagIndex, 'tags.html')),
+      );
+    }
     if (root.config?.versions.archived.length) {
       // Stable aliases: latest/ always opens the live docs; versions.json lists every version.
       const current = root.config.versions.current || 'latest';
@@ -493,7 +576,7 @@ export async function exportWiki(
 }
 /** Print and PDF: one column, no navigation, readable page breaks. */
 export const printCss = `@media print{:root{color-scheme:light}body{background:#fff}.site-nav,.site-toc,.site-pager,.site-search,.search-results,.copy-code,.breadcrumbs,.site-variants{display:none!important}.site-layout{display:block;max-width:none;padding:0}.doc{max-width:none}.doc pre,.doc figure,.doc table,.doc .callout,.doc .api-op,.doc .nb-cell,.doc img,.doc svg{break-inside:avoid}.doc h1,.doc h2,.doc h3{break-after:avoid}.doc a[href^="http"]::after{content:" (" attr(href) ")";font-size:.85em;color:#555;word-break:break-all}.doc details{display:block}.doc details>*{display:block}.print-page{break-before:page}.print-page:first-of-type{break-before:auto}.print-toc ol{columns:1}}`;
-const siteCss = `.site-layout{display:grid;grid-template-columns:minmax(180px,240px) minmax(0,var(--ws-doc-width)) minmax(140px,200px);gap:40px;max-width:1400px;margin:0 auto;padding:32px 24px}.site-layout.site-home{display:block;max-width:var(--ws-doc-width)}.site-layout main{min-width:0;width:100%}.site-nav,.site-toc{position:sticky;top:24px;align-self:start;max-height:calc(100vh - 48px);overflow:auto;font-size:13px}.site-nav ul,.site-toc ul{list-style:none;padding:0;margin:8px 0}.site-nav li,.site-toc li{padding:3px 0}.site-nav a,.site-toc a{color:var(--ws-muted);text-decoration:none}.site-nav a:hover,.site-toc a:hover{color:var(--ws-fg)}.site-nav a[aria-current=page]{color:var(--ws-accent);font-weight:600}.site-nav>strong a{color:var(--ws-fg);font-size:15px}.site-toc strong{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--ws-muted)}.site-toc ul{border-left:1px solid var(--ws-hairline);padding-left:10px}.site-search{width:100%;margin:12px 0 4px;height:30px;padding:0 10px;border:1px solid var(--ws-border);border-radius:6px;background:var(--ws-bg);color:var(--ws-fg);font:inherit}.site-search:focus{outline:1px solid var(--ws-focus)}.search-results:empty{display:none}.site-pager{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:48px 0 24px}.site-pager a{display:block;padding:10px 14px;border:1px solid var(--ws-hairline);border-radius:6px;text-decoration:none}.site-pager a:last-child:not(:first-child){text-align:right}.breadcrumbs{color:var(--ws-muted);font-size:13px;margin-bottom:18px}.site-variants{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0 0;font-size:12px}.site-variants a,.site-variants span{padding:1px 6px;border-radius:4px}.site-variants [aria-current]{background:var(--ws-surface-2);font-weight:600}.site-variants .missing{color:var(--ws-muted);text-decoration:line-through}.archived-banner{padding:8px 12px;border:1px solid var(--ws-orange);border-radius:6px;margin:0 0 18px}@media(max-width:900px){.site-layout{grid-template-columns:180px minmax(0,1fr)}.site-toc{display:none}}@media(max-width:600px){.site-layout{display:block;padding:16px}.site-nav{position:static;max-height:200px;border-bottom:1px solid var(--ws-hairline);margin-bottom:20px}}.doc table.snapshot-calendar{display:table;width:100%;table-layout:fixed;border-collapse:collapse;font-size:12px}.snapshot-calendar caption{text-align:left;font-weight:600;margin-bottom:6px}.snapshot-calendar td{vertical-align:top;height:72px;border:1px solid var(--ws-hairline);padding:4px}.snapshot-calendar td[aria-current]{outline:2px solid var(--ws-accent);outline-offset:-2px}.snapshot-calendar .day{display:block;font-weight:600}.cal-task{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ws-muted)}.cal-task.done{text-decoration:line-through}${printCss}`;
+const siteCss = `.site-layout{display:grid;grid-template-columns:minmax(180px,240px) minmax(0,var(--ws-doc-width)) minmax(140px,200px);gap:40px;max-width:1400px;margin:0 auto;padding:32px 24px}.site-layout.site-home{display:block;max-width:var(--ws-doc-width)}.site-layout main{min-width:0;width:100%}.site-nav,.site-toc{position:sticky;top:24px;align-self:start;max-height:calc(100vh - 48px);overflow:auto;font-size:13px}.site-nav ul,.site-toc ul{list-style:none;padding:0;margin:8px 0}.site-nav li,.site-toc li{padding:3px 0}.site-nav a,.site-toc a{color:var(--ws-muted);text-decoration:none}.site-nav a:hover,.site-toc a:hover{color:var(--ws-fg)}.site-nav a[aria-current=page]{color:var(--ws-accent);font-weight:600}.site-nav>strong a{color:var(--ws-fg);font-size:15px}.site-toc strong{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--ws-muted)}.site-toc ul{border-left:1px solid var(--ws-hairline);padding-left:10px}.site-search{width:100%;margin:12px 0 4px;height:30px;padding:0 10px;border:1px solid var(--ws-border);border-radius:6px;background:var(--ws-bg);color:var(--ws-fg);font:inherit}.site-search:focus{outline:1px solid var(--ws-focus)}.search-results:empty{display:none}.site-pager{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:48px 0 24px}.site-pager a{display:block;padding:10px 14px;border:1px solid var(--ws-hairline);border-radius:6px;text-decoration:none}.site-pager a:last-child:not(:first-child){text-align:right}.breadcrumbs{color:var(--ws-muted);font-size:13px;margin-bottom:18px}.site-variants{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0 0;font-size:12px}.site-variants a,.site-variants span{padding:1px 6px;border-radius:4px}.site-variants [aria-current]{background:var(--ws-surface-2);font-weight:600}.site-variants .missing{color:var(--ws-muted);text-decoration:line-through}.archived-banner{padding:8px 12px;border:1px solid var(--ws-orange);border-radius:6px;margin:0 0 18px}.site-announcement{padding:8px 16px;text-align:center;font-size:14px;background:color-mix(in srgb,var(--ws-accent) 16%,var(--ws-bg));border-bottom:1px solid var(--ws-hairline)}.site-announcement a{color:inherit;font-weight:600}.page-cover{display:block;width:100%;max-height:260px;object-fit:cover;border-radius:12px;margin:0 0 20px}.page-tags{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}.page-tags .tag,.tag-cloud .tag{text-decoration:none}.tag-cloud{display:flex;flex-wrap:wrap;gap:8px}.page-status{margin:0 0 8px}.page-icon{display:inline-flex;vertical-align:-2px;margin-right:6px;color:var(--ws-accent)}.site-nav .status-badge{margin-left:4px;font-size:10px}@media(max-width:900px){.site-layout{grid-template-columns:180px minmax(0,1fr)}.site-toc{display:none}}@media(max-width:600px){.site-layout{display:block;padding:16px}.site-nav{position:static;max-height:200px;border-bottom:1px solid var(--ws-hairline);margin-bottom:20px}}.doc table.snapshot-calendar{display:table;width:100%;table-layout:fixed;border-collapse:collapse;font-size:12px}.snapshot-calendar caption{text-align:left;font-weight:600;margin-bottom:6px}.snapshot-calendar td{vertical-align:top;height:72px;border:1px solid var(--ws-hairline);padding:4px}.snapshot-calendar td[aria-current]{outline:2px solid var(--ws-accent);outline-offset:-2px}.snapshot-calendar .day{display:block;font-weight:600}.cal-task{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ws-muted)}.cal-task.done{text-decoration:line-through}${printCss}`;
 // Optional page-view beacon. It never runs from file:// URLs, honours Do Not Track and Global
 // Privacy Control, sets no cookies and sends only the page path (no query string or hash).
 const analyticsJs = `(()=>{const m=document.querySelector('meta[name=wiki-analytics]');if(!m||location.protocol==='file:')return;if(navigator.doNotTrack==='1'||window.doNotTrack==='1'||navigator.globalPrivacyControl)return;try{const c=JSON.parse(m.content);const url=location.origin+location.pathname;const body=c.provider==='plausible'?{name:'pageview',url,domain:c.domain}:{path:location.pathname,lang:document.documentElement.lang};const blob=new Blob([JSON.stringify(body)],{type:'text/plain'});if(!(navigator.sendBeacon&&navigator.sendBeacon(c.endpoint,blob)))fetch(c.endpoint,{method:'POST',body:blob,keepalive:true,credentials:'omit',mode:'no-cors'}).catch(()=>{})}catch{}})();`;

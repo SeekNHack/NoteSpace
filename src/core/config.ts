@@ -12,6 +12,8 @@ export interface WikiConfig {
     icon?: string;
     /** Color preset of the wiki's icon (optional). */
     color?: string;
+    /** A short message shown above every page of the site and in the Wiki (inline Markdown). */
+    announcement?: string;
   };
   content: { root: string; homepage: string };
   navigation: { mode: 'automatic'; sort: 'filename' | 'title' | 'order' };
@@ -40,7 +42,8 @@ export interface WikiConfig {
     /** Export daily notes, planner snapshots and task embeds. Off by default for privacy. */
     plannerExport: boolean;
   };
-  build: { output: string; basePath: string };
+  /** `url`: where the site is published (https), for share previews and canonical links. */
+  build: { output: string; basePath: string; url?: string };
   /** Extra languages; translations live in `<content root>/<code>/` and the default language is `wiki.language`. */
   i18n: { languages: string[] };
   /** `current` labels the live docs; archived snapshots live in `<content root>/_versions/<id>/`. */
@@ -166,6 +169,9 @@ export function parseConfig(source: string): WikiConfig {
   const basePath = str(build.basePath, defaults.build.basePath, 'build.basePath');
   if (!/^\/(?:[a-zA-Z0-9._~!$&'()*+,;=:@%-]+\/)*$/.test(basePath) || basePath.includes('..'))
     throw new Error('build.basePath must be an absolute URL path ending in /.');
+  const url = str(build.url, '', 'build.url').trim().replace(/\/?$/, '/');
+  if (url !== '/' && !/^https:\/\/[^\s/?#]+(?:\/[^\s?#]*)?$/.test(url))
+    throw new Error('build.url must be the https address of the published site.');
   const language = str(wiki.language, defaults.wiki.language, 'wiki.language');
   const languages = list(i18n.languages, 'i18n.languages', languageCode, 'language code');
   if (languages.includes(language))
@@ -213,7 +219,14 @@ export function parseConfig(source: string): WikiConfig {
           throw new Error('wiki.icon must be an icon name such as book, rocket or notebook.');
         if (color && !wikiColors.includes(color))
           throw new Error(`wiki.color must be one of ${wikiColors.join(', ')}.`);
-        return { ...(icon ? { icon } : {}), ...(color ? { color } : {}) };
+        const announcement = str(wiki.announcement, '', 'wiki.announcement').trim();
+        if (announcement.length > 400 || /\n/.test(announcement))
+          throw new Error('wiki.announcement must be one line of at most 400 characters.');
+        return {
+          ...(icon ? { icon } : {}),
+          ...(color ? { color } : {}),
+          ...(announcement ? { announcement } : {}),
+        };
       })(),
     },
     content: { root, homepage },
@@ -231,7 +244,7 @@ export function parseConfig(source: string): WikiConfig {
       breadcrumbs: bool(features.breadcrumbs, true, 'features.breadcrumbs'),
       plannerExport: bool(features.plannerExport, false, 'features.plannerExport'),
     },
-    build: { output, basePath },
+    build: { output, basePath, ...(url !== '/' ? { url } : {}) },
     i18n: { languages },
     versions: { current, archived },
     analytics: { provider: provider as WikiConfig['analytics']['provider'], endpoint, domain },

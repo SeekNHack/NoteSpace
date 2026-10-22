@@ -160,6 +160,8 @@ export interface State {
     /** wiki.yaml's icon (a codicon name) and color, shown in the header. */
     icon?: string;
     color?: string;
+    /** wiki.announcement rendered as inline HTML (from Markdown without HTML). */
+    announcement?: string;
     homepage?: string;
     boardsFolder: string;
     notesFolder: string;

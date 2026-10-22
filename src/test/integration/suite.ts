@@ -2685,6 +2685,87 @@ export async function run(): Promise<void> {
       await ws.refresh();
     }
   });
+  await test('the site shows the announcement, share previews, statuses, covers, tags and a blog', async () => {
+    const project = vscode.Uri.joinPath(root.folder.uri, 'blog-site');
+    const config = defaultConfig('Blog Site');
+    config.wiki.announcement = 'Version 2 is out — [read the post](blog/2026-01-02-hello.md)';
+    config.build.url = 'https://docs.example.com/';
+    const write = (path: string, text: string) =>
+      vscode.workspace.fs.writeFile(vscode.Uri.joinPath(project, path), Buffer.from(text));
+    await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(project, 'docs', 'blog'));
+    await vscode.workspace.fs.createDirectory(vscode.Uri.joinPath(project, 'docs', 'images'));
+    await write('wiki.yaml', createConfig(config));
+    await write('docs/index.md', '# Blog Site\n\nWelcome.\n');
+    await vscode.workspace.fs.writeFile(
+      vscode.Uri.joinPath(project, 'docs', 'images', 'cover.png'),
+      Buffer.from(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aZ1sAAAAASUVORK5CYII=',
+        'base64',
+      ),
+    );
+    await write(
+      'docs/blog/index.md',
+      '# Blog\n\n```collection\nsource: pages\nfolder: blog\nview: posts\n```\n',
+    );
+    await write(
+      'docs/blog/2026-01-02-hello.md',
+      '---\nauthors: [Ana]\ntags: [release]\nstatus: new\ncover: ../images/cover.png\ndescription: The first post.\n---\n# Hello\n\nText.\n',
+    );
+    await write(
+      'docs/blog/old.md',
+      '---\ndate: 2025-12-01\ntags: [release]\nicon: rocket\n---\n# Older post\n\nOlder text that is long enough.\n',
+    );
+    await ws.refresh();
+    const site = ws.roots.find((r) => r.projectUri?.toString() === project.toString());
+    assert.ok(site);
+    assert.equal(site.config?.wiki.announcement, config.wiki.announcement);
+    const output = vscode.Uri.joinPath(root.folder.uri, 'blog-export');
+    await vscode.workspace.fs.createDirectory(output);
+    try {
+      const result = await api.exportWiki(ws, site, output, undefined, { planner: api.planner });
+      const read = async (path: string) =>
+        Buffer.from(
+          await vscode.workspace.fs.readFile(vscode.Uri.joinPath(result.uri, path)),
+        ).toString();
+      const post = await read('pages/blog/2026-01-02-hello.html');
+      assert.match(
+        post,
+        /<div class="site-announcement" role="note">Version 2 is out — <a href="blog\/2026-01-02-hello\.md">read the post<\/a><\/div>/,
+      );
+      assert.match(post, /<meta name="description" content="The first post\.">/);
+      assert.match(post, /<meta property="og:title" content="Hello">/);
+      assert.match(
+        post,
+        /<link rel="canonical" href="https:\/\/docs\.example\.com\/pages\/blog\/2026-01-02-hello\.html">/,
+      );
+      assert.match(
+        post,
+        /<meta property="og:image" content="https:\/\/docs\.example\.com\/assets\/images\/cover\.png">/,
+      );
+      assert.match(
+        post,
+        /<img class="page-cover" src="\.\.\/\.\.\/assets\/images\/cover\.png" alt="">/,
+      );
+      assert.match(post, /class="status-badge status-new">New</);
+      assert.match(post, /href="\.\.\/\.\.\/tags\.html#tag-release">#release/);
+      assert.ok((await read('assets/images/cover.png')).length > 0);
+      const blog = await read('pages/blog/index.html');
+      assert.match(
+        blog,
+        /class="collection-posts"[\s\S]*Hello[\s\S]*January 2, 2026[\s\S]*Ana[\s\S]*The first post\.[\s\S]*Older post[\s\S]*December 1, 2025/,
+      );
+      assert.match(blog, /<span class="page-icon"><svg/, 'icons in the navigation');
+      const tags = await read('tags.html');
+      assert.match(
+        tags,
+        /<section id="tag-release"><h2>#release<\/h2><ul>[\s\S]*Hello[\s\S]*Older post/,
+      );
+    } finally {
+      await vscode.workspace.fs.delete(output, { recursive: true });
+      await vscode.workspace.fs.delete(project, { recursive: true });
+      await ws.refresh();
+    }
+  });
   await test('boards embedded in pages move tasks between status columns', async () => {
     const planner = api.planner;
     const root = ws.roots[0];

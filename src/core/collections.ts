@@ -1,4 +1,5 @@
 import { Page } from './model';
+import { excerptOf } from './mentions';
 import {
   compareTasks,
   inList,
@@ -155,13 +156,58 @@ export function renderCollection(
     .join('')}</ul></div>`;
 }
 
+/** A post's date: front matter `date`, else a `YYYY-MM-DD` at the start of the file name. */
+export function postDate(p: Page): string {
+  const value = p.properties?.date?.slice(0, 10) || '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  return /(?:^|\/)(\d{4}-\d{2}-\d{2})[^/]*$/.exec(p.path)?.[1] || '';
+}
+const longDate = (date: string) =>
+  new Intl.DateTimeFormat('en', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(`${date}T12:00:00Z`));
+
 function pageCollection(spec: Record<string, string>, ctx: CollectionContext): string {
   let pages = ctx.pages.filter((p) => !p.draft && p.id !== ctx.page.id);
   if (spec.folder) pages = pages.filter((p) => p.path.startsWith(spec.folder.replace(/\/?$/, '/')));
   if (spec.tag) pages = pages.filter((p) => p.tags.includes(spec.tag.replace(/^#/, '')));
-  pages.sort((a, b) => a.title.localeCompare(b.title));
+  // Posts (`view: posts`) are newest first; `sort:` names a property (`-` for descending).
+  const sort = spec.sort || (spec.view === 'posts' ? '-date' : 'title');
+  const key = sort.replace(/^-/, '');
+  const value = (p: Page) =>
+    key === 'title' ? p.title : key === 'date' ? postDate(p) : p.properties?.[key] || '';
+  pages.sort(
+    (a, b) =>
+      (sort.startsWith('-') ? -1 : 1) *
+        value(a).localeCompare(value(b), undefined, { numeric: true }) ||
+      a.title.localeCompare(b.title),
+  );
   pages = pages.slice(0, Math.min(Number(spec.limit) || 100, 500));
   if (!pages.length) return '<p class="muted">No matching pages.</p>';
+  if (spec.view === 'posts')
+    return `<div class="collection-posts">${pages
+      .map((p) => {
+        const date = postDate(p);
+        const authors = (p.properties?.authors || p.properties?.author || '')
+          .split(',')
+          .map((a) => a.trim())
+          .filter(Boolean);
+        const meta = [
+          date ? `<time datetime="${escape(date)}">${escape(longDate(date))}</time>` : '',
+          authors.length ? `<span>${escape(authors.join(', '))}</span>` : '',
+          p.tags.length
+            ? `<span class="post-tags">${p.tags.map((t) => `#${escape(t)}`).join(' ')}</span>`
+            : '',
+        ]
+          .filter(Boolean)
+          .join('<span aria-hidden="true"> · </span>');
+        const summary = excerptOf(p, 260);
+        return `<article class="post"><h3><a href="${escape(ctx.pageHref(p))}">${escape(p.title)}</a></h3>${meta ? `<p class="post-meta">${meta}</p>` : ''}${summary ? `<p>${escape(summary)}</p>` : ''}<a class="post-more" href="${escape(ctx.pageHref(p))}">Continue reading</a></article>`;
+      })
+      .join('')}</div>`;
   const excerpt = (p: Page) =>
     escape(
       p.body

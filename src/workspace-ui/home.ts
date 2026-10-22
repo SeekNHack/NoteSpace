@@ -27,6 +27,11 @@ export function quickCreateItems(): MenuItem[] {
     { label: 'Wiki page', icon: 'file', run: () => post({ type: 'command', name: 'newPage' }) },
     { label: 'Note', icon: 'edit', run: () => post({ type: 'command', name: 'newNote' }) },
     { label: 'Folder', icon: 'folder', run: () => post({ type: 'command', name: 'newSection' }) },
+    {
+      label: 'Blog post',
+      icon: 'edit',
+      run: () => post({ type: 'command', name: 'newBlogPost' }),
+    },
     { label: 'Task', icon: 'task', run: () => focusQuickAdd() },
     { label: 'Kanban board', icon: 'layout', run: () => createBoardDialog() },
     {

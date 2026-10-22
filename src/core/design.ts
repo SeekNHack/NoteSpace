@@ -286,4 +286,14 @@ ${calloutCss}
 .doc ol.code-annotations{margin:-.4em 0 1em;padding:.5em 1em .5em 2.6em;border:1px solid var(--ws-hairline);border-top:0;border-radius:0 0 8px 8px;font-size:.9em;color:var(--ws-muted)}
 .doc ol.code-annotations li:target{color:var(--ws-fg)}
 .annotation-popover{position:absolute;z-index:50;padding:10px 12px;border:1px solid var(--ws-menu-border);border-radius:8px;background:var(--ws-menu-bg);color:var(--ws-menu-fg);box-shadow:var(--ws-shadow);font-size:13px;line-height:1.5}
-.annotation-popover>:first-child{margin-top:0}.annotation-popover>:last-child{margin-bottom:0}`;
+.annotation-popover>:first-child{margin-top:0}.annotation-popover>:last-child{margin-bottom:0}
+.doc .collection-posts{display:grid;gap:4px}
+.doc .post{padding:1em 0;border-bottom:1px solid var(--ws-hairline)}
+.doc .post:last-child{border-bottom:0}
+.doc .post h3{margin:0 0 .2em;font-size:1.25em}
+.doc .post h3 a{color:var(--ws-fg);text-decoration:none}.doc .post h3 a:hover{color:var(--ws-accent)}
+.doc .post-meta{margin:0 0 .5em;font-size:.85em;color:var(--ws-muted)}
+.doc .post p{margin:.4em 0}
+.doc .post-more{font-size:.9em;font-weight:600;text-decoration:none}
+:is(.doc,.site-nav) .status-badge{display:inline-block;padding:0 .55em;border-radius:999px;font-size:.72em;font-weight:650;vertical-align:.15em;color:var(--ws-fg);background:color-mix(in srgb,var(--tone,var(--ws-muted)) 18%,transparent);border:1px solid color-mix(in srgb,var(--tone,var(--ws-muted)) 45%,transparent)}
+:is(.doc,.site-nav) .status-new{--tone:var(--ws-green)}:is(.doc,.site-nav) .status-updated{--tone:var(--ws-blue)}:is(.doc,.site-nav) .status-beta{--tone:var(--ws-purple)}:is(.doc,.site-nav) .status-deprecated{--tone:var(--ws-red)}:is(.doc,.site-nav) .status-draft{--tone:var(--ws-orange)}`;

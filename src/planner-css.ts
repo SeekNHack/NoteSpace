@@ -407,6 +407,8 @@ tbody tr{cursor:pointer}tbody tr:hover{background:var(--ws-hover)}
 .wiki-preview p{margin:6px 0 0}
 .wiki-preview .preview-path,.wiki-preview .preview-tags{font-size:11.5px;color:var(--ws-muted);margin-top:2px}
 .discover{display:flex;flex-wrap:wrap;gap:8px}
+.wiki-announcement{margin:0 0 16px;padding:8px 14px;border-radius:8px;font-size:13px;background:color-mix(in srgb,var(--brand,var(--ws-accent)) 14%,transparent);border:1px solid color-mix(in srgb,var(--brand,var(--ws-accent)) 35%,transparent)}
+.wiki-announcement a{color:inherit;font-weight:600}
 /* Find (/) */
 .finder-back{align-items:flex-start!important;padding-top:12vh}
 .finder{width:min(620px,calc(100vw - 32px));background:var(--ws-menu-bg,var(--ws-bg));border:1px solid var(--ws-menu-border,var(--ws-border));border-radius:var(--ws-r3);box-shadow:var(--ws-shadow);overflow:hidden}

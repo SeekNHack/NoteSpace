@@ -691,9 +691,17 @@ function content(): HTMLElement {
   const style = [p.font ? `--ws-font:${p.font}` : '', p.width ? `--ws-doc-width:${p.width}` : '']
     .filter(Boolean)
     .join(';');
+  const notice = S().workspace.announcement
+    ? h('div', { class: 'wiki-announcement', role: 'note' })
+    : undefined;
+  if (notice) {
+    notice.innerHTML = S().workspace.announcement!;
+    notice.addEventListener('click', onArticleClick);
+  }
   return h(
     'div',
     { class: 'wiki-content', style: style || undefined },
+    notice,
     head,
     article,
     updated,

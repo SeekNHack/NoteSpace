@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import MarkdownIt from 'markdown-it';
 import { randomBytes } from 'node:crypto';
 import { WikiRoot, WikiWorkspace } from './workspace';
 import { PlannerService } from './planner';
@@ -556,6 +557,12 @@ export class PlannerPanel implements vscode.Disposable {
         description: root.config?.wiki.description || '',
         icon: root.config?.wiki.icon,
         color: root.config?.wiki.color,
+        // The site's announcement, also shown above Wiki pages (inline Markdown, no HTML).
+        announcement: root.config?.wiki.announcement
+          ? new MarkdownIt({ html: false, linkify: true }).renderInline(
+              root.config.wiki.announcement,
+            )
+          : undefined,
         homepage: pages.some((p) => p.path === homepage) ? homepage : undefined,
         boardsFolder: vscode.workspace
           .getConfiguration('notespace', root.folder.uri)
@@ -1231,6 +1238,7 @@ export class PlannerPanel implements vscode.Disposable {
           'newNote',
           'newSection',
           'newFromTemplate',
+          'newBlogPost',
           'dailyNote',
           'contentHealth',
           'graph',
@@ -1238,7 +1246,9 @@ export class PlannerPanel implements vscode.Disposable {
           'apiClient',
         ];
         const name = str(m.name, 40);
-        if (name && allowed.includes(name))
+        if (name === 'newBlogPost')
+          await vscode.commands.executeCommand('notespace.newBlogPost', root?.id);
+        else if (name && allowed.includes(name))
           await vscode.commands.executeCommand(`notespace.${name}`);
         return;
       }
