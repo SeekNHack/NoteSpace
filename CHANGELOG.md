@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- **Previous / Next links only where you want them** — pages no longer end with Previous / Next boxes unless their front matter says `pager: true`. **Toggle Previous / Next Links on This Page** (Command Palette) or **Previous / Next Links** in a page's menu in the Wiki adds or removes it; the Wiki, the Reader and the exported site follow the same setting.
+- **Boards page** — each board is a larger card with its columns as a colored progress bar, the count per column and the share done; the Status board has its own color, and **New board** is a tile in the grid instead of a second box under it.
+
 ## 1.1.0 — 2026-10-22
 
 - **A documentation-site look** — the tab's header shows the wiki's name, icon and color (`wiki.color`) with a search box, the sections as underlined tabs and a section's pages below them. Wiki pages read like a docs site: navigation with expandable sections on the left, breadcrumbs and Edit / Reader icons above the title, an outline that follows the heading being read, "Last updated", backlinks and previous/next cards at the end. Insights cards and numbers are larger and easier to scan.

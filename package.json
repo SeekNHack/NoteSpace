@@ -215,6 +215,12 @@
         "icon": "$(settings-gear)"
       },
       {
+        "command": "notespace.togglePager",
+        "title": "Toggle Previous / Next Links on This Page",
+        "category": "NoteSpace",
+        "icon": "$(arrow-right)"
+      },
+      {
         "command": "notespace.validate",
         "title": "Validate Wiki",
         "category": "NoteSpace",

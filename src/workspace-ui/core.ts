@@ -92,10 +92,13 @@ export interface NavNode {
   status?: string;
   icon?: string;
   tags?: string[];
+  /** Front matter `pager: true`: previous / next links under the page. */
+  pager?: boolean;
   children?: NavNode[];
 }
 export interface WikiPageDto {
   id: string;
+  pager?: boolean;
   uri: string;
   path: string;
   title: string;

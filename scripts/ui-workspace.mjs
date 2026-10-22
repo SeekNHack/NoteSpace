@@ -276,8 +276,17 @@ try {
   );
   await page.locator('.tab', { hasText: 'NoteSpace' }).first().click();
   f = await panel();
-  await f.locator('.nav [aria-label=Create]').click();
-  await f.locator('.menu .item', { hasText: 'Page from template' }).click();
+  // The webview takes focus a moment after the tab click, and focus changes close open menus.
+  await poll(async () => {
+    await f.locator('.nav [aria-label=Create]').click();
+    return f
+      .locator('.menu .item', { hasText: 'Page from template' })
+      .click({ timeout: 2000 })
+      .then(
+        () => true,
+        () => false,
+      );
+  }, 'Create menu');
   await f.locator('.template-item', { hasText: 'Project' }).click();
   assert.match(await f.locator('.template-preview').innerText(), /Goals/);
   await f.locator('.modal input.field').fill('Roadmap');

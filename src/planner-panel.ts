@@ -21,7 +21,7 @@ import { contentHealth } from './core/quality';
 import { plannerCss } from './planner-css';
 import { WikiActivity } from './activity';
 import { namedPage, posix } from './core/paths';
-import { navOrder, navTree, pageIcon, pageStatus } from './core/nav-tree';
+import { navOrder, navTree, pageIcon, pageShowsPager, pageStatus } from './core/nav-tree';
 import { excerptOf, linkMention, unlinkedMentions } from './core/mentions';
 import { propertyValue, PropertyType, typedProperties, validPropertyKey } from './core/properties';
 import { withFrontMatter } from './core/frontmatter';
@@ -757,6 +757,7 @@ export class PlannerPanel implements vscode.Disposable {
         draft: page.draft,
         status: pageStatus(page),
         icon: pageIcon(page),
+        pager: pageShowsPager(page),
         cover,
         description: page.description,
         properties: typedProperties(page.text),

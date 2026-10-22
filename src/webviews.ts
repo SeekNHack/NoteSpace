@@ -9,6 +9,7 @@ import { showPage } from './views';
 import { resolveImage, resolveAttachment, resolveMedia } from './assets';
 import { renderDiagrams } from './diagrams';
 import { readerInteractions } from './core/reader-interactions';
+import { pageShowsPager } from './core/nav-tree';
 import { WikiActivity } from './activity';
 import { pageWithIncludes } from './core/includes';
 import { icon, IconName } from './core/icons';
@@ -879,7 +880,9 @@ export class WikiPanels implements vscode.Disposable {
                       `<li class="toc-${h.level}"><a href="#${escapeHtml(h.slug)}">${escapeHtml(h.text)}</a></li>`,
                   )
                   .join('')}</ul></aside>`;
-          const pager = `<nav class="reader-pager" aria-label="Pages">${ix > 0 ? `<a href="${escapeHtml(href(pages[ix - 1]))}"><small>Previous</small>${escapeHtml(pages[ix - 1].title)}</a>` : ''}${ix >= 0 && ix < pages.length - 1 ? `<a class="next" href="${escapeHtml(href(pages[ix + 1]))}"><small>Next</small>${escapeHtml(pages[ix + 1].title)}</a>` : ''}</nav>`;
+          const pager = !pageShowsPager(page)
+            ? ''
+            : `<nav class="reader-pager" aria-label="Pages">${ix > 0 ? `<a href="${escapeHtml(href(pages[ix - 1]))}"><small>Previous</small>${escapeHtml(pages[ix - 1].title)}</a>` : ''}${ix >= 0 && ix < pages.length - 1 ? `<a class="next" href="${escapeHtml(href(pages[ix + 1]))}"><small>Next</small>${escapeHtml(pages[ix + 1].title)}</a>` : ''}</nav>`;
           let switchers = '',
             banner = '',
             language = root.config?.wiki.language;

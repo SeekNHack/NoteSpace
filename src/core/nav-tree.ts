@@ -32,6 +32,11 @@ export const pageIcon = (p: { properties?: Record<string, string> }): string | u
   if (/^[a-z][a-zA-Z0-9-]{0,39}$/.test(value)) return value;
   return [...value].length <= 4 && !/[\w\s<>&"']/.test(value) ? value : undefined;
 };
+/** Previous / next links under the page: only where its front matter says `pager: true`. */
+export const pageShowsPager = (p: { properties?: Record<string, unknown> }): boolean =>
+  String(p.properties?.pager ?? '')
+    .trim()
+    .toLowerCase() === 'true';
 export interface NavNode {
   kind: 'page' | 'section' | 'file';
   title: string;
@@ -45,6 +50,7 @@ export interface NavNode {
   status?: PageStatus;
   icon?: string;
   tags?: string[];
+  pager?: boolean;
   children?: NavNode[];
 }
 export interface NavOptions {
@@ -64,6 +70,7 @@ export function navTree(pages: NavPage[], options: NavOptions, prefix = ''): Nav
     status: pageStatus(p),
     icon: pageIcon(p),
     tags: p.tags?.length ? p.tags : undefined,
+    pager: pageShowsPager(p) || undefined,
   });
   const byPath = new Map(pages.map((p) => [p.path, p]));
   const nodes: Array<NavNode & { order?: number }> = [];

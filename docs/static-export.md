@@ -16,7 +16,7 @@ The generator uses the reader's renderer and link resolver. It writes `index.htm
 | Canvas                                                     | Static SVG preview with links to exported pages                                                                                                                          |
 | OpenAPI                                                    | Static reference (no requests, no credentials)                                                                                                                           |
 | Task views, Kanban, calendar                               | Read-only snapshots (`planner.html`: lists, a month calendar with due tasks and daily-note links, and a status board) — only with `plannerExport`                        |
-| Languages and versions                                     | Language and version switchers, `<html lang>`, navigation, pager and search scoped to the page's language and version; the index lists language and version entry points |
+| Languages and versions                                     | Language and version switchers, `<html lang>`, navigation, pager (on pages with `pager: true`) and search scoped to the page's language and version; the index lists language and version entry points |
 
 Pages also show their cover image, status badge and tags; `tags.html` lists every tag with its pages, and the navigation shows page icons and statuses. `wiki.announcement` appears as a bar above every page. Each page has a description (`description:` or its first paragraph) for search engines and share previews (Open Graph); with `build.url` set, pages also get canonical links and the cover becomes the preview image.
 

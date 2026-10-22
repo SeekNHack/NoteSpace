@@ -9,7 +9,7 @@ import { renderDiagrams } from './diagrams';
 import { resolveAttachment, resolveImage } from './assets';
 import MarkdownIt from 'markdown-it';
 import { icon, iconPaths, IconName } from './core/icons';
-import { pageIcon, pageStatus } from './core/nav-tree';
+import { pageIcon, pageShowsPager, pageStatus } from './core/nav-tree';
 import { excerptOf } from './core/mentions';
 import { pageWithIncludes } from './core/includes';
 import { readerInteractions } from './core/reader-interactions';
@@ -346,7 +346,9 @@ export async function exportWiki(
           ? ''
           : `<aside class="site-toc"><strong>On this page</strong><ul>${page.headings.map((h) => `<li><a href="#${escapeHtml(h.slug)}">${escapeHtml(h.text)}</a></li>`).join('')}</ul></aside>`;
       const ix = scoped.findIndex((p) => p.id === page.id);
-      const pager = `<nav class="site-pager">${ix > 0 ? `<a href="${escapeHtml(href(scoped[ix - 1]))}">← ${escapeHtml(scoped[ix - 1].title)}</a>` : '<span></span>'}${ix < scoped.length - 1 ? `<a href="${escapeHtml(href(scoped[ix + 1]))}">${escapeHtml(scoped[ix + 1].title)} →</a>` : ''}</nav>`;
+      const pager = !pageShowsPager(page)
+        ? ''
+        : `<nav class="site-pager">${ix > 0 ? `<a href="${escapeHtml(href(scoped[ix - 1]))}">← ${escapeHtml(scoped[ix - 1].title)}</a>` : '<span></span>'}${ix < scoped.length - 1 ? `<a href="${escapeHtml(href(scoped[ix + 1]))}">${escapeHtml(scoped[ix + 1].title)} →</a>` : ''}</nav>`;
       const breadcrumbs =
         root.config?.features.breadcrumbs === false
           ? ''

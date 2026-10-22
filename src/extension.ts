@@ -16,6 +16,8 @@ import {
   uriPath,
 } from './core/paths';
 import { Page } from './core/model';
+import { withFrontMatter } from './core/frontmatter';
+import { pageShowsPager } from './core/nav-tree';
 import { exportWiki } from './export';
 import { createConfig, defaultConfig, parseConfig, updateConfig, WikiConfig } from './core/config';
 import { VisualEditorProvider, caretContext } from './visual';
@@ -1090,6 +1092,26 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
       await editor.edit((edit) => edit.replace(editor.selection, markdown));
     else await vscode.env.clipboard.writeText(markdown);
   });
+  command('togglePager', async (node?: PageNode) => {
+    const page = getPage(node);
+    const on = !pageShowsPager(page);
+    const doc = await vscode.workspace.openTextDocument(vscode.Uri.parse(page.uri));
+    const text = withFrontMatter(doc.getText(), { pager: on ? true : null });
+    const edit = new vscode.WorkspaceEdit();
+    edit.replace(
+      doc.uri,
+      new vscode.Range(doc.positionAt(0), doc.positionAt(doc.getText().length)),
+      text,
+    );
+    if (!(await vscode.workspace.applyEdit(edit))) throw new Error('Could not update the page.');
+    await doc.save();
+    void vscode.window.setStatusBarMessage(
+      on
+        ? `Previous / next links added to ${page.title}`
+        : `Previous / next links removed from ${page.title}`,
+      3000,
+    );
+  });
   command('pageProperties', async (node?: PageNode) => {
     const page = getPage(node);
     const doc = await vscode.workspace.openTextDocument(vscode.Uri.parse(page.uri));
@@ -1866,7 +1888,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
       source.text,
     );
     if (answer === undefined) return;
-    const { withFrontMatter } = await import('./core/frontmatter');
     const { contentHash } = await import('./core/scopes');
     const text = withFrontMatter(unwrap(answer), { translated_from: contentHash(source.body) });
     if (existing) {

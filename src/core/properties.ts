@@ -12,6 +12,8 @@ export interface Property {
 const frontMatter = /^(?:﻿)?---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/;
 /** Keys the page itself manages (shown elsewhere or internal). */
 const hidden = new Set(['title', 'translated_from']);
+/** Keys with their own control (the page menu's Previous / Next Links), not shown as properties. */
+const shownElsewhere = new Set(['pager']);
 const date = /^\d{4}-\d{2}-\d{2}$/;
 
 /** A page's front matter as typed properties, in file order; objects are left out. */
@@ -24,7 +26,7 @@ export function typedProperties(text: string): Property[] {
   if (!data || typeof data !== 'object' || Array.isArray(data)) return [];
   const out: Property[] = [];
   for (const [key, raw] of Object.entries(data as Record<string, unknown>)) {
-    if (hidden.has(key)) continue;
+    if (hidden.has(key) || shownElsewhere.has(key)) continue;
     if (Array.isArray(raw)) {
       if (raw.every((v) => ['string', 'number', 'boolean'].includes(typeof v)))
         out.push({ key, type: 'list', value: raw.map(String) });

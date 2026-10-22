@@ -55,6 +55,7 @@ order: 1
 icon: download # an icon name (rocket, book, globe, download…) or an emoji
 status: new # new, updated, beta, deprecated or draft: a badge in the navigation
 cover: ../assets/images/install.png # a banner above the title in the Wiki
+pager: true # Previous / Next links at the end of this page (off unless set)
 draft: false
 tags: [guide]
 translated_from: 8c3f0a1b2d4e5f60 # set on translations by Create Translation

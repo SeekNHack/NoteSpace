@@ -187,6 +187,20 @@ function pageMenu(n: NavNode): MenuItem[] {
     },
     { label: 'Copy Link', icon: 'link', run: () => action('copyLink', { uri }) },
     { label: 'Properties…', icon: 'sliders', run: () => action('pageProperties', { uri }) },
+    {
+      label: 'Previous / Next Links',
+      icon: 'arrowRight',
+      checked: !!n.pager,
+      run: () =>
+        post({
+          type: 'wikiProperty',
+          uri,
+          key: 'pager',
+          propertyType: 'checkbox',
+          value: true,
+          remove: !!n.pager,
+        }),
+    },
     { label: 'History', icon: 'clock', run: () => action('pageHistory', { uri }) },
     { separator: true, label: '' },
     { label: 'Rename…', icon: 'edit', run: () => action('renamePage', { uri }) },
@@ -634,12 +648,15 @@ function content(): HTMLElement {
     b.addEventListener('click', () => openWikiPage({ id: n.id }));
     return b;
   };
-  const pager = h(
-    'nav',
-    { class: 'wiki-pager', 'aria-label': 'Previous and next page' },
-    ix > 0 ? pagerLink(order[ix - 1], 'Previous', 'prev') : undefined,
-    ix >= 0 && ix < order.length - 1 ? pagerLink(order[ix + 1], 'Next', 'next') : undefined,
-  );
+  // Only pages that ask for them (front matter `pager: true`) end with previous / next links.
+  const pager = !p.pager
+    ? undefined
+    : h(
+        'nav',
+        { class: 'wiki-pager', 'aria-label': 'Previous and next page' },
+        ix > 0 ? pagerLink(order[ix - 1], 'Previous', 'prev') : undefined,
+        ix >= 0 && ix < order.length - 1 ? pagerLink(order[ix + 1], 'Next', 'next') : undefined,
+      );
   const updated = p.modified
     ? h(
         'p',

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { parsePage } from '../../core/markdown';
 import { createConfig, defaultConfig, parseConfig } from '../../core/config';
 import { postDate, renderCollection } from '../../core/collections';
+import { navTree, pageShowsPager } from '../../core/nav-tree';
 
 const page = (file: string, text: string) => parsePage('root', file, `file:///wiki/${file}`, text);
 
@@ -60,4 +61,20 @@ test('posts are listed newest first with date, authors, tags and a summary', () 
     showTasks: true,
   });
   assert.ok(byTitle.indexOf('Hello') < byTitle.indexOf('Old'));
+});
+
+test('previous / next links are shown only on pages with pager: true', () => {
+  assert.equal(pageShowsPager(page('a.md', '---\npager: true\n---\n# A\n')), true);
+  assert.equal(pageShowsPager(page('b.md', '# B\n')), false);
+  assert.equal(pageShowsPager(page('c.md', '---\npager: false\n---\n# C\n')), false);
+  const tree = navTree([page('a.md', '---\npager: true\n---\n# A\n'), page('b.md', '# B\n')], {
+    sort: 'filename',
+  });
+  assert.deepEqual(
+    tree.map((n) => [n.title, n.pager]),
+    [
+      ['A', true],
+      ['B', undefined],
+    ],
+  );
 });

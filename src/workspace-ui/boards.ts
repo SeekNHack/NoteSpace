@@ -254,30 +254,80 @@ function boardMenu(board: AnyBoard): MenuItem[] {
 // ---------------------------------------------------------------------------------------------
 // Boards overview
 // ---------------------------------------------------------------------------------------------
+/** How many of the board's tasks sit in each column, in column order. */
+function columnCounts(board: AnyBoard) {
+  const counts = new Map(board.columns.map((c) => [c.id, 0]));
+  for (const task of S().tasks) {
+    if (board.id !== 'status' && !(board.id in task.boards)) continue;
+    const column = columnOfTask(task, board);
+    if (column !== undefined && counts.has(column)) counts.set(column, counts.get(column)! + 1);
+  }
+  return board.columns.map((column) => ({ column, count: counts.get(column.id)! }));
+}
+
 export function boardCard(
   board: BoardDto | (AnyBoard & { count: number; open?: number; inProgress?: number }),
 ): HTMLElement {
   const pinned = P().pinned.includes(board.id);
+  const columns = columnCounts(board);
+  const total = columns.reduce((sum, c) => sum + c.count, 0);
+  const done = columns.filter((c) => c.column.completed).reduce((sum, c) => sum + c.count, 0);
+  const bar = h('div', {
+    class: 'board-card-bar',
+    role: 'img',
+    'aria-label': columns.map((c) => `${c.count} ${c.column.title}`).join(', '),
+  });
+  for (const { column, count } of columns)
+    if (count)
+      bar.append(
+        h('span', {
+          style: `flex:${count};background:${columnColor(column)}`,
+          title: `${count} ${column.title}`,
+        }),
+      );
   const card = h(
     'article',
     {
       class: `board-card${board.archived ? ' archived' : ''}`,
-      style: `--c:var(--bc-${board.color || 'gray'})`,
+      style: `--c:var(--bc-${board.color || (board.id === 'status' ? 'blue' : 'gray')})`,
       'data-board': board.id,
     },
     h(
       'div',
       { class: 'board-card-head' },
-      h('span', { class: 'board-icon' }, svg(iconOf(board.icon), 16)),
-      h('h3', {}, h('a', { href: '#', class: 'open', text: board.name })),
+      h('span', { class: 'board-icon' }, svg(iconOf(board.icon), 18)),
+      h(
+        'div',
+        { class: 'board-card-title' },
+        h('h3', {}, h('a', { href: '#', class: 'open', text: board.name })),
+        h('p', {
+          class: 'desc',
+          text: board.description || `${board.columns.length} columns`,
+        }),
+      ),
     ),
-    board.description ? h('p', { class: 'desc', text: board.description }) : undefined,
+    bar,
+    h(
+      'div',
+      { class: 'board-card-columns' },
+      ...(total
+        ? columns
+            .filter((c) => c.count)
+            .map(({ column, count }) =>
+              h(
+                'span',
+                {},
+                h('i', { style: `background:${columnColor(column)}` }),
+                `${count} ${column.title}`,
+              ),
+            )
+        : [h('span', { class: 'none', text: 'No tasks yet' })]),
+    ),
     h(
       'p',
       { class: 'meta' },
       `${board.count} task${board.count === 1 ? '' : 's'}`,
-      'inProgress' in board && board.inProgress ? ` · ${board.inProgress} in progress` : '',
-      'open' in board && board.open !== undefined ? ` · ${board.open} open` : '',
+      total && done ? ` · ${Math.round((done / total) * 100)}% done` : '',
     ),
   );
   const actions = h('div', { class: 'board-card-actions' });
@@ -301,6 +351,24 @@ export function boardCard(
   });
   card.addEventListener('contextmenu', (e) => menuAt(e, boardMenu(board), 'Board actions'));
   return card;
+}
+
+/** The last tile of the grid: creates a board, and explains boards while there are none. */
+function newBoardTile(explain: boolean) {
+  const tile = h(
+    'button',
+    { type: 'button', class: 'board-card board-new' },
+    h('span', { class: 'board-icon' }, svg('plus', 18)),
+    h('strong', { text: 'New board' }),
+    h('span', {
+      class: 'desc',
+      text: explain
+        ? 'For a project, a team or a routine: a Markdown file with its own columns, and tasks from any page can join it.'
+        : 'A Markdown file with its own columns',
+    }),
+  );
+  tile.addEventListener('click', () => createBoardDialog());
+  return tile;
 }
 
 export function boardsView(): HTMLElement {
@@ -332,15 +400,9 @@ export function boardsView(): HTMLElement {
       { class: 'board-grid' },
       ...active.filter((b) => !P().pinned.includes(b.id)).map(boardCard),
       boardCard(S().statusBoard),
+      newBoardTile(!active.length),
     ),
   );
-  if (!active.length)
-    wrap.append(
-      emptyState(
-        'Create a board for a project, a team or a routine. Each board is a Markdown file with its own columns; tasks from any page can join it.',
-        button('New board', () => createBoardDialog(), 'btn primary', 'plus'),
-      ),
-    );
   if (archived.length)
     wrap.append(
       h(
