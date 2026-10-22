@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.2.0 — 2026-10-22
 
 - **Previous / Next links only where you want them** — pages no longer end with Previous / Next boxes unless their front matter says `pager: true`. **Toggle Previous / Next Links on This Page** (Command Palette) or **Previous / Next Links** in a page's menu in the Wiki adds or removes it; the Wiki, the Reader and the exported site follow the same setting.
 - **Edit pages in the Wiki** — the pencil above a page now edits it in place: the visual editor (Studio) takes the page's column with its formatting bar, `/` menu and link completion, and the page tree stays beside it. **Done** saves and shows the page again (leaving the page or the Wiki saves too); the icon next to Done still opens an editor tab with Studio, Code and Split.
