@@ -2766,6 +2766,72 @@ export async function run(): Promise<void> {
       await ws.refresh();
     }
   });
+  await test('web pages are clipped, blog posts and template pages are created from commands', async () => {
+    const root = ws.roots[0];
+    const server = createServer((req, res) => {
+      if (req.url === '/article') {
+        res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+        res.end(
+          '<html><head><title>Clip Me</title><meta name="description" content="A page to clip."></head><body><article><p>The main paragraph of the clipped article, long enough to keep.</p></article></body></html>',
+        );
+      } else {
+        res.writeHead(200, { 'content-type': 'application/json' });
+        res.end('{}');
+      }
+    });
+    await new Promise<void>((r) => server.listen(0, '127.0.0.1', () => r()));
+    const port = (server.address() as { port: number }).port;
+    const window = vscode.window as unknown as Record<string, unknown>;
+    const original = { input: window.showInputBox, error: window.showErrorMessage };
+    const answers: string[] = [];
+    const errors: string[] = [];
+    window.showInputBox = async () => answers.shift();
+    window.showErrorMessage = async (message: string) => (errors.push(message), undefined);
+    const text = async (path: string) =>
+      Buffer.from(
+        await vscode.workspace.fs.readFile(vscode.Uri.joinPath(root.uri, path)),
+      ).toString();
+    try {
+      answers.push(`http://127.0.0.1:${port}/article`);
+      await vscode.commands.executeCommand('notespace.clipWebPage', root.id);
+      const clip = await text('clips/clip-me.md');
+      assert.match(
+        clip,
+        /^---\nsource: "http:\/\/127\.0\.0\.1:\d+\/article"\nsite: "127\.0\.0\.1"\nclipped: \d{4}-\d{2}-\d{2}\ntags: \[clip\]\n---\n\n# Clip Me\n\n> A page to clip\.\n\n> The main paragraph/,
+      );
+      answers.push(`http://127.0.0.1:${port}/data.json`);
+      await vscode.commands.executeCommand('notespace.clipWebPage', root.id);
+      assert.match(errors.join('\n'), /not a web page/);
+      answers.push('Launch notes');
+      await vscode.commands.executeCommand('notespace.newBlogPost', root.id);
+      const posts = ws.index.all(root.id).filter((p) => p.path.startsWith('blog/'));
+      assert.ok(posts.some((p) => p.path === 'blog/index.md'));
+      const post = posts.find((p) => /^blog\/\d{4}-\d{2}-\d{2}-launch-notes\.md$/.test(p.path));
+      assert.ok(post, posts.map((p) => p.path).join(', '));
+      assert.match(
+        post.text,
+        /^---\ndate: \d{4}-\d{2}-\d{2}\nauthors: \[\]\ntags: \[\]\n---\n\n# Launch notes/,
+      );
+      // A template by name and a title, as the template gallery and template buttons pass them.
+      await vscode.commands.executeCommand(
+        'notespace.newFromTemplate',
+        { label: '', root: root.id, prefix: 'clips/' },
+        'meeting',
+        'Weekly sync',
+      );
+      assert.match(
+        await text('clips/weekly-sync.md'),
+        /^# Weekly sync\n\nDate: \d{4}-\d{2}-\d{2}\n\n## Attendees/,
+      );
+      for (const path of ['clips', 'blog'])
+        await vscode.workspace.fs.delete(vscode.Uri.joinPath(root.uri, path), { recursive: true });
+      await ws.refresh();
+    } finally {
+      window.showInputBox = original.input;
+      window.showErrorMessage = original.error;
+      server.close();
+    }
+  });
   await test('boards embedded in pages move tasks between status columns', async () => {
     const planner = api.planner;
     const root = ws.roots[0];

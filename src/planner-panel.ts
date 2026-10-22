@@ -20,9 +20,13 @@ import {
 import { contentHealth } from './core/quality';
 import { plannerCss } from './planner-css';
 import { WikiActivity } from './activity';
-import { posix } from './core/paths';
+import { namedPage, posix } from './core/paths';
 import { navOrder, navTree, pageIcon, pageStatus } from './core/nav-tree';
 import { excerptOf, linkMention, unlinkedMentions } from './core/mentions';
+import { propertyValue, PropertyType, typedProperties, validPropertyKey } from './core/properties';
+import { withFrontMatter } from './core/frontmatter';
+import { listTemplates } from './template-files';
+import { fillTemplate } from './templates';
 import { defaultAcronyms, DirectorySort, isFolderIndex } from './core/titles';
 import { escapeHtml, pageCss, safeExternal } from './core/render';
 import { fonts, resolveAppearance, widths } from './core/themes';
@@ -641,6 +645,56 @@ export class PlannerPanel implements vscode.Disposable {
         .find(Boolean)
     );
   }
+  /** Rewrites a page's text with an edit of the whole document, then saves it. */
+  private async editText(uri: string, change: (text: string) => string): Promise<void> {
+    const target = vscode.Uri.parse(uri);
+    const document = await vscode.workspace.openTextDocument(target);
+    const text = document.getText();
+    const next = change(text);
+    if (next === text) return;
+    const edit = new vscode.WorkspaceEdit();
+    edit.replace(
+      target,
+      new vscode.Range(document.positionAt(0), document.positionAt(text.length)),
+      next,
+    );
+    if (!(await vscode.workspace.applyEdit(edit)))
+      throw new Error('VS Code could not edit the page.');
+    await document.save();
+    await this.workspace.refresh();
+  }
+  /** The pages of a folder as database rows: their typed properties, icon, status and cover. */
+  private async sendDatabase(prefix: string): Promise<void> {
+    const panel = this.panel;
+    const root = this.root();
+    if (!panel || !root) return;
+    const rows = [];
+    for (const page of this.wikiPages(root)) {
+      if (!page.path.startsWith(prefix)) continue;
+      const rest = page.path.slice(prefix.length);
+      if (rest.includes('/') || isFolderIndex(page.path)) continue;
+      const coverTarget = page.properties?.cover || page.properties?.image;
+      let cover: string | undefined;
+      if (coverTarget && !/^[a-z][a-z0-9+.-]*:/i.test(coverTarget)) {
+        const uri = await resolveImage(this.workspace, root, page, coverTarget);
+        if (uri) cover = panel.webview.asWebviewUri(uri).toString();
+      }
+      rows.push({
+        id: page.id,
+        uri: page.uri,
+        path: page.path,
+        title: page.title,
+        icon: pageIcon(page),
+        status: pageStatus(page),
+        cover,
+        excerpt: excerptOf(page, 140),
+        modified: this.workspace.modifiedAt(page.uri),
+        properties: typedProperties(page.text),
+      });
+    }
+    if (this.panel === panel)
+      void panel.webview.postMessage({ type: 'wikiDatabase', prefix, rows });
+  }
   /** Renders the current wiki page into the panel when it (or the page) changed. */
   private async sendWikiPage(anchor?: string, force = false): Promise<void> {
     const panel = this.panel;
@@ -705,6 +759,7 @@ export class PlannerPanel implements vscode.Disposable {
         icon: pageIcon(page),
         cover,
         description: page.description,
+        properties: typedProperties(page.text),
         mentions,
         modified: this.workspace.modifiedAt(page.uri),
         headings:
@@ -752,6 +807,93 @@ export class PlannerPanel implements vscode.Disposable {
             icon: pageIcon(page),
             tags: page.tags,
           });
+        return;
+      }
+      case 'wikiProperty': {
+        // A front matter property edited in the Wiki (page properties or a database cell).
+        const page = root && this.wikiPages(root).find((p) => p.uri === str(m.uri, 2000));
+        const key = str(m.key, 40) || '';
+        const type = str(m.propertyType, 12) as PropertyType;
+        if (!page || !validPropertyKey(key)) return;
+        try {
+          const value = m.remove
+            ? null
+            : propertyValue(
+                ['text', 'number', 'checkbox', 'date', 'list', 'url'].includes(type)
+                  ? type
+                  : 'text',
+                m.value,
+              );
+          await this.editText(page.uri, (text) => withFrontMatter(text, { [key]: value }));
+          if (typeof m.database === 'string') void this.sendDatabase(m.database);
+        } catch (error) {
+          void reply({
+            type: 'toast',
+            text: error instanceof Error ? error.message : String(error),
+            error: true,
+          });
+          this.post(true);
+        }
+        return;
+      }
+      case 'templates': {
+        // The template gallery: each template with a rendered preview.
+        if (!root) return;
+        const md = new MarkdownIt({ html: false, linkify: true });
+        const items = (await listTemplates(this.workspace, root)).map((t) => ({
+          label: t.label,
+          description: t.description,
+          preview: md.render(fillTemplate(t.body, 'Untitled')).slice(0, 20000),
+        }));
+        void reply({ type: 'templates', items });
+        return;
+      }
+      case 'templateCreate': {
+        // From the gallery (with a title) or a template button in a page (asks for it).
+        if (!root) return;
+        const name = str(m.name, 120);
+        const prefix = str(m.prefix, 1000);
+        if (!name) return;
+        await vscode.commands.executeCommand(
+          'notespace.newFromTemplate',
+          { label: '', root: root.id, prefix: prefix ?? '' },
+          name,
+          str(m.title, 200),
+        );
+        return;
+      }
+      case 'wikiDatabase': {
+        const prefix = str(m.prefix, 1000);
+        if (prefix !== undefined) void this.sendDatabase(prefix);
+        return;
+      }
+      case 'wikiDatabaseNew': {
+        // A new page in the database's folder, with the properties the view is filtered by.
+        const prefix = str(m.prefix, 1000) || '';
+        const title = (str(m.title, 200) || '').trim();
+        if (!root || !title) return;
+        const fields =
+          m.fields && typeof m.fields === 'object' ? (m.fields as Record<string, unknown>) : {};
+        const values: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(fields))
+          if (validPropertyKey(k) && ['string', 'number', 'boolean'].includes(typeof v))
+            values[k] = v;
+        try {
+          // A URL-safe file name in the folder; the title stays as typed.
+          const named = namedPage(`${prefix}${title.replace(/\//g, '-')}`);
+          await this.workspace.createPage(
+            root,
+            named.path,
+            withFrontMatter(`# ${title}\n`, values),
+          );
+          void this.sendDatabase(prefix);
+        } catch (error) {
+          void reply({
+            type: 'toast',
+            text: error instanceof Error ? error.message : String(error),
+            error: true,
+          });
+        }
         return;
       }
       case 'linkMention': {
@@ -1239,6 +1381,7 @@ export class PlannerPanel implements vscode.Disposable {
           'newSection',
           'newFromTemplate',
           'newBlogPost',
+          'clipWebPage',
           'dailyNote',
           'contentHealth',
           'graph',
@@ -1246,8 +1389,8 @@ export class PlannerPanel implements vscode.Disposable {
           'apiClient',
         ];
         const name = str(m.name, 40);
-        if (name === 'newBlogPost')
-          await vscode.commands.executeCommand('notespace.newBlogPost', root?.id);
+        if (name === 'newBlogPost' || name === 'clipWebPage')
+          await vscode.commands.executeCommand(`notespace.${name}`, root?.id);
         else if (name && allowed.includes(name))
           await vscode.commands.executeCommand(`notespace.${name}`);
         return;

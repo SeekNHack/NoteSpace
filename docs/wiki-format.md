@@ -64,3 +64,13 @@ translated_from: 8c3f0a1b2d4e5f60 # set on translations by Create Translation
 ```
 
 `icon`, `status` and `cover` are shown in the Wiki of the NoteSpace tab: the icon and status badge in the page tree and above the title, the cover as a banner. Tags open the tag index (**Tags** in the Wiki's page tree or Find). `order` sorts pages when navigation sort is `order`; section order can be set on its `index.md` page. `draft: true` hides a page from static export. **Edit Page Properties and Order** offers guided inputs. Legacy folders configured with `notespace.root` remain readable when no `wiki.yaml` is found.
+
+## Properties, databases, templates and clips
+
+**Properties**: the front matter of a page appears under its title in the Wiki as typed properties — text, number, checkbox (true/false), date (`YYYY-MM-DD`), list and link — read from the YAML values. Click a value to edit it, **Add property** adds one, the trash button removes it. Edits change only that YAML key; comments and the rest of the file stay as they are.
+
+**Databases**: a folder's pages can be shown as a database — **Database** on the folder's page or **Open as Database** in the page tree's folder menu. Every property used in the folder is a column. **Table** edits cells in place and sorts by any column; **Gallery** shows cards with each page's `cover:`; **Board** groups pages by a text, list or checkbox property (`status` by default) and moving a card writes the new value. **New page** creates a page in the folder. The view, sort, grouping and filter are remembered per folder; nothing is stored besides the pages.
+
+**Templates**: _Page from template_ (Create menu) opens a gallery of the built-in templates and the wiki's `.templates/*.md` with a preview. In a page, `[New meeting](template:Meeting)` is a button that creates a page from that template in the page's folder (in the Reader and the Wiki; exported sites show the label only).
+
+**Web clips**: **NoteSpace: Clip a Web Page…** (or _Clip a web page_ in the Create menu) downloads a page once (up to 3 MB, 15 seconds) and saves `clips/<title>.md` with the source, site, author and date in the front matter, the summary and first paragraphs as quotes, a link to the original and a Notes section. Scripts and images are never kept.

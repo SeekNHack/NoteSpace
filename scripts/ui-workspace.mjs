@@ -20,6 +20,11 @@ const files = {
     'schemaVersion: 1\nwiki:\n  title: Acme Docs\n  description: Product and team notes\ncontent:\n  root: docs\n  homepage: index.md\n',
   'docs/index.md':
     '# Acme Docs\n\nWelcome to the docs. Start with [[Setup]].\n\n## Overview\n\n:::tabs\n:::tab "Mac"\nUse brew.\n:::\n:::tab "Linux"\nUse apt.\n:::\n:::\n\n## More\n\n- [ ] Draft welcome\n\n```tasks\npage: this\nview: board\n```\n',
+  'docs/projects/index.md': '# Projects\n\nAll projects.\n',
+  'docs/projects/apollo.md':
+    '---\nstatus: active\nowner: Ana\npoints: 8\n---\n# Apollo\n\nGo to the moon.\n\n[New meeting](template:Meeting)\n',
+  'docs/projects/gemini.md':
+    '---\nstatus: done\nowner: Bo\npoints: 5\n---\n# Gemini\n\nTwo seats.\n',
   'docs/guide/deploy.md':
     '---\nstatus: deprecated\nicon: rocket\ntags: [ops]\n---\n# Deploy\n\nFinish the setup before you ship.\n',
   'docs/guide/setup.md': `# Setup\n\n- [ ] Write install guide due:${today} priority:high #docs\n- [ ] Review API page\n- [ ] Check links\n`,
@@ -218,6 +223,74 @@ try {
     'back from the tag index',
   );
   console.log('PASS workspace: status, icons, link previews, unlinked mentions and tags');
+
+  // A folder as a database: cells edit each page's front matter; a new row is a new page.
+  await f.locator('.wiki-node.section', { hasText: 'Projects' }).locator('.wiki-link').click();
+  await f.locator('.wiki-head button', { hasText: 'Database' }).click();
+  await poll(async () => (await f.locator('.db-table tbody tr').count()) === 2, 'database rows');
+  assert.match(await f.locator('.db-table thead').innerText(), /owner[\s\S]*points[\s\S]*status/);
+  await f
+    .locator('.db-table tr', { hasText: 'Gemini' })
+    .locator('.prop-value[aria-label^="Gemini owner"]')
+    .click();
+  await f.locator('.db-table .prop-input').fill('Cy');
+  await f.locator('.db-table .prop-input').press('Enter');
+  await poll(
+    async () => /^owner: Cy$/m.test(await file('projects/gemini.md')),
+    'database cell written to the front matter',
+  );
+  await poll(
+    async () => /Cy/.test(await f.locator('.db-table tr', { hasText: 'Gemini' }).innerText()),
+    'row refreshed',
+  );
+  await axe(f, 'database');
+  await f.locator('.db-toolbar button', { hasText: 'Board' }).click();
+  assert.match(
+    await f.locator('.db-board').innerText(),
+    /active[\s\S]*Apollo[\s\S]*done[\s\S]*Gemini/,
+  );
+  await f.locator('.db-toolbar button', { hasText: 'New page' }).click();
+  await f.locator('.modal input').fill('Mercury');
+  await f.locator('.modal button[type=submit]').click();
+  await poll(async () => /# Mercury/.test(await file('projects/mercury.md')), 'new database page');
+  await f.locator('.db-toolbar button', { hasText: 'Table' }).click();
+  // Page properties under the title edit the same front matter.
+  await f.locator('.db-title', { hasText: 'Apollo' }).click();
+  await poll(
+    async () => (await f.locator('.wiki-article .wiki-props').count()) === 1,
+    'properties panel',
+  );
+  await f.locator('.wiki-props .prop-value[aria-label^="points"]').click();
+  await f.locator('.wiki-props .prop-input').fill('13');
+  await f.locator('.wiki-props .prop-input').press('Enter');
+  await poll(async () => /^points: 13$/m.test(await file('projects/apollo.md')), 'property edited');
+  // A template button in the page and the template gallery create pages from templates.
+  await f.locator('.wiki-article a.template-button', { hasText: 'New meeting' }).click();
+  const input = page.locator('.quick-input-widget input');
+  await input.waitFor();
+  await input.fill('projects/Kickoff');
+  await input.press('Enter');
+  await poll(
+    async () => /## Agenda/.test(await file('projects/kickoff.md')),
+    'page from template button',
+  );
+  await page.locator('.tab', { hasText: 'NoteSpace' }).first().click();
+  f = await panel();
+  await f.locator('.nav [aria-label=Create]').click();
+  await f.locator('.menu .item', { hasText: 'Page from template' }).click();
+  await f.locator('.template-item', { hasText: 'Project' }).click();
+  assert.match(await f.locator('.template-preview').innerText(), /Goals/);
+  await f.locator('.modal input.field').fill('Roadmap');
+  await f.locator('.modal button[type=submit]').click();
+  await poll(
+    async () => /## Goals/.test((await file('projects/roadmap.md')) || (await file('roadmap.md'))),
+    'page from the gallery',
+  );
+  // The new pages opened in editors beside the tab: close them and come back.
+  await runCommand(page, 'View: Close All Editors');
+  await runCommand(page, 'NoteSpace: Open NoteSpace');
+  f = await panel();
+  console.log('PASS workspace: databases, page properties and templates');
   await f.locator('.nav [data-nav=home]').click();
   console.log('PASS workspace: Wiki reads pages in the panel with tree, outline, Back and Forward');
   console.log('PASS workspace: API opens inside the panel and Back returns to the page');

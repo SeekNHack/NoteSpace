@@ -20,6 +20,7 @@ import type { IconName } from '../core/icons';
 import type { MenuItem } from './core';
 import { enhanceReaderBlocks } from '../reader-blocks';
 import { openDay } from './calendar';
+import { databaseView, propertiesPanel } from './database';
 import type { NavNode, WikiPageDto } from './core';
 
 let page: WikiPageDto | undefined;
@@ -81,7 +82,19 @@ export const statusBadge = (status: string | undefined) =>
 /** Shows the tag index: every tag, or the pages of one tag. */
 export function showTags(tag = '') {
   ui.wikiTags = tag;
+  ui.wikiDatabase = undefined;
   save();
+  if (store.prefs?.destination !== 'wiki') setPrefs({ destination: 'wiki' });
+  else store.render();
+  window.scrollTo(0, 0);
+}
+
+/** Shows a folder's pages as a database (table, gallery or board of their properties). */
+export function showDatabase(prefix: string) {
+  ui.wikiDatabase = prefix;
+  ui.wikiTags = undefined;
+  save();
+  if (prefix) revealPath(prefix);
   if (store.prefs?.destination !== 'wiki') setPrefs({ destination: 'wiki' });
   else store.render();
   window.scrollTo(0, 0);
@@ -109,8 +122,9 @@ export function openWikiPage(target: { path?: string; id?: string; anchor?: stri
   if (path && store.prefs) store.prefs = { ...store.prefs, destination: 'wiki', wikiPage: path };
   if (node) revealPath(node.kind === 'section' ? node.path : node.path);
   pendingAnchor = target.anchor || undefined;
-  if (ui.wikiTags !== undefined) {
+  if (ui.wikiTags !== undefined || ui.wikiDatabase !== undefined) {
     ui.wikiTags = undefined;
+    ui.wikiDatabase = undefined;
     save();
     store.render();
   }
@@ -193,6 +207,7 @@ function sectionMenu(n: NavNode): MenuItem[] {
     ...(n.id
       ? [{ label: 'Open', icon: 'preview' as const, run: () => openWikiPage({ id: n.id }) }]
       : []),
+    { label: 'Open as Database', icon: 'table', run: () => showDatabase(prefix) },
     { label: 'New Page Here…', icon: 'plus', run: () => action('newPage', { prefix }) },
     { label: 'New Folder Here…', icon: 'folder', run: () => action('newSection', { prefix }) },
     { separator: true, label: '' },
@@ -475,6 +490,14 @@ function onArticleClick(event: MouseEvent) {
     if (offset !== null)
       post({ type: 'wikiOpen', id: decodeURIComponent(id), offset: Number(offset) });
     else openWikiPage({ id: decodeURIComponent(id), anchor: params.get('anchor') || undefined });
+  } else if (href.startsWith('#template:')) {
+    // A template button: a new page from that template, in this page's folder.
+    event.preventDefault();
+    post({
+      type: 'templateCreate',
+      name: decodeURIComponent(href.slice(10)),
+      prefix: folderOf(page.path),
+    });
   } else if (href.startsWith('#date:')) {
     // A date mention opens that day in the calendar; a person, their tasks.
     event.preventDefault();
@@ -545,6 +568,11 @@ function content(): HTMLElement {
     crumbs,
     statusBadge(p.status),
     h('span', { class: 'spacer' }),
+    /(^|\/)(index|readme)\.md$/i.test(p.path)
+      ? button('Database', () => showDatabase(folderOf(p.path)), 'btn ghost small', 'table', {
+          title: 'This folder’s pages as a table, gallery or board of their properties',
+        })
+      : undefined,
     button('', () => post({ type: 'wikiReader', uri: p.uri }), 'btn ghost icon-only', 'preview', {
       'aria-label': 'Open in Reader',
       title: 'Open the page in the Reader beside (interactive blocks run there)',
@@ -691,6 +719,14 @@ function content(): HTMLElement {
   const style = [p.font ? `--ws-font:${p.font}` : '', p.width ? `--ws-doc-width:${p.width}` : '']
     .filter(Boolean)
     .join(';');
+  // Properties sit under the title, as in a database page (the article is kept across renders).
+  article.querySelector(':scope > .wiki-props-wrap')?.remove();
+  if (p.properties.length) {
+    const panel = propertiesPanel(p.uri, p.properties);
+    const title = article.querySelector(':scope > h1');
+    if (title) title.after(panel);
+    else article.prepend(panel);
+  }
   const notice = S().workspace.announcement
     ? h('div', { class: 'wiki-announcement', role: 'note' })
     : undefined;
@@ -912,6 +948,39 @@ window.addEventListener('scroll', () => {
 });
 
 export function wikiView(): HTMLElement {
+  if (ui.wikiDatabase !== undefined) {
+    const prefix = ui.wikiDatabase;
+    const section = allNodes(S().wiki.tree).find((n) => n.kind === 'section' && n.path === prefix);
+    const crumbs = h('nav', { class: 'wiki-crumbs', 'aria-label': 'Breadcrumb' });
+    const home = h('button', { type: 'button', class: 'crumb', text: S().workspace.name });
+    home.addEventListener('click', () => {
+      const first = S().wiki.tree.find((n) => n.id);
+      if (first?.id) openWikiPage({ id: first.id });
+    });
+    crumbs.append(home);
+    if (section) {
+      const link = h('button', { type: 'button', class: 'crumb', text: section.title });
+      link.addEventListener('click', () =>
+        section.id ? openWikiPage({ id: section.id }) : undefined,
+      );
+      crumbs.append(
+        svg('chevronRight', 12),
+        section.id ? link : h('span', { text: section.title }),
+      );
+    }
+    crumbs.append(svg('chevronRight', 12), h('span', { text: 'Database' }));
+    return h(
+      'div',
+      { class: `wiki wide${ui.wikiNavHidden ? ' nav-hidden' : ''}` },
+      sidebar(),
+      h(
+        'div',
+        { class: 'wiki-content db-content' },
+        h('div', { class: 'wiki-head' }, crumbs),
+        databaseView(section, prefix, (id) => openWikiPage({ id }), pageIconEl),
+      ),
+    );
+  }
   if (ui.wikiTags !== undefined)
     return h(
       'div',

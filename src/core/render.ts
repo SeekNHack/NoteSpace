@@ -89,7 +89,10 @@ export interface RenderOptions {
   dashboard?: (source: string) => string;
   /** Renders ```http blocks interactively; without it they are static request cards. */
   http?: (source: string) => string;
+  /** `[label](template:Name)` buttons create a page from a template (Reader and Wiki only). */
+  templates?: boolean;
   /** Today in the wiki's time zone: due dates read as Today, Tomorrow or overdue. */
+
   today?: string;
   /**
    * The planner key of the task written on a body line; tasks with a key get a checkbox that
@@ -275,6 +278,26 @@ export function renderPage(page: Page, index: WikiIndex, options: RenderOptions)
   md.renderer.rules.link_open = (tokens, i, opts, env, self) => {
     const token = tokens[i],
       href = token.attrGet('href') || '';
+    const template = /^template:(.{1,120})$/i.exec(href);
+    if (template) {
+      // Where pages cannot be created (exported sites) the label stays as plain text.
+      if (options.templates) {
+        token.attrSet('href', `#template:${encodeURIComponent(decodeURIComponent(template[1]))}`);
+        token.attrSet('class', 'doc-button template-button');
+        token.attrSet('title', `New page from the ${decodeURIComponent(template[1])} template`);
+        return defaultLink(tokens, i, opts, env, self);
+      }
+      token.tag = 'span';
+      token.attrs = [];
+      for (let j = i + 1, depth = 1; j < tokens.length; j++) {
+        if (tokens[j].type === 'link_open') depth++;
+        if (tokens[j].type === 'link_close' && !--depth) {
+          tokens[j].tag = 'span';
+          break;
+        }
+      }
+      return self.renderToken(tokens, i, opts);
+    }
     if (isExternal(href)) {
       if (!safeExternal(href)) token.attrSet('href', '#');
       token.attrSet('rel', 'noopener noreferrer');

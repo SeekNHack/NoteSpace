@@ -29,11 +29,14 @@ import {
   receiveWikiPage,
   revealInWiki,
   showTags,
+  showDatabase,
   namedIcon,
   toggleWikiNav,
   wikiView,
 } from './workspace-ui/wiki';
 import { openFinder } from './workspace-ui/finder';
+import { receiveTemplates } from './workspace-ui/template-gallery';
+import { receiveDatabase, requestDatabase } from './workspace-ui/database';
 import { wireTaskBoards } from './task-board-ui';
 import { wireReaderBlocks } from './reader-blocks';
 import { FrameName, setFrameDoc, showFrame, toFrame } from './workspace-ui/frames';
@@ -87,7 +90,9 @@ const here = (): Location => ({
       ? undefined
       : ui.wikiTags !== undefined
         ? `#tags:${ui.wikiTags}`
-        : P().wikiPage,
+        : ui.wikiDatabase !== undefined
+          ? `#db:${ui.wikiDatabase}`
+          : P().wikiPage,
 });
 const same = (a?: Location, b?: Location) =>
   !!a && !!b && a.destination === b.destination && a.board === b.board && a.wikiPage === b.wikiPage;
@@ -114,6 +119,8 @@ function travel(step: -1 | 1) {
   save();
   if (target.destination === 'wiki' && target.wikiPage?.startsWith('#tags:')) {
     showTags(target.wikiPage.slice(6));
+  } else if (target.destination === 'wiki' && target.wikiPage?.startsWith('#db:')) {
+    showDatabase(target.wikiPage.slice(4));
   } else if (target.destination === 'wiki' && target.wikiPage) {
     // Destination and page change together, so the move is not recorded as a new place.
     openWikiPage({ path: target.wikiPage });
@@ -335,6 +342,9 @@ window.addEventListener('message', (event) => {
     store.lastState = json;
     const previous = store.state?.tasks?.find((t) => t.key === ui.selected);
     store.state = m as State;
+    // Pages changed: a database on screen reads its rows again.
+    if (ui.wikiDatabase !== undefined && P()?.destination === 'wiki')
+      requestDatabase(ui.wikiDatabase);
     // Tasks without a ^id are keyed by their line: follow an edited task to its new key.
     if (previous && !store.state.tasks?.some((t) => t.key === ui.selected)) {
       const same = store.state.tasks?.filter(
@@ -361,6 +371,9 @@ window.addEventListener('message', (event) => {
     requestRender();
   } else if (m.type === 'wikiPage') receiveWikiPage(m.page, m.anchor);
   else if (m.type === 'wikiPreview') receivePreview(m);
+  else if (m.type === 'wikiDatabase') receiveDatabase(m.prefix, m.rows);
+  else if (m.type === 'toast') toast(String(m.text), !!m.error);
+  else if (m.type === 'templates') receiveTemplates(m.items);
   else if (m.type === 'frame') toFrame(m.frame, m.message);
   else if (m.type === 'frameDoc') setFrameDoc(m.frame, m.doc);
   else if (m.type === 'wikiReveal') revealInWiki(m.section, m.filter);

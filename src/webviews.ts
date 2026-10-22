@@ -294,6 +294,25 @@ export class WikiPanels implements vscode.Disposable {
       await vscode.commands.executeCommand('notespace.revealSection', m.root, m.prefix);
       return;
     }
+    if (
+      m.type === 'template' &&
+      typeof m.name === 'string' &&
+      m.name.length <= 120 &&
+      this.previewUri
+    ) {
+      // A template button in the page: a new page from that template beside this one.
+      const page = this.workspace.index.byUri(this.previewUri);
+      if (!page) return;
+      const folder = page.path.includes('/')
+        ? page.path.slice(0, page.path.lastIndexOf('/') + 1)
+        : '';
+      await vscode.commands.executeCommand(
+        'notespace.newFromTemplate',
+        { label: '', root: page.root, prefix: folder },
+        m.name,
+      );
+      return;
+    }
     if (m.type === 'favorite' && typeof m.id === 'string' && this.activity) {
       const page = this.workspace.index.pages.get(m.id);
       if (page) await this.activity.toggleFavorite(page);
@@ -724,6 +743,7 @@ export class WikiPanels implements vscode.Disposable {
         mediaHref: (target) => media.get(target),
         assetHref: (target) => attachments.get(target),
         codeHref: (target) => `#code:${encodeURIComponent(target)}`,
+        templates: true,
         collection: this.planner?.collection(page, (target) => href(target), true, true),
         chart: await chartRenderer(this.workspace, page, this.planner),
         notebook: await notebookRenderer(this.workspace, page),

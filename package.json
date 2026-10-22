@@ -659,6 +659,12 @@
         "icon": "$(trash)"
       },
       {
+        "command": "notespace.clipWebPage",
+        "title": "Clip a Web Page…",
+        "category": "NoteSpace",
+        "icon": "$(link-external)"
+      },
+      {
         "command": "notespace.newBlogPost",
         "title": "New Blog Post",
         "category": "NoteSpace",

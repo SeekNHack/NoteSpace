@@ -20,6 +20,7 @@ import { createBoardDialog, openBoard } from './boards';
 import { openDay, tasksOn } from './calendar';
 import { openWikiPage, randomPage, revealInWiki, showTags } from './wiki';
 import { openFinder } from './finder';
+import { openTemplateGallery } from './template-gallery';
 
 /** Quick Create: every way to start something, one menu. */
 export function quickCreateItems(): MenuItem[] {
@@ -27,6 +28,11 @@ export function quickCreateItems(): MenuItem[] {
     { label: 'Wiki page', icon: 'file', run: () => post({ type: 'command', name: 'newPage' }) },
     { label: 'Note', icon: 'edit', run: () => post({ type: 'command', name: 'newNote' }) },
     { label: 'Folder', icon: 'folder', run: () => post({ type: 'command', name: 'newSection' }) },
+    {
+      label: 'Clip a web page',
+      icon: 'link',
+      run: () => post({ type: 'command', name: 'clipWebPage' }),
+    },
     {
       label: 'Blog post',
       icon: 'edit',
@@ -42,7 +48,7 @@ export function quickCreateItems(): MenuItem[] {
     {
       label: 'Page from template',
       icon: 'template',
-      run: () => post({ type: 'command', name: 'newFromTemplate' }),
+      run: () => openTemplateGallery(),
     },
   ];
 }

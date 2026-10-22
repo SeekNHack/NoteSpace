@@ -95,6 +95,9 @@
     } else if (href.startsWith('#asset:')) {
       event.preventDefault();
       vscode.postMessage({ type: 'asset', target: decodeURIComponent(href.slice(7)) });
+    } else if (href.startsWith('#template:')) {
+      event.preventDefault();
+      vscode.postMessage({ type: 'template', name: decodeURIComponent(href.slice(10)) });
     } else if (href.startsWith('#wiki:')) {
       event.preventDefault();
       const [id, query] = href.slice(6).split('?');

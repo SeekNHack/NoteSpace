@@ -106,6 +106,12 @@ export interface WikiPageDto {
   /** The cover image (`cover:` in the front matter) as a webview URI. */
   cover?: string;
   description?: string;
+  /** The front matter as typed properties (editable under the title). */
+  properties: Array<{
+    key: string;
+    type: 'text' | 'number' | 'checkbox' | 'date' | 'list' | 'url';
+    value: string | number | boolean | string[];
+  }>;
   /** Pages that write this page's title without linking to it. */
   mentions: Array<{
     id: string;
@@ -199,6 +205,19 @@ export interface UiState {
   wikiNavHidden?: boolean;
   /** The Wiki shows the tag index (all tags, or the pages of one tag) instead of a page. */
   wikiTags?: string;
+  /** The Wiki shows a folder (by prefix) as a database instead of a page. */
+  wikiDatabase?: string;
+  /** Per-folder database view: table, gallery or board, sort, grouping and filter. */
+  dbViews?: Record<
+    string,
+    {
+      view: 'table' | 'gallery' | 'board';
+      sort?: string;
+      desc?: boolean;
+      group?: string;
+      filter?: string;
+    }
+  >;
   history?: { entries: Location[]; at: number };
   /** Saved state of the pages shown in frames (the API Client keeps its tabs in the host). */
   frames?: Record<string, unknown>;

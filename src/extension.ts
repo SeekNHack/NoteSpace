@@ -2,6 +2,8 @@ import * as vscode from 'vscode';
 import { WikiRoot, WikiWorkspace } from './workspace';
 import { PageNode, registerLanguageFeatures, showPage } from './views';
 import { WikiPanels } from './webviews';
+import { listTemplates } from './template-files';
+import { clipFromHtml, clipMarkdown } from './core/web-clip';
 import { fillTemplate, homepageTemplate, templates } from './templates';
 import {
   encodePath,
@@ -1226,6 +1228,83 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
       if (page) await openPreferred(page);
     } else await createNamedPage(root, value, templates[0].body);
   });
+  // Clip a web page: its title, summary and first paragraphs become a page in clips/.
+  command('clipWebPage', async (rootId?: string) => {
+    const root = await chooseRoot(typeof rootId === 'string' ? rootId : activePage()?.root);
+    if (!root) return;
+    const copied = (await vscode.env.clipboard.readText()).trim();
+    const url = await vscode.window.showInputBox({
+      title: 'Clip a web page',
+      prompt: 'The address of the page. NoteSpace downloads it once and keeps a summary.',
+      value: /^https?:\/\/\S+$/.test(copied) ? copied : '',
+      validateInput: (v) =>
+        /^https?:\/\/[^\s/]+\S*$/.test(v.trim()) ? undefined : 'Type an http(s) address.',
+    });
+    if (!url?.trim()) return;
+    try {
+      const clip = await vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.Notification,
+          title: 'Clipping the page…',
+          cancellable: true,
+        },
+        async (_, cancel) => {
+          const controller = new AbortController();
+          cancel.onCancellationRequested(() => controller.abort());
+          const timer = setTimeout(() => controller.abort(), 15000);
+          try {
+            const response = await fetch(url.trim(), {
+              signal: controller.signal,
+              headers: { accept: 'text/html,application/xhtml+xml' },
+              redirect: 'follow',
+            });
+            if (!response.ok) throw new Error(`The page answered ${response.status}.`);
+            if (!/html/i.test(response.headers.get('content-type') || ''))
+              throw new Error('That address is not a web page (HTML).');
+            const reader = response.body?.getReader();
+            const chunks: Uint8Array[] = [];
+            let size = 0;
+            while (reader) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              size += value.length;
+              if (size > 3 * 1024 * 1024) {
+                await reader.cancel();
+                break;
+              }
+              chunks.push(value);
+            }
+            return clipFromHtml(
+              new TextDecoder().decode(Buffer.concat(chunks)),
+              response.url || url.trim(),
+            );
+          } finally {
+            clearTimeout(timer);
+          }
+        },
+      );
+      const folder = 'clips';
+      let name =
+        slug(clip.title.replace(/\./g, '-'))
+          .replace(/-+/g, '-')
+          .replace(/^-|-$/g, '')
+          .slice(0, 60) || 'clip';
+      const taken = new Set(workspace.index.all(root.id).map((p) => p.path.toLowerCase()));
+      for (let n = 2; taken.has(`${folder}/${name}.md`); n++)
+        name = `${name.replace(/-\d+$/, '')}-${n}`;
+      const uri = await workspace.createPage(
+        root,
+        `${folder}/${name}`,
+        clipMarkdown(clip, planner.today(root)),
+      );
+      const page = workspace.index.byUri(uri.toString());
+      if (page) await openPreferred(page);
+    } catch (error) {
+      void vscode.window.showErrorMessage(
+        `Could not clip the page: ${error instanceof Error ? (error.name === 'AbortError' ? 'it took too long or was cancelled' : error.message) : String(error)}`,
+      );
+    }
+  });
   // Blog posts live in blog/ (newest first on blog/index.md, created with the first post).
   command('newBlogPost', async (rootId?: string) => {
     const root = await chooseRoot(typeof rootId === 'string' ? rootId : activePage()?.root);
@@ -1257,45 +1336,44 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
       void vscode.window.showErrorMessage(error instanceof Error ? error.message : String(error));
     }
   });
-  command('newFromTemplate', async (node?: PageNode) => {
+  // From the Command Palette both are asked; the tab's template gallery and template buttons
+  // in pages pass the template (by name) and, from the gallery, the title.
+  command('newFromTemplate', async (node?: PageNode, templateName?: string, title?: string) => {
     const active = activePage(node);
     const root = await chooseRoot(node?.root || active?.root);
     if (!root) return;
-    const custom: { label: string; description: string; body: string }[] = [];
-    const templateDir = vscode.Uri.joinPath(root.uri, '.templates');
-    try {
-      await workspace.assertNoSymlink(root, templateDir);
-      for (const [name, type] of await vscode.workspace.fs.readDirectory(templateDir)) {
-        if (type !== vscode.FileType.File || !/\.md$/i.test(name)) continue;
-        const uri = vscode.Uri.joinPath(templateDir, name);
-        if ((await vscode.workspace.fs.stat(uri)).size > 1024 * 1024) continue;
-        custom.push({
-          label: posix.basename(name, '.md'),
-          description: 'Workspace template',
-          body: new TextDecoder().decode(await vscode.workspace.fs.readFile(uri)),
-        });
-      }
-    } catch (e) {
-      if (!(e instanceof vscode.FileSystemError && e.code === 'FileNotFound'))
-        log.appendLine(`Templates: ${String(e)}`);
+    const all = await listTemplates(workspace, root, (m) => log.appendLine(m));
+    const template =
+      typeof templateName === 'string'
+        ? all.find((t) => t.label.toLocaleLowerCase() === templateName.toLocaleLowerCase())
+        : await vscode.window.showQuickPick(all, { title: 'New page from template' });
+    if (!template) {
+      if (typeof templateName === 'string')
+        void vscode.window.showWarningMessage(`There is no template named “${templateName}”.`);
+      return;
     }
-    const template = await vscode.window.showQuickPick([...templates, ...custom], {
-      title: 'New page from template',
-    });
-    if (!template) return;
     const section =
       node?.prefix !== undefined
-        ? node.prefix
+        ? node.prefix.replace(/\/$/, '')
         : active?.root === root.id
           ? posix.dirname(active.path).replace(/^\.$/, '')
           : '';
-    const name = await vscode.window.showInputBox({
-      title: `New ${template.label.toLowerCase()}`,
-      value: section ? `${section}/` : '',
-      prompt: 'Page title or section/title',
-      validateInput: (value) => validateNamedPage(root, value),
-    });
-    if (name) await createNamedPage(root, name, template.body);
+    const name =
+      typeof title === 'string' && title.trim()
+        ? `${section ? `${section}/` : ''}${title.trim().replace(/\//g, '-')}`
+        : await vscode.window.showInputBox({
+            title: `New ${template.label.toLowerCase()}`,
+            value: section ? `${section}/` : '',
+            prompt: 'Page title or section/title',
+            validateInput: (value) => validateNamedPage(root, value),
+          });
+    if (!name) return;
+    const problem = validateNamedPage(root, name);
+    if (problem) {
+      void vscode.window.showErrorMessage(problem);
+      return;
+    }
+    await createNamedPage(root, name, template.body);
   });
   /** The date of the daily note in the active tab, if any. */
   const activeJournalDate = (): string | undefined => {

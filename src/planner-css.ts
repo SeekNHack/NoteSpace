@@ -409,6 +409,62 @@ tbody tr{cursor:pointer}tbody tr:hover{background:var(--ws-hover)}
 .discover{display:flex;flex-wrap:wrap;gap:8px}
 .wiki-announcement{margin:0 0 16px;padding:8px 14px;border-radius:8px;font-size:13px;background:color-mix(in srgb,var(--brand,var(--ws-accent)) 14%,transparent);border:1px solid color-mix(in srgb,var(--brand,var(--ws-accent)) 35%,transparent)}
 .wiki-announcement a{color:inherit;font-weight:600}
+/* Page properties and folder databases */
+.wiki-props-wrap{margin:-4px 0 18px;padding:6px 0 8px;border-bottom:1px solid var(--ws-hairline)}
+.wiki-props{margin:0;display:grid;gap:1px}
+.prop-row{display:grid;grid-template-columns:minmax(110px,170px) minmax(0,1fr);align-items:center;min-height:30px}
+.prop-row dt{display:flex;align-items:center;gap:6px;color:var(--ws-muted);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prop-row dd{display:flex;align-items:center;gap:4px;margin:0;min-width:0}
+.prop-row dd>.btn{opacity:0;width:24px;height:24px}.prop-row:hover dd>.btn,.prop-row dd>.btn:focus-visible{opacity:1}
+.prop-value{display:inline-flex;align-items:center;min-height:26px;max-width:100%;padding:2px 8px;border:0;border-radius:6px;background:none;color:var(--ws-fg);cursor:text;text-align:left;font:inherit;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prop-value:hover{background:var(--ws-hover)}
+.prop-value.empty{color:var(--ws-faint)}
+.prop-input{height:28px;width:100%;max-width:320px}
+.prop-check{width:15px;height:15px;margin:0 8px;accent-color:var(--ws-accent)}
+.prop-chips{display:inline-flex;flex-wrap:wrap;gap:4px}
+.prop-chip{display:inline-block;padding:0 8px;border-radius:999px;font-size:11.5px;line-height:20px;background:var(--ws-surface-2);color:var(--ws-fg);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wiki-props-wrap>.btn{margin-top:2px;color:var(--ws-muted)}
+.wiki.wide{grid-template-columns:272px minmax(0,1fr)}.wiki.wide.nav-hidden{grid-template-columns:minmax(0,1fr)}
+.wiki-content.db-content{max-width:none}
+.db h1{display:flex;align-items:center;gap:10px;font-size:28px;font-weight:700;letter-spacing:-.02em;margin:0 0 4px}
+.db h1 .title-icon{color:var(--brand,var(--ws-accent))}
+.db>p.muted{margin:0 0 16px}
+.db-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 14px}
+.db-toolbar>.field{height:28px;max-width:200px}
+.db-toolbar .desc svg{transform:rotate(90deg)}.db-toolbar .asc svg{transform:rotate(-90deg)}
+.db-table-wrap{overflow-x:auto;border:1px solid var(--ws-hairline);border-radius:10px}
+.db-table{width:100%;border-collapse:collapse;font-size:13px}
+.db-table th{position:sticky;top:0;text-align:left;font-weight:500;color:var(--ws-muted);background:var(--ws-surface);border-bottom:1px solid var(--ws-hairline);padding:0 6px;height:34px;white-space:nowrap}
+.db-table td{border-bottom:1px solid var(--ws-hairline);padding:2px 6px;height:36px;max-width:280px}
+.db-table tr:last-child td{border-bottom:0}
+.db-table tbody tr:hover{background:var(--ws-hover)}
+.db-sort{display:inline-flex;align-items:center;gap:6px;border:0;background:none;color:inherit;cursor:pointer;font:inherit;padding:4px}
+.db-sort:hover{color:var(--ws-fg)}
+.db-title{display:inline-flex;align-items:center;gap:8px;border:0;background:none;padding:2px 4px;cursor:pointer;color:var(--ws-fg);font:inherit;font-weight:600;text-align:left;max-width:100%}
+.db-title span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.db-title:hover span{color:var(--ws-accent);text-decoration:underline}
+.db-gallery{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.db-card{border:1px solid var(--ws-hairline);border-radius:10px;overflow:hidden;background:var(--ws-surface);display:flex;flex-direction:column}
+.db-card:hover{border-color:var(--ws-accent)}
+.db-cover{display:flex;align-items:center;justify-content:center;width:100%;height:110px;object-fit:cover;background:var(--ws-surface-2);color:var(--ws-muted)}
+.db-card-body{padding:10px 12px 12px;display:grid;gap:6px;min-width:0}
+.db-card-body p{margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.db-card-props{display:flex;flex-wrap:wrap;gap:4px}
+.db-board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(240px,1fr);gap:12px;overflow-x:auto;padding-bottom:8px}
+.db-column{background:var(--ws-surface);border:1px solid var(--ws-hairline);border-radius:10px;padding:8px;min-height:120px;display:flex;flex-direction:column;gap:8px}
+.db-column.drop{outline:2px dashed var(--ws-accent);outline-offset:-2px}
+.db-column h3{display:flex;align-items:center;justify-content:space-between;margin:2px 4px;font-size:12.5px;font-weight:650}
+.db-board-card{padding:8px 10px;border:1px solid var(--ws-hairline);border-radius:8px;background:var(--ws-bg);cursor:grab;display:grid;gap:4px}
+.db-board-card:hover{border-color:var(--ws-accent)}
+.modal.wide{width:min(860px,calc(100vw - 32px));max-width:none}
+.template-gallery{display:grid;grid-template-columns:220px minmax(0,1fr);gap:12px;margin:0 0 12px;height:min(420px,55vh)}
+.template-list{display:flex;flex-direction:column;gap:4px;overflow:auto}
+.template-item{display:grid;gap:2px;padding:8px 10px;border:1px solid transparent;border-radius:8px;background:none;text-align:left;cursor:pointer;color:var(--ws-fg)}
+.template-item:hover{background:var(--ws-hover)}
+.template-item[aria-checked=true]{border-color:var(--ws-accent);background:color-mix(in srgb,var(--ws-accent) 10%,transparent)}
+.template-preview{overflow:auto;padding:12px 16px;border:1px solid var(--ws-hairline);border-radius:8px;background:var(--ws-bg);font-size:13px}
+.template-preview h1{font-size:1.5em}
+@media(max-width:640px){.template-gallery{grid-template-columns:1fr;height:auto}.template-preview{max-height:200px}}
 /* Find (/) */
 .finder-back{align-items:flex-start!important;padding-top:12vh}
 .finder{width:min(620px,calc(100vw - 32px));background:var(--ws-menu-bg,var(--ws-bg));border:1px solid var(--ws-menu-border,var(--ws-border));border-radius:var(--ws-r3);box-shadow:var(--ws-shadow);overflow:hidden}
