@@ -1,3 +1,4 @@
+import { blockAnchor } from './markdown-extras';
 import { Heading, Link, Page, Resolution, TextChange } from './model';
 import { SearchIndex, tokenize } from './search';
 import { encodePath, insidePath, isExternal, pageId, posix, slug, splitTarget } from './paths';
@@ -129,6 +130,23 @@ export class WikiIndex {
       }
     }
     if (!page) return { error: 'missing' };
+    if (anchor?.startsWith('^')) {
+      // A block reference: `[[Page#^id]]` targets the paragraph ending with `^id`.
+      const id = anchor.slice(1);
+      const at = new RegExp(`[ \\t]\\^${id.replace(/[^A-Za-z0-9-]/g, '')}[ \\t]*\\r?$`, 'm').exec(
+        page.body,
+      );
+      if (!at || !/^[A-Za-z0-9][A-Za-z0-9-]{0,31}$/.test(id)) return { page, error: 'heading' };
+      return {
+        page,
+        heading: {
+          text: `^${id}`,
+          slug: blockAnchor(id),
+          level: 0,
+          offset: page.text.length - page.body.length + at.index,
+        },
+      };
+    }
     if (anchor) {
       const heading = page.headings.find((h) => h.slug === anchor || h.slug === slug(anchor));
       if (!heading) return { page, error: 'heading' };

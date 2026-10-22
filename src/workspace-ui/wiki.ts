@@ -19,6 +19,7 @@ import { iconPaths } from '../core/icons';
 import type { IconName } from '../core/icons';
 import type { MenuItem } from './core';
 import { enhanceReaderBlocks } from '../reader-blocks';
+import { openDay } from './calendar';
 import type { NavNode, WikiPageDto } from './core';
 
 let page: WikiPageDto | undefined;
@@ -474,6 +475,15 @@ function onArticleClick(event: MouseEvent) {
     if (offset !== null)
       post({ type: 'wikiOpen', id: decodeURIComponent(id), offset: Number(offset) });
     else openWikiPage({ id: decodeURIComponent(id), anchor: params.get('anchor') || undefined });
+  } else if (href.startsWith('#date:')) {
+    // A date mention opens that day in the calendar; a person, their tasks.
+    event.preventDefault();
+    openDay(href.slice(6));
+  } else if (href.startsWith('#person:')) {
+    event.preventDefault();
+    ui.filter = { ...ui.filter, assignee: decodeURIComponent(href.slice(8)) };
+    save();
+    setPrefs({ destination: 'tasks', taskList: 'all' });
   } else if (href.startsWith('#asset:')) {
     event.preventDefault();
     post({ type: 'wikiAsset', uri: page.uri, target: decodeURIComponent(href.slice(7)) });

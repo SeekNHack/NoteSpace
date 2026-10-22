@@ -8,6 +8,15 @@ export function wireReaderBlocks(post: (message: unknown) => void) {
     'click',
     (event) => {
       const target = event.target as HTMLElement | null;
+      // Code annotations open as a popover next to their marker.
+      const marker = target?.closest?.<HTMLAnchorElement>('a.code-annotation');
+      if (marker) {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleAnnotation(marker);
+        return;
+      }
+      if (!target?.closest?.('.annotation-popover')) closeAnnotation();
       const send = target?.closest?.<HTMLButtonElement>('.http-block .http-send');
       if (send) {
         event.preventDefault();
@@ -34,7 +43,11 @@ export function wireReaderBlocks(post: (message: unknown) => void) {
       }
       const copy = target?.closest?.<HTMLButtonElement>('.copy-code');
       if (copy) {
-        const code = copy.parentElement?.querySelector('code')?.textContent || '';
+        // Annotation markers are not part of the code.
+        const element = copy.parentElement?.querySelector('code')?.cloneNode(true) as
+          HTMLElement | undefined;
+        element?.querySelectorAll('.code-annotation').forEach((a) => a.remove());
+        const code = (element?.textContent || '').replace(/[ \t]+$/gm, '');
         navigator.clipboard.writeText(code).then(
           () => {
             copy.textContent = 'Copied';
@@ -49,6 +62,7 @@ export function wireReaderBlocks(post: (message: unknown) => void) {
     true,
   );
   document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeAnnotation(true);
     const figure = (event.target as HTMLElement | null)?.closest?.('.diagram[data-diagram-zoom]');
     if (figure && (event.key === 'Enter' || event.key === ' ')) {
       event.preventDefault();
@@ -59,6 +73,33 @@ export function wireReaderBlocks(post: (message: unknown) => void) {
     const m = event.data;
     if (m?.type === 'httpResponse') showResponse(m);
   });
+}
+
+let openMarker: HTMLAnchorElement | undefined;
+function closeAnnotation(restoreFocus = false) {
+  document.querySelector('.annotation-popover')?.remove();
+  openMarker?.setAttribute('aria-expanded', 'false');
+  if (restoreFocus) openMarker?.focus();
+  openMarker = undefined;
+}
+function toggleAnnotation(marker: HTMLAnchorElement) {
+  const same = openMarker === marker;
+  closeAnnotation();
+  if (same) return;
+  const note = document.getElementById(decodeURIComponent(marker.hash.slice(1)));
+  if (!note) return;
+  const pop = document.createElement('div');
+  pop.className = 'annotation-popover';
+  pop.setAttribute('role', 'note');
+  pop.innerHTML = note.innerHTML;
+  document.body.append(pop);
+  const r = marker.getBoundingClientRect();
+  const width = Math.min(340, window.innerWidth - 24);
+  pop.style.width = `${width}px`;
+  pop.style.left = `${Math.max(12, Math.min(r.left - 12, window.innerWidth - width - 12)) + window.scrollX}px`;
+  pop.style.top = `${r.bottom + 6 + window.scrollY}px`;
+  marker.setAttribute('aria-expanded', 'true');
+  openMarker = marker;
 }
 
 /** Makes the zoomable diagrams of a page focusable (call after inserting a page). */
