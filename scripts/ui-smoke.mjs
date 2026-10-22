@@ -319,6 +319,7 @@ try {
         return frame;
   }, 'graph opens the page in the Wiki');
   await wikiPanel.locator('.wiki-head [aria-label="Edit this page"]').click();
+  await wikiPanel.locator('.wiki-editing [aria-label="Open in an editor tab"]').click();
   await poll(
     async () => (await page.locator('.tab.active', { hasText: 'Guide.md' }).count()) > 0,
     'Edit opens the page',

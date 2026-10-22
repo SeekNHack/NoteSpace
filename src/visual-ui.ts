@@ -39,7 +39,22 @@ interface Context {
   mode: 'studio' | 'split';
   runners?: Record<string, string>;
 }
-const vscode = acquireVsCodeApi();
+// Inside the NoteSpace tab's Wiki the editor runs in a same-origin frame and talks through the
+// panel's bridge; in its own editor tab it owns the VS Code API.
+type Bridge = ReturnType<typeof acquireVsCodeApi>;
+const bridge = (() => {
+  try {
+    const name = (window.frameElement as HTMLElement | null)?.dataset.frame;
+    return name
+      ? (window.parent as unknown as { notespaceBridge?: (n: string) => Bridge }).notespaceBridge?.(
+          name,
+        )
+      : undefined;
+  } catch {
+    return undefined;
+  }
+})();
+const vscode = bridge || acquireVsCodeApi();
 const viewState: ViewState = vscode.getState() || {};
 const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
 const mod = isMac ? '⌘' : 'Ctrl+';

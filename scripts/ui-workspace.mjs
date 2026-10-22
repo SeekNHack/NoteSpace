@@ -177,13 +177,31 @@ try {
     async () => /Write install guide/.test(await f.locator('.wiki-article').innerText()),
     'forward to setup',
   );
+  // Edit edits the page in place: the Studio editor in the page's column, saved with Done.
   await f.locator('.wiki-head [aria-label="Edit this page"]').click();
+  const editor = f.frameLocator('iframe[data-frame=editor]');
+  await editor.locator('[contenteditable=true]').first().waitFor({ timeout: 20000 });
+  await editor.locator('h1').first().click();
+  await page.keyboard.press('End');
+  await page.keyboard.type(' guide');
+  await f.locator('.wiki-editing button', { hasText: 'Done' }).click();
   await poll(
-    async () => (await page.locator('.tab.active', { hasText: /setup/i }).count()) > 0,
-    'edit opens the page',
+    async () => /^# Setup guide$/m.test(await file('guide/setup.md')),
+    'edited in the Wiki',
   );
-  await page.locator('.tab', { hasText: 'NoteSpace' }).first().click();
-  f = await panel();
+  await f.locator('.wiki-article h1', { hasText: 'Setup guide' }).waitFor();
+  await poll(
+    async () => (await f.locator('iframe[data-frame=editor]').count()) === 0,
+    'editor closed',
+  );
+  // Editing the same page again opens a fresh editor; the title goes back to Setup.
+  await f.locator('.wiki-head [aria-label="Edit this page"]').click();
+  await editor.locator('h1', { hasText: 'Setup guide' }).click();
+  await page.keyboard.press('End');
+  for (let i = 0; i < 6; i++) await page.keyboard.press('Backspace');
+  await f.locator('.wiki-editing button', { hasText: 'Done' }).click();
+  await poll(async () => /^# Setup$/m.test(await file('guide/setup.md')), 'title restored');
+  console.log('PASS workspace: pages are edited in place in the Wiki and saved with Done');
   // API is a destination of the panel too: same navigation, and Back returns to the page.
   await f.locator('.nav [data-nav=api]').click();
   const api = await frameWith(page, '.app .side-tabs', 'API Client in the panel');

@@ -3370,6 +3370,60 @@ export async function run(): Promise<void> {
       store.dispose();
     }
   });
+  await test('a wiki without wiki.yaml is renamed and described, then gets wiki.yaml in place', async () => {
+    const plain = ws.roots.find((r) => !r.config);
+    assert.ok(plain, 'a wiki without wiki.yaml');
+    const folder = plain.folder.uri;
+    const pageCount = ws.index.all(plain.id).length;
+    const node = { label: plain.name, root: plain.id, prefix: '' };
+    const window = vscode.window as unknown as {
+      showInformationMessage: (...args: unknown[]) => Promise<unknown>;
+      showInputBox: (...args: unknown[]) => Promise<string | undefined>;
+      showTextDocument: (...args: unknown[]) => Promise<unknown>;
+    };
+    const original = {
+      showInformationMessage: window.showInformationMessage,
+      showInputBox: window.showInputBox,
+      showTextDocument: window.showTextDocument,
+    };
+    const settings = () => vscode.workspace.getConfiguration('notespace', folder);
+    window.showInputBox = async () => 'Field notes';
+    window.showInformationMessage = async (...args: unknown[]) => args[args.length - 1];
+    try {
+      await vscode.commands.executeCommand('notespace.renameWiki', node, 'Notes Two');
+      await waitFor(
+        () => ws.roots.some((r) => r.id === plain.id && r.name === 'Notes Two'),
+        'renamed',
+      );
+      assert.equal(settings().get('wikiName'), 'Notes Two');
+      await vscode.commands.executeCommand('notespace.editWikiDescription', node);
+      await waitFor(
+        () => ws.roots.find((r) => r.id === plain.id)?.look?.description === 'Field notes',
+        'described',
+      );
+      // Wiki Settings needs wiki.yaml: it is created beside the pages, which stay in place.
+      await vscode.commands.executeCommand('notespace.openWikiSettings', node);
+      const find = () =>
+        ws.roots.find((r) => r.folder.uri.toString() === folder.toString() && r.config);
+      await waitFor(() => !!find(), 'wiki.yaml created');
+      const configured = find()!;
+      assert.equal(configured.config!.wiki.title, 'Notes Two');
+      assert.equal(configured.config!.wiki.description, 'Field notes');
+      assert.equal(configured.uri.toString(), plain.uri.toString(), 'same content folder');
+      assert.equal(ws.index.all(configured.id).length, pageCount, 'same pages');
+    } finally {
+      Object.assign(window, original);
+      await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+      await vscode.workspace.fs
+        .delete(vscode.Uri.joinPath(folder, 'wiki.yaml'))
+        .then(undefined, () => undefined);
+      for (const key of ['wikiName', 'wikiDescription'])
+        await settings().update(key, undefined, vscode.ConfigurationTarget.WorkspaceFolder);
+      await ws.refresh();
+    }
+    assert.ok(ws.roots.some((r) => r.id === plain.id && !r.config && r.name === plain.name));
+  });
+
   if (process.env.WIKI_BENCHMARK === '1')
     await test('benchmarks 1,000 documents through the real workspace and exporter', async () => {
       const versioned = ws.roots.find((r) => r.config?.wiki.title === 'Product Docs')!;

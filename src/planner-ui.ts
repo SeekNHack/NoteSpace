@@ -32,6 +32,10 @@ import {
   showDatabase,
   namedIcon,
   wikiView,
+  editorShown,
+  isEditing,
+  stopEditing,
+  studioClosed,
 } from './workspace-ui/wiki';
 import { openFinder } from './workspace-ui/finder';
 import { receiveTemplates } from './workspace-ui/template-gallery';
@@ -72,7 +76,11 @@ const pages: Partial<Record<Section, Array<[Destination, string, IconName]>>> = 
   ],
 };
 const frameOf = (d: Destination): FrameName | undefined =>
-  d === 'api' || d === 'health' || d === 'graph' ? d : undefined;
+  d === 'api' || d === 'health' || d === 'graph'
+    ? d
+    : d === 'wiki' && editorShown()
+      ? 'editor'
+      : undefined;
 
 function go(target: Destination) {
   setPrefs({ destination: target });
@@ -338,6 +346,8 @@ function render() {
     return;
   }
   const destination = P().destination;
+  // Leaving the Wiki ends editing in place (the page is saved); that renders again.
+  if (destination !== 'wiki' && isEditing()) return stopEditing();
   record();
   ui.sections = { ...ui.sections, [sectionOf(destination)]: destination };
   const selected = state.tasks.find((t) => t.key === ui.selected);
@@ -421,6 +431,7 @@ window.addEventListener('message', (event) => {
   else if (m.type === 'wikiPreview') receivePreview(m);
   else if (m.type === 'wikiDatabase') receiveDatabase(m.prefix, m.rows);
   else if (m.type === 'toast') toast(String(m.text), !!m.error);
+  else if (m.type === 'studioClosed') studioClosed();
   else if (m.type === 'templates') receiveTemplates(m.items);
   else if (m.type === 'frame') toFrame(m.frame, m.message);
   else if (m.type === 'frameDoc') setFrameDoc(m.frame, m.doc);

@@ -17,6 +17,8 @@ import {
 } from './core/paths';
 import { Page } from './core/model';
 import { withFrontMatter } from './core/frontmatter';
+import { ensureConfig } from './wiki-setup';
+import { nameClash } from './core/name-clash';
 import { pageShowsPager } from './core/nav-tree';
 import { exportWiki } from './export';
 import { createConfig, defaultConfig, parseConfig, updateConfig, WikiConfig } from './core/config';
@@ -202,6 +204,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
   panels.planner = planner;
   plannerPanel.reader = (page, webview, href) => panels.renderBody(page, webview, href);
   plannerPanel.pages = panels;
+  plannerPanel.visual = studio;
   plannerPanel.files = (rootId) => [
     ...notebooks
       .all(rootId)
@@ -410,7 +413,23 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     const page = workspace.index.byUri(uri.toString());
     if (page) await openPreferred(page);
   };
-  const validateNamedPage = (root: WikiRoot, value: string): string | undefined => {
+  /** Names that differ only in case from what is already there are explained or warned. */
+  const clashMessage = (root: WikiRoot, path: string) => {
+    const clash = nameClash(workspace.index.all(root.id), path);
+    return clash
+      ? {
+          message: clash.message,
+          severity:
+            clash.severity === 'info'
+              ? vscode.InputBoxValidationSeverity.Info
+              : vscode.InputBoxValidationSeverity.Warning,
+        }
+      : undefined;
+  };
+  const validateNamedPage = (
+    root: WikiRoot,
+    value: string,
+  ): string | vscode.InputBoxValidationMessage | undefined => {
     try {
       const { path } = namedPage(value);
       if (
@@ -419,7 +438,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
           .some((p) => p.path.toLocaleLowerCase() === path.toLocaleLowerCase())
       )
         return 'A page with this name already exists.';
-      return undefined;
+      return clashMessage(root, path);
     } catch (e) {
       return (e as Error).message;
     }
@@ -663,8 +682,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
       value: section ? `${section}/` : '',
       validateInput: (v) => {
         try {
-          namedSection(v);
-          return undefined;
+          return clashMessage(root, `${namedSection(v).path.replace(/\/$/, '')}/`);
         } catch (e) {
           return (e as Error).message;
         }
@@ -865,9 +883,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
   command('openWikiSettings', async (node?: PageNode) => {
     const root = await chooseRoot(node?.root);
     if (!root) return;
-    if (root.projectUri)
-      await vscode.window.showTextDocument(vscode.Uri.joinPath(root.projectUri, 'wiki.yaml'));
-    else await vscode.commands.executeCommand('workbench.action.openSettings', 'notespace.root');
+    const configured = await ensureConfig(workspace, root, 'Wiki settings');
+    if (configured?.projectUri)
+      await vscode.window.showTextDocument(vscode.Uri.joinPath(configured.projectUri, 'wiki.yaml'));
   });
   command('deleteWiki', async (node?: PageNode) => {
     const root = await chooseRoot(node?.root);
@@ -1172,9 +1190,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     await doc.save();
   });
   command('settings', async () => {
-    const root = await chooseRoot();
-    if (!root || !root.projectUri)
-      throw new Error('This wiki has no wiki.yaml. Create or import a versioned wiki first.');
+    const chosen = await chooseRoot();
+    const root = chosen && (await ensureConfig(workspace, chosen, 'Wiki settings'));
+    if (!root?.projectUri) return;
     const uri = vscode.Uri.joinPath(root.projectUri, 'wiki.yaml');
     const doc = await vscode.workspace.openTextDocument(uri);
     const current = parseConfig(doc.getText());
@@ -1404,8 +1422,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
             validateInput: (value) => validateNamedPage(root, value),
           });
     if (!name) return;
+    // Only refusals stop here; explanations and warnings were shown while typing.
     const problem = validateNamedPage(root, name);
-    if (problem) {
+    if (typeof problem === 'string') {
       void vscode.window.showErrorMessage(problem);
       return;
     }
@@ -2242,12 +2261,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     await vscode.commands.executeCommand('vscode.openWith', uri, DashboardEditorProvider.viewType);
   });
   command('themeBuilder', async () => {
-    const root = await chooseRoot(activeTabPage()?.root);
+    const chosen = await chooseRoot(activeTabPage()?.root);
+    const root = chosen && (await ensureConfig(workspace, chosen, 'Site themes'));
     if (root) openThemeBuilder(workspace, root);
   });
   command('contentHealth', () => plannerPanel.show('health'));
   command('addLanguage', async () => {
-    const root = await chooseRoot(activeTabPage()?.root);
+    const chosen = await chooseRoot(activeTabPage()?.root);
+    const root = chosen && (await ensureConfig(workspace, chosen, 'Languages'));
     if (!root) return;
     const code = await vscode.window.showInputBox({
       title: 'Add language',
@@ -2296,9 +2317,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     vscode.window.setStatusBarMessage('$(check) Translation marked as up to date', 2500);
   });
   command('archiveVersion', async () => {
-    const root = await chooseRoot(activeTabPage()?.root);
-    if (!root) return;
-    if (!root.config) throw new Error('Versions need a wiki with a wiki.yaml file.');
+    const chosen = await chooseRoot(activeTabPage()?.root);
+    const root = chosen && (await ensureConfig(workspace, chosen, 'Versions'));
+    if (!root?.config) return;
     const id = await vscode.window.showInputBox({
       title: 'Archive current version (1/2)',
       prompt: 'Version id for the snapshot of the current docs',
@@ -2756,9 +2777,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
     if (choice === 'Copy Export Path') await vscode.env.clipboard.writeText(result.uri.fsPath);
   });
   command('buildWiki', async () => {
-    const root = await chooseRoot();
-    if (!root || !root.projectUri || !root.config)
-      throw new Error('Build requires a wiki.yaml project.');
+    const chosen = await chooseRoot();
+    const root = chosen && (await ensureConfig(workspace, chosen, 'Build settings'));
+    if (!root?.projectUri || !root.config) return;
     const destination = vscode.Uri.joinPath(root.projectUri, root.config.build.output);
     await workspace.assertNoSymlink(root, destination);
     let oldExists = false;

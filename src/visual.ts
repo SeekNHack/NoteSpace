@@ -43,9 +43,25 @@ export interface StudioHost {
   http?: import('./http-blocks').HttpBlocks;
 }
 
+/**
+ * Where a Studio editor runs: its own editor tab (a webview panel) or a frame of the NoteSpace
+ * tab's Wiki. Both carry the same messages; a frame has no column of its own.
+ */
+export interface StudioView {
+  readonly webview: Pick<vscode.Webview, 'postMessage' | 'asWebviewUri' | 'onDidReceiveMessage'>;
+  readonly viewColumn?: vscode.ViewColumn;
+  readonly active: boolean;
+  readonly onDidChangeViewState: vscode.Event<unknown>;
+  readonly onDidDispose: vscode.Event<void>;
+}
+export interface StudioOptions {
+  /** Opens a linked page in place of the default (a Studio tab), as the Wiki does. */
+  openPage?: (page: Page, anchor?: string) => void;
+}
+
 export class VisualEditorProvider implements vscode.CustomTextEditorProvider {
   static readonly viewType = 'notespace.visual';
-  private readonly panels = new Map<string, Set<vscode.WebviewPanel>>();
+  private readonly panels = new Map<string, Set<StudioView>>();
   private readonly emitter = new vscode.EventEmitter<void>();
   readonly onDidChangeState = this.emitter.event;
   /** Studio panels keyed by document URI with their sync state for the status bar. */
@@ -90,12 +106,8 @@ export class VisualEditorProvider implements vscode.CustomTextEditorProvider {
     document: vscode.TextDocument,
     panel: vscode.WebviewPanel,
   ): Promise<void> {
-    const key = document.uri.toString();
-    const pageOf = () => this.workspace.index.byUri(key);
-    const initial = pageOf();
+    const initial = this.workspace.index.byUri(document.uri.toString());
     if (!initial) throw new Error('Open a Markdown page inside a NoteSpace project.');
-    if (!this.panels.has(key)) this.panels.set(key, new Set());
-    this.panels.get(key)!.add(panel);
     const roots = this.workspace.roots.flatMap((r) =>
       r.projectUri ? [r.uri, r.projectUri] : [r.uri],
     );
@@ -111,6 +123,37 @@ export class VisualEditorProvider implements vscode.CustomTextEditorProvider {
       .getConfiguration('notespace', document.uri)
       .get<string>('editor.width', 'normal');
     panel.webview.html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${n}'; style-src 'unsafe-inline'; img-src ${panel.webview.cspSource} data:; font-src ${panel.webview.cspSource}; connect-src 'none'; base-uri 'none'; form-action 'none'"><title>${escapeHtml(initial.title)}</title><style>${visualShellCss}</style></head><body data-width="${escapeHtml(width)}"><div id="app"></div><script nonce="${n}" src="${script}"></script></body></html>`;
+    this.attach(document, panel);
+  }
+
+  /** The editor's document HTML for a frame: the shell styles and the script, inline. */
+  async frameDocument(document: vscode.TextDocument) {
+    const code = await vscode.workspace.fs.readFile(
+      vscode.Uri.joinPath(this.extensionUri, 'dist', 'visual.js'),
+    );
+    const width = vscode.workspace
+      .getConfiguration('notespace', document.uri)
+      .get<string>('editor.width', 'normal');
+    return {
+      title: 'Edit page',
+      css: visualShellCss,
+      // The page in the markup makes each page a new frame document (a fresh editor).
+      body: `<div id="app" data-page="${escapeHtml(document.uri.toString())}"></div>`,
+      scripts: [
+        `document.body.dataset.width=${JSON.stringify(width).replace(/</g, '\\u003c')};document.body.dataset.embedded='true';`,
+        new TextDecoder().decode(code),
+      ],
+    };
+  }
+
+  /** Connects a Studio editor to a document: edits, saves, links, images and the rest. */
+  attach(document: vscode.TextDocument, panel: StudioView, options: StudioOptions = {}): void {
+    const key = document.uri.toString();
+    const pageOf = () => this.workspace.index.byUri(key);
+    const initial = pageOf();
+    if (!initial) throw new Error('Open a Markdown page inside a NoteSpace project.');
+    if (!this.panels.has(key)) this.panels.set(key, new Set());
+    this.panels.get(key)!.add(panel);
 
     /** Texts the webview may base an edit on, by id. `v<N>` are document versions. */
     const known = new Map<string, string>();
@@ -469,7 +512,9 @@ export class VisualEditorProvider implements vscode.CustomTextEditorProvider {
             return;
           }
           const result = this.workspace.index.resolve(page, href, kind);
-          if (result.page && !result.error)
+          if (result.page && !result.error && options.openPage)
+            options.openPage(result.page, result.heading?.slug);
+          else if (result.page && !result.error)
             await this.host?.openPage(result.page, {
               anchor: result.heading?.slug,
               from: 'studio',

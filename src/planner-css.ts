@@ -521,5 +521,7 @@ tbody tr{cursor:pointer}tbody tr:hover{background:var(--ws-hover)}
 .finder-none{padding:12px;color:var(--ws-muted)}
 /* Pages shown in frames (API Client, Content health, Link graph) */
 .frame-host{position:fixed;left:0;right:0;top:var(--top,41px);bottom:0;z-index:5}
+.wiki-content.wiki-editing{display:flex;flex-direction:column;max-width:calc(var(--ws-doc-width,760px) + 300px)}
+.wiki-edit-slot{height:calc(100vh - var(--top,41px) - 76px);min-height:240px}
 .frame-host iframe{display:block;width:100%;height:100%;border:0;background:var(--ws-bg)}
 body.frame-visible{overflow:hidden}`;

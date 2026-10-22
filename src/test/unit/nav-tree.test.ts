@@ -63,3 +63,29 @@ test('nav tree: folders first or files first, notebooks after pages', () => {
   );
   assert.equal(folders[0].kind, 'section', 'folders first by default');
 });
+
+test('nav tree: a page named like its folder is the folder’s page', () => {
+  const tree = navTree(
+    [
+      { id: 'n', path: 'Ciao.md', title: 'Ciao' },
+      { id: 'm', path: 'Ciao/ciao.md', title: 'ciao' },
+      { id: 'k', path: 'Notes/notes.md', title: 'Notes' },
+      { id: 'j', path: 'Notes/todo.md', title: 'Todo' },
+      { id: 't', path: 'Test.md', title: 'Test' },
+    ],
+    { sort: 'filename' },
+  );
+  // Beside the folder wins over inside it; the inside page then stays a child.
+  assert.deepEqual(
+    tree.map((n) => [n.kind, n.title, n.id, (n.children || []).map((c) => c.id)]),
+    [
+      ['section', 'Ciao', 'n', ['m']],
+      ['section', 'Notes', 'k', ['j']],
+      ['page', 'Test', 't', []],
+    ],
+  );
+  assert.deepEqual(
+    navOrder(tree).map((n) => n.id),
+    ['n', 'm', 'k', 'j', 't'],
+  );
+});

@@ -22,8 +22,35 @@ import { enhanceReaderBlocks } from '../reader-blocks';
 import { openDay } from './calendar';
 import { databaseView, propertiesPanel } from './database';
 import type { NavNode, WikiPageDto } from './core';
+import { dropFrame } from './frames';
 
 let page: WikiPageDto | undefined;
+/** The page being edited in place (its uri), while the editor is open in the Wiki. */
+let editing: string | undefined;
+
+export const isEditing = () => !!editing;
+/** The editor is shown when the page on screen is the one being edited. */
+export const editorShown = () => !!editing && page?.uri === editing;
+/** Edits the page on screen inside the Wiki (the Studio editor in the page's column). */
+export function startEditing() {
+  if (!page) return;
+  editing = page.uri;
+  window.scrollTo(0, 0);
+  post({ type: 'wikiStudio', uri: page.uri });
+  store.render();
+}
+/** Ends editing: the page is saved (unless discarded by the host) and read again. */
+export function stopEditing() {
+  if (!editing) return;
+  editing = undefined;
+  // The frame stays (hidden) until the host has taken its last edits and saved the page.
+  post({ type: 'wikiStudioClose' });
+  store.render();
+}
+/** The host saved the page: the editor frame goes, unless editing started again meanwhile. */
+export function studioClosed() {
+  if (!editing) dropFrame('editor');
+}
 /** The rendered article, kept across re-renders so its DOM (and images) are not rebuilt. */
 let article: HTMLElement | undefined;
 let pendingAnchor: string | undefined;
@@ -144,6 +171,8 @@ function revealPath(path: string) {
 /** A page arrived from the host. */
 export function receiveWikiPage(next: WikiPageDto | undefined, anchor?: string) {
   hidePreview();
+  // Another page replaces the one being edited: editing ends (and the edit is saved).
+  if (editing && next?.uri !== editing) stopEditing();
   const changed = next?.id !== page?.id;
   page = next;
   article = undefined;
@@ -589,14 +618,24 @@ function content(): HTMLElement {
       crumbs.append(a);
     } else crumbs.append(h('span', { text: section?.title || parts[i] }));
   });
+  // The folder this page is the page of (its index, README or same-named page), if any.
+  const ownedFolder = (function find(nodes: NavNode[]): string | undefined {
+    for (const n of nodes) {
+      if (n.kind !== 'section') continue;
+      if (n.id === p.id) return n.path;
+      const inner = find(n.children || []);
+      if (inner) return inner;
+    }
+    return undefined;
+  })(S().wiki.tree);
   const head = h(
     'div',
     { class: 'wiki-head' },
     crumbs,
     statusBadge(p.status),
     h('span', { class: 'spacer' }),
-    /(^|\/)(index|readme)\.md$/i.test(p.path)
-      ? button('Database', () => showDatabase(folderOf(p.path)), 'btn ghost small', 'table', {
+    ownedFolder
+      ? button('Database', () => showDatabase(ownedFolder), 'btn ghost small', 'table', {
           title: 'This folder’s pages as a table, gallery or board of their properties',
         })
       : undefined,
@@ -608,11 +647,40 @@ function content(): HTMLElement {
       'aria-label': 'Open in Reader',
       title: 'Open the page in the Reader beside (interactive blocks run there)',
     }),
-    button('', () => post({ type: 'wikiEdit', uri: p.uri }), 'btn ghost icon-only', 'edit', {
+    button('', () => startEditing(), 'btn ghost icon-only', 'edit', {
       'aria-label': 'Edit this page',
-      title: 'Edit this page',
+      title: 'Edit this page here',
     }),
   );
+  if (editorShown())
+    return h(
+      'div',
+      { class: 'wiki-content wiki-editing' },
+      h(
+        'div',
+        { class: 'wiki-head' },
+        crumbs,
+        h('span', { class: 'spacer' }),
+        // One editor per page: editing here ends (and saves) before the tab opens.
+        button(
+          '',
+          () => {
+            stopEditing();
+            post({ type: 'wikiEdit', uri: p.uri });
+          },
+          'btn ghost icon-only',
+          'split',
+          {
+            'aria-label': 'Open in an editor tab',
+            title: 'Open in an editor tab (Studio, Code or Split)',
+          },
+        ),
+        button('Done', () => stopEditing(), 'btn primary small', 'check', {
+          title: 'Save and read the page',
+        }),
+      ),
+      h('div', { class: 'wiki-edit-slot' }),
+    );
   if (!article) {
     article = h('article', { class: 'doc wiki-article' });
     article.innerHTML = p.html;
@@ -1025,7 +1093,7 @@ export function wikiView(): HTMLElement {
       tagsView(),
       h('div', { class: 'wiki-toc' }),
     );
-  const toc = outline();
+  const toc = editorShown() ? undefined : outline();
   if (toc) requestAnimationFrame(followOutline);
   return h(
     'div',

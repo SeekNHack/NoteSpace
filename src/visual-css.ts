@@ -10,6 +10,7 @@ import { iconUrl } from './core/icons';
 
 /** Studio chrome: document bar, toolbar, floating menus and editor-only block affordances. */
 export const visualShellCss = `${tokensCss}
+body[data-embedded] .docbar .crumbs{visibility:hidden}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{margin:0;background:var(--ws-bg);color:var(--ws-fg);font-family:var(--ws-font);font-size:var(--ws-ui-size)}

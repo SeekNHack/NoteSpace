@@ -71,12 +71,23 @@ const topics: Topic[] = [
     title: 'Pages and the page tree',
     keywords:
       'page tree folder sidebar move drag rename duplicate delete favorites pagina cartella preferiti',
-    html: `<p>Every page is a Markdown file. Folders are sections; a folder's <code>index.md</code> or <code>README.md</code> is the section's own page.</p>
+    html: `<p>Every page is a Markdown file. Folders are sections. A folder's own page is its <code>index.md</code> or <code>README.md</code>, or a page with the folder's name beside it (<code>Guide.md</code> next to <code>Guide/</code>) or inside it (<code>Guide/Guide.md</code>). When you name a new page or folder like one already there (even with different capitals), NoteSpace tells you what will happen.</p>
 <ul><li>Right-click a page or folder (or its <b>…</b>) for edit, open beside, rename, move, duplicate, favorites, properties, history, export as PDF and delete.</li>
 <li>Drag pages and folders to move them.</li>
 <li><b>Filter pages</b> narrows the tree; <b>Favorites</b> are listed on top.</li>
 <li>The panel button left of the wiki's name hides the tree; the one at the top left of the page brings it back.</li>
-<li>The pencil above a page edits it; the book icon opens it in the Reader beside.</li></ul>`,
+<li>The book icon opens a page in the Reader beside.</li></ul>`,
+  },
+  {
+    id: 'editing',
+    group: 'Wiki',
+    title: 'Editing pages',
+    keywords: 'edit modify write editor studio inline done save modifica scrivi salva',
+    html: `<p>The pencil above a page edits it right there, in the Wiki: the visual editor (Studio) takes the page's place with its formatting bar, <kbd>/</kbd> menu and <code>[[</code> link completion. The page tree stays beside it.</p>
+<ul><li><b>Done</b> saves the page and shows it again. Going to another page or section also saves.</li>
+<li>The panel icon next to Done opens the page in an editor tab, where you can switch between Studio, Code (the Markdown source) and Split.</li>
+<li>Links you follow while editing open their page in the Wiki.</li>
+<li>Pages with syntax the visual editor cannot keep exactly are shown read-only there; edit them as Code.</li></ul>`,
   },
   {
     id: 'links',

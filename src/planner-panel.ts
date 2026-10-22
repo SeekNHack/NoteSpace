@@ -21,13 +21,20 @@ import { contentHealth } from './core/quality';
 import { plannerCss } from './planner-css';
 import { WikiActivity } from './activity';
 import { namedPage, posix } from './core/paths';
-import { navOrder, navTree, pageIcon, pageShowsPager, pageStatus } from './core/nav-tree';
+import {
+  folderPage,
+  navOrder,
+  navTree,
+  pageIcon,
+  pageShowsPager,
+  pageStatus,
+} from './core/nav-tree';
 import { excerptOf, linkMention, unlinkedMentions } from './core/mentions';
 import { propertyValue, PropertyType, typedProperties, validPropertyKey } from './core/properties';
 import { withFrontMatter } from './core/frontmatter';
 import { listTemplates } from './template-files';
 import { fillTemplate } from './templates';
-import { defaultAcronyms, DirectorySort, isFolderIndex } from './core/titles';
+import { defaultAcronyms, DirectorySort } from './core/titles';
 import { escapeHtml, pageCss, safeExternal } from './core/render';
 import { fonts, resolveAppearance, widths } from './core/themes';
 import type { Page } from './core/model';
@@ -36,6 +43,7 @@ import { richTabsScript } from './core/reader-interactions';
 import { tokensCss } from './core/design';
 import { apiClientCss } from './api-client-css';
 import type { HttpBlocks } from './http-blocks';
+import type { StudioView, VisualEditorProvider } from './visual';
 
 /** Destinations of the workspace panel; the old Planner views are kept as aliases. */
 export type PlannerView =
@@ -220,6 +228,14 @@ export class PlannerPanel implements vscode.Disposable {
     handleFrame(message: unknown, openInPanel: (page: Page) => Promise<void>): Promise<void>;
   };
   /** Notebooks and canvases of a wiki, listed with its pages (set by the extension). */
+  /** The Studio editor, also used to edit pages inside the Wiki. */
+  visual?: VisualEditorProvider;
+  /** The page being edited in the Wiki's editor frame. */
+  private studio?: {
+    document: vscode.TextDocument;
+    receive: vscode.EventEmitter<unknown>;
+    close(): void;
+  };
   files?: (rootId: string) => Array<{ path: string; uri: string; file: 'notebook' | 'canvas' }>;
   /** Frame documents last sent, so unchanged pages are not reloaded. */
   private frameSent = new Map<string, string>();
@@ -354,6 +370,7 @@ export class PlannerPanel implements vscode.Disposable {
       );
       this.panel.webview.html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}'; style-src 'unsafe-inline'; img-src ${this.panel.webview.cspSource} data:; media-src ${this.panel.webview.cspSource}; base-uri 'none'; form-action 'none'"><title>NoteSpace</title><style>${plannerCss}\n${pageCss}</style></head><body><div id="app"></div><script nonce="${nonce}">${richTabsScript}</script><script nonce="${nonce}" src="${script}"></script></body></html>`;
       this.panel.onDidDispose(() => {
+        void this.closeStudio();
         this.panel = undefined;
         this.wikiShown = undefined;
         this.api?.hostClosed();
@@ -362,6 +379,13 @@ export class PlannerPanel implements vscode.Disposable {
       // Messages are handled one at a time: two quick edits of the same page must not both
       // compute their change from the same text.
       this.panel.webview.onDidReceiveMessage((message) => {
+        // The Wiki's editor has its own ordering (edits carry their base version); it skips the
+        // queue so Done, which waits for the editor's last edits, cannot wait behind itself.
+        const m = message as { type?: unknown; frame?: unknown; message?: unknown } | undefined;
+        if (m?.type === 'frame' && m.frame === 'editor') {
+          if (m.message && typeof m.message === 'object') this.studio?.receive.fire(m.message);
+          return;
+        }
         this.queue = this.queue.then(() =>
           this.onMessage(message).catch((error) => {
             const text = error instanceof Error ? error.message : String(error);
@@ -380,6 +404,68 @@ export class PlannerPanel implements vscode.Disposable {
       this.panel?.webview.postMessage({ type: 'frame', frame: 'api', message }) ??
       Promise.resolve(false)
     );
+  }
+
+  /**
+   * Edits a page inside the Wiki: the Studio editor runs in a frame of this webview and is
+   * attached to the page's document like an editor tab (same edits, saves and links).
+   */
+  private async openStudio(page: Page): Promise<void> {
+    const panel = this.panel;
+    if (!panel || !this.visual) return;
+    await this.closeStudio();
+    const document = await vscode.workspace.openTextDocument(vscode.Uri.parse(page.uri));
+    const receive = new vscode.EventEmitter<unknown>();
+    const disposed = new vscode.EventEmitter<void>();
+    const viewState = new vscode.EventEmitter<unknown>();
+    const view: StudioView = {
+      webview: {
+        postMessage: (message: unknown) =>
+          panel.webview.postMessage({ type: 'frame', frame: 'editor', message }),
+        asWebviewUri: (uri: vscode.Uri) => panel.webview.asWebviewUri(uri),
+        onDidReceiveMessage: receive.event,
+      },
+      viewColumn: panel.viewColumn,
+      get active() {
+        return panel.active;
+      },
+      onDidChangeViewState: viewState.event,
+      onDidDispose: disposed.event,
+    };
+    const state = panel.onDidChangeViewState(() => viewState.fire(undefined));
+    this.studio = {
+      document,
+      receive,
+      close: () => {
+        disposed.fire();
+        state.dispose();
+        receive.dispose();
+        disposed.dispose();
+        viewState.dispose();
+      },
+    };
+    // Links followed in the editor open their page in the Wiki (editing ends there).
+    this.visual.attach(document, view, {
+      openPage: (target) => void this.showWiki({ id: target.id }),
+    });
+    await this.sendStudioFrame();
+  }
+  private async sendStudioFrame(): Promise<void> {
+    const studio = this.studio;
+    if (!studio || !this.visual || !this.panel) return;
+    const doc = await this.visual.frameDocument(studio.document);
+    if (this.studio === studio)
+      void this.panel.webview.postMessage({ type: 'frameDoc', frame: 'editor', doc });
+  }
+  /** Ends editing in the Wiki and saves the page (files.autoSave or not, as Done means done). */
+  private async closeStudio(): Promise<void> {
+    const studio = this.studio;
+    if (!studio) return;
+    // The editor stays connected until it has handed over its last edits.
+    if (this.visual) await this.visual.flush(studio.document.uri);
+    if (this.studio === studio) this.studio = undefined;
+    studio.close();
+    if (studio.document.isDirty && !studio.document.isClosed) await studio.document.save();
   }
 
   /** Sends a frame's document (the API Client once; Insights pages again when they change). */
@@ -427,14 +513,7 @@ export class PlannerPanel implements vscode.Disposable {
     const page =
       byId ||
       (target.path ? pages.find((p) => p.path === target.path) : undefined) ||
-      (section
-        ? pages.find(
-            (p) =>
-              p.path.startsWith(section) &&
-              isFolderIndex(p.path) &&
-              !p.path.slice(section.length).includes('/'),
-          )
-        : undefined);
+      (section ? folderPage(pages, section) : undefined);
     if (page) await this.setPrefs({ destination: 'wiki', wikiPage: page.path });
     else await this.setPrefs({ destination: 'wiki' });
     this.post(false, { destination: 'wiki', ...(page ? { wikiPage: page.path } : {}) });
@@ -669,10 +748,11 @@ export class PlannerPanel implements vscode.Disposable {
     const root = this.root();
     if (!panel || !root) return;
     const rows = [];
+    const own = folderPage(this.wikiPages(root), prefix);
     for (const page of this.wikiPages(root)) {
       if (!page.path.startsWith(prefix)) continue;
       const rest = page.path.slice(prefix.length);
-      if (rest.includes('/') || isFolderIndex(page.path)) continue;
+      if (rest.includes('/') || page.id === own?.id) continue;
       const coverTarget = page.properties?.cover || page.properties?.image;
       let cover: string | undefined;
       if (coverTarget && !/^[a-z][a-z0-9+.-]*:/i.test(coverTarget)) {
@@ -939,6 +1019,7 @@ export class PlannerPanel implements vscode.Disposable {
         // (their styles and shortcuts stay their own).
         if (m.frame === 'api' || m.frame === 'health' || m.frame === 'graph')
           await this.sendFrame(m.frame);
+        else if (m.frame === 'editor' && this.studio) await this.sendStudioFrame();
         return;
       case 'frame': {
         if (!m.message || typeof m.message !== 'object') return;
@@ -1339,6 +1420,16 @@ export class PlannerPanel implements vscode.Disposable {
         this.post();
         return;
       }
+      case 'wikiStudio': {
+        const uri = str(m.uri, 2000);
+        const page = uri && this.workspace.index.byUri(uri);
+        if (page) await this.openStudio(page);
+        return;
+      }
+      case 'wikiStudioClose':
+        await this.closeStudio();
+        void this.panel?.webview.postMessage({ type: 'studioClosed' });
+        return;
       case 'wikiEdit': {
         const uri = str(m.uri, 2000);
         const page = uri && this.workspace.index.byUri(uri);

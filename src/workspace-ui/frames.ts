@@ -4,7 +4,7 @@
 // only hidden, so a client's open requests and drafts survive switching destination.
 import { post, save, ui } from './core';
 
-export type FrameName = 'api' | 'health' | 'graph';
+export type FrameName = 'api' | 'health' | 'graph' | 'editor';
 /** A frame's document, sent by the host. Scripts run inline (frames cannot load webview files). */
 export interface FrameDoc {
   title: string;
@@ -131,11 +131,40 @@ export function showFrame(name: FrameName | undefined, onKey: (event: KeyboardEv
   place();
 }
 
-/** Frames start below the sticky header (navigation and section tabs). */
+/**
+ * Frames start below the sticky header (navigation and section tabs). The page editor covers
+ * only its slot in the Wiki, so the page tree stays beside it.
+ */
 function place() {
   if (!shown) return;
+  const host = frames.get(shown)!.host;
+  const slot = shown === 'editor' ? document.querySelector('.wiki-edit-slot') : null;
+  if (slot) {
+    const rect = slot.getBoundingClientRect();
+    host.style.top = `${Math.max(0, Math.round(rect.top))}px`;
+    host.style.left = `${Math.round(rect.left)}px`;
+    host.style.right = 'auto';
+    host.style.width = `${Math.round(rect.width)}px`;
+    return;
+  }
   const top = document.querySelector('.top')?.getBoundingClientRect().bottom ?? 41;
-  frames.get(shown)!.host.style.top = `${Math.max(0, Math.round(top))}px`;
+  host.style.top = `${Math.max(0, Math.round(top))}px`;
+}
+
+/** Removes a frame and its saved state (the page editor, when editing ends). */
+export function dropFrame(name: FrameName) {
+  const f = frames.get(name);
+  if (!f) return;
+  f.host.remove();
+  frames.delete(name);
+  if (ui.frames?.[name] !== undefined) {
+    ui.frames = { ...ui.frames, [name]: undefined };
+    save();
+  }
+  if (shown === name) {
+    shown = undefined;
+    document.body.classList.remove('frame-visible');
+  }
 }
 window.addEventListener('resize', place);
 

@@ -61,9 +61,26 @@ export interface NavOptions {
 }
 
 /**
- * The wiki as an MkDocs-style navigation: folders become sections, a folder's index or README
- * page becomes the section's own page, and the order follows the Wiki Explorer.
+ * The wiki as a documentation-site navigation: folders become sections, a folder's index, README
+ * or same-named page becomes the section's own page, and the order follows the Wiki Explorer.
  */
+/**
+ * A folder's own page (`folder` ends with `/`): its index or README, else a page named like the
+ * folder beside it (`Guide.md` next to `Guide/`), else one inside it (`Guide/Guide.md`).
+ */
+export function folderPage<P extends NavPage>(pages: P[], folder: string): P | undefined {
+  const parent = folder.replace(/[^/]+\/$/, '');
+  const name = folder.slice(parent.length, -1).toLowerCase();
+  const here = (p: P, dir: string) =>
+    !p.file && p.path.startsWith(dir) && !p.path.slice(dir.length).includes('/');
+  const stem = (path: string) => path.replace(/^.*\//, '').replace(/\.md$/i, '').toLowerCase();
+  return (
+    pages.find((p) => here(p, folder) && isFolderIndex(p.path)) ||
+    pages.find((p) => here(p, parent) && stem(p.path) === name) ||
+    pages.find((p) => here(p, folder) && stem(p.path) === name)
+  );
+}
+
 export function navTree(pages: NavPage[], options: NavOptions, prefix = ''): NavNode[] {
   const name = (text: string) => (options.readable ? humanize(text, options.acronyms) : text);
   const meta = (p: NavPage) => ({
@@ -72,7 +89,18 @@ export function navTree(pages: NavPage[], options: NavOptions, prefix = ''): Nav
     tags: p.tags?.length ? p.tags : undefined,
     pager: pageShowsPager(p) || undefined,
   });
-  const byPath = new Map(pages.map((p) => [p.path, p]));
+  const notes = new Map<string, NavPage>();
+  for (const page of pages) {
+    if (!page.path.startsWith(prefix)) continue;
+    const relative = page.path.slice(prefix.length);
+    const slash = relative.indexOf('/');
+    if (slash < 0) continue;
+    const dir = relative.slice(0, slash);
+    if (notes.has(dir)) continue;
+    const note = folderPage(pages, `${prefix}${dir}/`);
+    if (note) notes.set(dir, note);
+  }
+  const noteIds = new Set([...notes.values()].map((p) => p.id));
   const nodes: Array<NavNode & { order?: number }> = [];
   const dirs = new Set<string>();
   for (const page of pages) {
@@ -84,13 +112,7 @@ export function navTree(pages: NavPage[], options: NavOptions, prefix = ''): Nav
       if (dirs.has(dir)) continue;
       dirs.add(dir);
       const folder = `${prefix}${dir}/`;
-      const index = [...byPath.values()].find(
-        (p) =>
-          !p.file &&
-          p.path.startsWith(folder) &&
-          !p.path.slice(folder.length).includes('/') &&
-          isFolderIndex(p.path),
-      );
+      const index = notes.get(dir);
       const children = navTree(pages, options, folder).filter((n) => n.id !== index?.id);
       nodes.push({
         kind: 'section',
@@ -101,7 +123,7 @@ export function navTree(pages: NavPage[], options: NavOptions, prefix = ''): Nav
         order: index?.order,
         ...(index ? meta(index) : {}),
       });
-    } else
+    } else if (!noteIds.has(page.id))
       nodes.push({
         kind: page.file ? 'file' : 'page',
         title: page.titleFromFile ? name(page.title) : page.title,

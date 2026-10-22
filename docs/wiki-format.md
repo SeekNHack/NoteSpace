@@ -64,7 +64,7 @@ translated_from: 8c3f0a1b2d4e5f60 # set on translations by Create Translation
 # Installation
 ```
 
-`icon`, `status` and `cover` are shown in the Wiki of the NoteSpace tab: the icon and status badge in the page tree and above the title, the cover as a banner. Tags open the tag index (**Tags** in the Wiki's page tree or Find). `order` sorts pages when navigation sort is `order`; section order can be set on its `index.md` page. `draft: true` hides a page from static export. **Edit Page Properties and Order** offers guided inputs. Legacy folders configured with `notespace.root` remain readable when no `wiki.yaml` is found.
+`icon`, `status` and `cover` are shown in the Wiki of the NoteSpace tab: the icon and status badge in the page tree and above the title, the cover as a banner. Tags open the tag index (**Tags** in the Wiki's page tree or Find). `order` sorts pages when navigation sort is `order`; section order can be set on its `index.md` page. A folder's own page is its `index.md` or `README.md`, else a page with the folder's name beside it (`Guide.md` next to `Guide/`) or inside it (`Guide/Guide.md`). `draft: true` hides a page from static export. **Edit Page Properties and Order** offers guided inputs. Legacy folders configured with `notespace.root` remain readable when no `wiki.yaml` is found.
 
 ## Properties, databases, templates and clips
 
