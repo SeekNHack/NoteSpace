@@ -23,7 +23,8 @@ NoteSpace is an MIT-licensed extension for VS Code and code-server that turns a 
 
 ## Highlights
 
-- **Home** — today's tasks with progress and quick add, a calendar preview with upcoming deadlines, recently edited pages, your boards and a single **Create** menu.
+- **One tab, like a documentation site** — Home, Wiki, Tasks, API and Insights with Back and Forward and a search for everything (`/`). Home shows today's tasks, the coming week, recent pages, the wiki's sections and your boards.
+- **Wiki** — pages read in the tab with a page tree, outline, link previews on hover, backlinks and unlinked mentions, tags, page status badges, icons and covers. Front matter shows as editable **properties**, and any folder opens as a **database** (table, gallery or board).
 - **Wiki with a visual editor (Studio)** — edit Markdown visually with slash commands (`/`), a bubble menu, block handles, `[[wiki links]]`, callouts, tabs, steps, cards, tables, math, Mermaid diagrams and charts. Switch to **Code** (plain Markdown) or **Split** at any time; untouched lines stay byte-identical.
 - **Tasks, Kanban and calendar** — tasks are ordinary `- [ ]` lines with `due:`, `priority:`, `status:`, `repeat:`, `#tags` and `@people`. Use them in lists and tables, on as many Kanban boards as you like (each board is a Markdown file with its own columns), and in a month/week/day calendar. Daily notes and recurring tasks included.
 - **Kanban inside any page** — a ` ```tasks ` block with `view: board` shows a live board in the page; drag cards (or press Alt+←/→) and the task lines update.
@@ -33,6 +34,7 @@ NoteSpace is an MIT-licensed extension for VS Code and code-server that turns a 
 - **Charts and live data dashboards** — accessible charts from CSV/JSON, and dashboards computed from local Excel, CSV and JSON files with a safe formula language.
 - **Reader and publishing** — a themed reader with search, outline and backlinks; export a static website, **PDF** or **EPUB**.
 - **Knowledge tools** — content health report, advanced search (`tag:`, `path:`, `heading:`, …), link graph, page history from Git, translations, versions and review comments.
+- **Writing tools** — block references and embeds (`[[Page#^id]]`, `![[Page#Heading]]`), `@date` and `@person` mentions, code annotations, a template gallery and template buttons, blog posts and web clips.
 
 ## Tour
 
