@@ -186,6 +186,8 @@ export const iconPaths = {
     '<circle cx="12" cy="12" r="10" /><path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z" />',
   download:
     '<path d="M12 15V3" /><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5" />',
+  help: '<circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><path d="M12 17h.01" />',
+  close: '<path d="M18 6 6 18" /><path d="m6 6 12 12" />',
 } as const;
 export type IconName = keyof typeof iconPaths;
 /** Inline 16px stroke icon that inherits currentColor. */

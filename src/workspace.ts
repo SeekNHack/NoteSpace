@@ -22,6 +22,8 @@ export interface WikiRoot {
   folder: vscode.WorkspaceFolder;
   projectUri?: vscode.Uri;
   config?: WikiConfig;
+  /** Description, icon and color of a wiki without wiki.yaml (settings of its folder). */
+  look?: { description?: string; icon?: string; color?: string };
 }
 export class WikiWorkspace implements vscode.Disposable {
   /** `.gitignore` rules per workspace folder, when `notespace.respectGitignore` is on. */
@@ -313,7 +315,23 @@ export class WikiWorkspace implements vscode.Disposable {
             );
             roots.push({
               id: folder.uri.toString(),
-              name: folder.name,
+              // Wikis without wiki.yaml are named after their folder unless renamed.
+              name:
+                vscode.workspace
+                  .getConfiguration('notespace', folder.uri)
+                  .get<string>('wikiName', '')
+                  .trim()
+                  .slice(0, 80) || folder.name,
+              look: (() => {
+                const settings = vscode.workspace.getConfiguration('notespace', folder.uri);
+                const text = (key: string, max: number) =>
+                  settings.get<string>(key, '').trim().slice(0, max) || undefined;
+                return {
+                  description: text('wikiDescription', 400),
+                  icon: text('wikiIcon', 40),
+                  color: text('wikiColor', 20),
+                };
+              })(),
               folder,
               uri: vscode.Uri.joinPath(folder.uri, relative),
             });

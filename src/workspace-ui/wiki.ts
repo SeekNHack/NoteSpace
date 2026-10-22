@@ -186,6 +186,7 @@ function pageMenu(n: NavNode): MenuItem[] {
       run: () => action('toggleFavorite', { uri }),
     },
     { label: 'Copy Link', icon: 'link', run: () => action('copyLink', { uri }) },
+    { label: 'Export as PDF…', icon: 'download', run: () => action('exportPdf', { uri }) },
     { label: 'Properties…', icon: 'sliders', run: () => action('pageProperties', { uri }) },
     {
       label: 'Previous / Next Links',
@@ -222,6 +223,7 @@ function sectionMenu(n: NavNode): MenuItem[] {
       ? [{ label: 'Open', icon: 'preview' as const, run: () => openWikiPage({ id: n.id }) }]
       : []),
     { label: 'Open as Database', icon: 'table', run: () => showDatabase(prefix) },
+    { label: 'Export as PDF…', icon: 'download', run: () => action('exportPdf', { prefix }) },
     { label: 'New Page Here…', icon: 'plus', run: () => action('newPage', { prefix }) },
     { label: 'New Folder Here…', icon: 'folder', run: () => action('newSection', { prefix }) },
     { separator: true, label: '' },
@@ -243,6 +245,8 @@ function sectionMenu(n: NavNode): MenuItem[] {
 function wikiMenu(): MenuItem[] {
   const run = (command: string) => () => action(`wiki:${command}`, {});
   return [
+    { label: 'Random Page', icon: 'refresh', run: () => randomPage() },
+    { separator: true, label: '' },
     { label: 'Wiki Settings', icon: 'sliders', run: run('openWikiSettings') },
     { label: 'Rename Wiki…', icon: 'edit', run: run('renameWiki') },
     { label: 'Edit Description…', icon: 'text', run: run('editWikiDescription') },
@@ -430,6 +434,15 @@ function treeView(nodes: NavNode[], filter: string, depth = 0): HTMLElement | un
   return list;
 }
 
+/** While the page tree is hidden, a button at the top left of the Wiki brings it back. */
+function showNavButton() {
+  return ui.wikiNavHidden
+    ? button('', () => toggleWikiNav(), 'btn ghost icon-only wiki-nav-show', 'sidebar', {
+        'aria-label': 'Show pages',
+        title: 'Show pages',
+      })
+    : undefined;
+}
 function sidebar(): HTMLElement {
   const filter = h('input', {
     id: 'wiki-filter',
@@ -456,6 +469,7 @@ function sidebar(): HTMLElement {
   const head = h(
     'div',
     { class: 'wiki-side-head' },
+    iconButton('sidebar', 'Hide pages', () => toggleWikiNav()),
     name,
     button('', () => post({ type: 'command', name: 'newPage' }), 'btn ghost icon-only', 'plus', {
       'aria-label': 'New page',
@@ -472,7 +486,6 @@ function sidebar(): HTMLElement {
       },
     ),
     iconButton('badge', 'Tags', () => showTags('')),
-    iconButton('refresh', 'Random page', () => randomPage()),
     button('', (e) => menuAt(e, wikiMenu(), 'Wiki'), 'btn ghost icon-only', 'more', {
       'aria-label': 'Wiki actions',
       title: 'Wiki settings, export, import',
@@ -587,6 +600,10 @@ function content(): HTMLElement {
           title: 'This folder’s pages as a table, gallery or board of their properties',
         })
       : undefined,
+    button('', () => action('exportPdf', { uri: p.uri }), 'btn ghost icon-only', 'download', {
+      'aria-label': 'Export as PDF',
+      title: 'Export this page, its section or the whole wiki as PDF',
+    }),
     button('', () => post({ type: 'wikiReader', uri: p.uri }), 'btn ghost icon-only', 'preview', {
       'aria-label': 'Open in Reader',
       title: 'Open the page in the Reader beside (interactive blocks run there)',
@@ -989,6 +1006,7 @@ export function wikiView(): HTMLElement {
     return h(
       'div',
       { class: `wiki wide${ui.wikiNavHidden ? ' nav-hidden' : ''}` },
+      showNavButton(),
       sidebar(),
       h(
         'div',
@@ -1002,6 +1020,7 @@ export function wikiView(): HTMLElement {
     return h(
       'div',
       { class: `wiki${ui.wikiNavHidden ? ' nav-hidden' : ''}` },
+      showNavButton(),
       sidebar(),
       tagsView(),
       h('div', { class: 'wiki-toc' }),
@@ -1011,6 +1030,7 @@ export function wikiView(): HTMLElement {
   return h(
     'div',
     { class: `wiki${toc ? '' : ' no-toc'}${ui.wikiNavHidden ? ' nav-hidden' : ''}` },
+    showNavButton(),
     sidebar(),
     content(),
     // Without an outline its column stays empty, so pages keep their place.

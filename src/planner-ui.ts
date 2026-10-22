@@ -31,7 +31,6 @@ import {
   showTags,
   showDatabase,
   namedIcon,
-  toggleWikiNav,
   wikiView,
 } from './workspace-ui/wiki';
 import { openFinder } from './workspace-ui/finder';
@@ -46,6 +45,7 @@ import { calendarView } from './workspace-ui/calendar';
 import { detail } from './workspace-ui/details';
 import { focusQuickAdd, homeHeader, homeView, quickCreateItems } from './workspace-ui/home';
 import { insightsView } from './workspace-ui/insights';
+import { openHelp } from './workspace-ui/help';
 import { tasksView } from './workspace-ui/tasks';
 import type { IconName } from './core/icons';
 
@@ -147,6 +147,8 @@ const brandColors: Record<string, string> = {
  * The header, as on a documentation site: the wiki's name and the search box on top, the
  * sections as tabs below it and, in sections with several pages, those pages as a third row.
  */
+/** The wiki name being typed in the header, while it is edited. */
+let nameDraft: string | undefined;
 function nav(): HTMLElement {
   const destination = P().destination;
   const current = sectionOf(destination);
@@ -158,11 +160,60 @@ function nav(): HTMLElement {
   if (!history || history.at >= history.entries.length - 1) forward.setAttribute('disabled', '');
   const brand = h(
     'button',
-    { type: 'button', class: 'brand', title: `${ws.name} — Home` },
+    {
+      type: 'button',
+      class: 'brand',
+      title: 'Rename the wiki',
+      'aria-label': `${ws.name} — rename`,
+    },
     h('span', { class: 'brand-mark' }, svg(namedIcon(ws.icon || '') || 'preview', 16)),
     h('span', { class: 'brand-name', text: ws.name }),
   );
-  brand.addEventListener('click', () => go('home'));
+  // Clicking the wiki's name edits it in place: Enter (or leaving the field) saves, Escape cancels.
+  // The draft lives outside the header, so a refresh while typing keeps the field and its text.
+  const edit = () => {
+    const input = h('input', {
+      class: 'brand-input',
+      value: nameDraft ?? ws.name,
+      maxlength: '80',
+      'aria-label': 'Wiki name',
+    }) as HTMLInputElement;
+    const mark = brand.querySelector('.brand-mark')!.cloneNode(true);
+    const editor = h('div', { class: 'brand editing' }, mark, input);
+    const fresh = nameDraft === undefined;
+    nameDraft = input.value;
+    requestAnimationFrame(() => {
+      input.focus();
+      if (fresh) input.select();
+    });
+    let done = false;
+    const finish = (save: boolean) => {
+      if (done) return;
+      done = true;
+      nameDraft = undefined;
+      const name = input.value.trim();
+      editor.replaceWith(brand);
+      const shown = brand.querySelector('.brand-name')!.textContent;
+      if (save && name && name !== shown) {
+        brand.querySelector('.brand-name')!.textContent = name;
+        post({ type: 'renameWiki', name });
+      }
+    };
+    input.addEventListener('input', () => (nameDraft = input.value));
+    input.addEventListener('keydown', (e) => {
+      e.stopPropagation();
+      if (e.key === 'Enter') finish(true);
+      else if (e.key === 'Escape') finish(false);
+    });
+    // A field removed by a refresh is not a choice to save: the new header continues the edit.
+    input.addEventListener('blur', () =>
+      setTimeout(() => {
+        if (input.isConnected && document.activeElement !== input) finish(true);
+      }),
+    );
+    return editor;
+  };
+  brand.addEventListener('click', () => brand.replaceWith(edit()));
   const finder = h(
     'button',
     {
@@ -180,7 +231,7 @@ function nav(): HTMLElement {
     'div',
     { class: 'header-bar' },
     h('span', { class: 'history' }, back, forward),
-    brand,
+    nameDraft === undefined ? brand : edit(),
   );
   if (S().roots.length > 1) {
     const s = h('select', { class: 'field wiki-switch', 'aria-label': 'Wiki' });
@@ -192,6 +243,7 @@ function nav(): HTMLElement {
   head.append(
     h('span', { class: 'spacer' }),
     finder,
+    iconButton('help', 'Guide (?)', () => openHelp()),
     button(
       '',
       (e) => menuAt(e, quickCreateItems(), 'Quick create'),
@@ -201,10 +253,6 @@ function nav(): HTMLElement {
     ),
   );
   const bar = h('nav', { class: 'section-tabs', 'aria-label': 'NoteSpace' });
-  if (destination === 'wiki')
-    bar.append(
-      iconButton('sidebar', 'Show or hide pages', () => toggleWikiNav(), 'btn ghost icon-only'),
-    );
   sections.forEach(([id, label, iconName], index) => {
     const b = h(
       'button',
@@ -422,6 +470,9 @@ function onKey(event: KeyboardEvent) {
   } else if (event.key === '/') {
     event.preventDefault();
     openFinder();
+  } else if (event.key === '?') {
+    event.preventDefault();
+    openHelp();
   } else if (event.key === 'f' && document.getElementById('filter-text')) {
     event.preventDefault();
     document.getElementById('filter-text')!.focus();

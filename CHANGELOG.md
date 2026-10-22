@@ -3,6 +3,10 @@
 ## Unreleased
 
 - **Previous / Next links only where you want them** — pages no longer end with Previous / Next boxes unless their front matter says `pager: true`. **Toggle Previous / Next Links on This Page** (Command Palette) or **Previous / Next Links** in a page's menu in the Wiki adds or removes it; the Wiki, the Reader and the exported site follow the same setting.
+- **Guide (?)** — the **?** button in the header (or the **?** key) opens a guide to every feature in short topics, with its own search that highlights the words found. Its topics are not part of Find or the wiki's search.
+- **Rename the wiki from its name** — click the wiki's name at the top left of the tab and type a new one. Wikis without `wiki.yaml` can now also change description, icon and color: name and look are kept in the folder's settings (`notespace.wikiName`, `notespace.wikiDescription`, `notespace.wikiIcon`, `notespace.wikiColor`) instead of failing with “has no wiki.yaml”.
+- **Page tree toggle inside the Wiki** — the button that hides the page tree is now in the tree's header, and a button at the top left brings it back; the section tabs no longer shift when the Wiki is open.
+- **PDF export where you need it** — a download icon above every Wiki page, **Export as PDF…** in the menus of pages and folders, the editor's **…** menu of a wiki page and the Explorer menu of `.md` files open **Export PDF (Page, Section or Wiki)**; from a folder it offers that section.
 - **Boards page** — each board is a larger card with its columns as a colored progress bar, the count per column and the share done; the Status board has its own color, and **New board** is a tile in the grid instead of a second box under it.
 
 ## 1.1.0 — 2026-10-22

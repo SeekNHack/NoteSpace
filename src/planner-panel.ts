@@ -558,9 +558,9 @@ export class PlannerPanel implements vscode.Disposable {
       root: root.id,
       workspace: {
         name: root.config?.wiki.title || root.name,
-        description: root.config?.wiki.description || '',
-        icon: root.config?.wiki.icon,
-        color: root.config?.wiki.color,
+        description: root.config?.wiki.description || root.look?.description || '',
+        icon: root.config?.wiki.icon || root.look?.icon,
+        color: root.config?.wiki.color || root.look?.color,
         // The site's announcement, also shown above Wiki pages (inline Markdown, no HTML).
         announcement: root.config?.wiki.announcement
           ? new MarkdownIt({ html: false, linkify: true }).renderInline(
@@ -795,6 +795,17 @@ export class PlannerPanel implements vscode.Disposable {
       case 'ready':
         this.post();
         return;
+      case 'renameWiki': {
+        const name = str(m.name, 80)?.trim();
+        if (root && name)
+          await vscode.commands.executeCommand(
+            'notespace.renameWiki',
+            { label: root.name, root: root.id, prefix: '' },
+            name,
+          );
+        this.post();
+        return;
+      }
       case 'wikiPreview': {
         const page = root && this.wikiPages(root).find((p) => p.id === str(m.id, 2000));
         if (page)
@@ -1225,6 +1236,7 @@ export class PlannerPanel implements vscode.Disposable {
           renameSection: 'renameSection',
           deleteSection: 'deleteSection',
           revealInExplorer: 'revealInExplorer',
+          exportPdf: 'exportPdf',
         };
         const name = str(m.action, 40) || '';
         const uri = str(m.uri, 2000);

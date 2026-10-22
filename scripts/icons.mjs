@@ -121,6 +121,8 @@ const names = {
   puzzle: 'puzzle',
   compass: 'compass',
   download: 'download',
+  help: 'circle-question-mark',
+  close: 'x',
 };
 const out = {};
 for (const [key, file] of Object.entries(names)) {

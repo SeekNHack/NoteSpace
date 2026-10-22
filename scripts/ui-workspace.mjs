@@ -87,6 +87,40 @@ try {
   await axe(f, 'home');
   console.log('PASS workspace: Home shows today, completes and captures tasks into Markdown');
 
+  // The guide (?) has its own search; Find (/) does not list its topics.
+  await f.locator('.header-bar [aria-label="Guide (?)"]').click();
+  await f.locator('.help').waitFor();
+  await f.locator('.help-search').fill('pdf');
+  await poll(
+    async () => (await f.locator('.help-topic').first().textContent()) === 'Export to PDF',
+    'guide search',
+  );
+  await axe(f, 'guide');
+  await f.locator('.help-search').press('Escape');
+  await poll(async () => (await f.locator('.help').count()) === 0, 'guide closed');
+  // Clicking the wiki's name renames it (wiki.title in wiki.yaml).
+  const wikiName = await f.locator('.brand-name').textContent();
+  await f.locator('.brand').click();
+  await f.locator('.brand-input').fill('Renamed wiki');
+  await f.locator('.brand-input').press('Enter');
+  await poll(
+    async () =>
+      /title: Renamed wiki/.test(await readFile(path.join(workspace, 'wiki.yaml'), 'utf8')),
+    'wiki renamed',
+  );
+  await f.locator('.brand').click();
+  await f.locator('.brand-input').fill(wikiName);
+  await f.locator('.brand-input').press('Enter');
+  await poll(
+    async () =>
+      new RegExp(`title: ${wikiName}`).test(
+        await readFile(path.join(workspace, 'wiki.yaml'), 'utf8'),
+      ),
+    'name restored',
+  );
+  await poll(async () => (await f.locator('.brand-name').textContent()) === wikiName, 'name shown');
+  console.log('PASS workspace: guide with its own search; renaming the wiki from its name');
+
   // 2. Wiki reads pages inside the panel: a page tree, the page and its outline; links, Back
   // and Forward stay in the panel, Edit opens the real document.
   await f.locator('.nav [data-nav=wiki]').click();

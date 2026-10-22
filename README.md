@@ -23,7 +23,7 @@ NoteSpace is an MIT-licensed extension for VS Code and code-server that turns a 
 
 ## Highlights
 
-- **One tab, like a documentation site** — Home, Wiki, Tasks, API and Insights with Back and Forward and a search for everything (`/`). Home shows today's tasks, the coming week, recent pages, the wiki's sections and your boards.
+- **One tab, like a documentation site** — Home, Wiki, Tasks, API and Insights with Back and Forward, a search for everything (`/`) and a searchable guide to every feature (`?`). Home shows today's tasks, the coming week, recent pages, the wiki's sections and your boards.
 - **Wiki** — pages read in the tab with a page tree, outline, link previews on hover, backlinks and unlinked mentions, tags, page status badges, icons and covers. Front matter shows as editable **properties**, and any folder opens as a **database** (table, gallery or board).
 - **Wiki with a visual editor (Studio)** — edit Markdown visually with slash commands (`/`), a bubble menu, block handles, `[[wiki links]]`, callouts, tabs, steps, cards, tables, math, Mermaid diagrams and charts. Switch to **Code** (plain Markdown) or **Split** at any time; untouched lines stay byte-identical.
 - **Tasks, Kanban and calendar** — tasks are ordinary `- [ ]` lines with `due:`, `priority:`, `status:`, `repeat:`, `#tags` and `@people`. Use them in lists and tables, on as many Kanban boards as you like (each board is a Markdown file with its own columns), and in a month/week/day calendar. Daily notes and recurring tasks included.

@@ -738,6 +738,11 @@
     "menus": {
       "editor/title": [
         {
+          "command": "notespace.exportPdf",
+          "when": "notespace.activeIsWikiPage",
+          "group": "1_notespace@9"
+        },
+        {
           "command": "notespace.visual",
           "when": "notespace.activeIsWikiPage && editorLangId == markdown && !activeCustomEditorId",
           "group": "navigation@1"
@@ -872,6 +877,11 @@
       ],
       "explorer/context": [
         {
+          "command": "notespace.exportPdf",
+          "when": "resourceExtname == .md",
+          "group": "navigation@9"
+        },
+        {
           "command": "notespace.openApiPlayground",
           "when": "resourceExtname =~ /^\\.(ya?ml|json)$/",
           "group": "navigation@9"
@@ -973,6 +983,41 @@
     "configuration": {
       "title": "NoteSpace",
       "properties": {
+        "notespace.wikiName": {
+          "type": "string",
+          "default": "",
+          "scope": "resource",
+          "description": "Name of a wiki that has no wiki.yaml (empty: the folder's name). Click the wiki's name in the NoteSpace tab to change it."
+        },
+        "notespace.wikiDescription": {
+          "type": "string",
+          "default": "",
+          "scope": "resource",
+          "description": "Description of a wiki that has no wiki.yaml (shown on Home)."
+        },
+        "notespace.wikiIcon": {
+          "type": "string",
+          "default": "",
+          "scope": "resource",
+          "description": "Icon of a wiki that has no wiki.yaml: an icon name such as book, rocket or notebook."
+        },
+        "notespace.wikiColor": {
+          "type": "string",
+          "default": "",
+          "enum": [
+            "",
+            "blue",
+            "green",
+            "yellow",
+            "orange",
+            "red",
+            "purple",
+            "magenta",
+            "cyan"
+          ],
+          "scope": "resource",
+          "description": "Color of a wiki that has no wiki.yaml."
+        },
         "notespace.root": {
           "type": "string",
           "default": "wiki",

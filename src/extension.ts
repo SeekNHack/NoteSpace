@@ -776,42 +776,59 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
       `“${wikiName(root)}” is the default wiki when a command could apply to several.`,
     );
   });
-  const requireConfig = (root: WikiRoot) => {
-    if (!root.config)
-      throw new Error(
-        `“${root.name}” has no wiki.yaml, so its name and look come from its folder. Run Create Wiki or Import Project to give it settings.`,
-      );
-  };
-  command('renameWiki', async (node?: PageNode) => {
+  command('renameWiki', async (node?: PageNode, name?: string) => {
     const root = await chooseRoot(node?.root);
     if (!root) return;
-    requireConfig(root);
-    const title = await vscode.window.showInputBox({
-      title: 'Rename wiki',
-      value: root.config!.wiki.title,
-      validateInput: (v) => (v.trim() ? undefined : 'Enter a name.'),
-    });
-    if (title) await updateWikiConfig(workspace, root, (c) => void (c.wiki.title = title.trim()));
+    const title =
+      typeof name === 'string'
+        ? name
+        : await vscode.window.showInputBox({
+            title: 'Rename wiki',
+            value: root.name,
+            validateInput: (v) => (v.trim() ? undefined : 'Enter a name.'),
+          });
+    if (!title?.trim() || title.trim() === root.name) return;
+    await setWikiLook(root, 'title', title.trim().slice(0, 80));
   });
+  /**
+   * Changes the wiki's name, description, icon or color: in wiki.yaml when the wiki has one,
+   * otherwise as a setting of its folder (.vscode/settings.json).
+   */
+  const setWikiLook = async (
+    root: WikiRoot,
+    key: 'title' | 'description' | 'icon' | 'color',
+    value: string,
+  ) => {
+    if (root.config)
+      await updateWikiConfig(workspace, root, (c) => {
+        if (key === 'title' || key === 'description') c.wiki[key] = value;
+        else c.wiki[key] = value || undefined;
+      });
+    else {
+      const setting = {
+        title: 'wikiName',
+        description: 'wikiDescription',
+        icon: 'wikiIcon',
+        color: 'wikiColor',
+      }[key];
+      await vscode.workspace
+        .getConfiguration('notespace', root.folder.uri)
+        .update(setting, value || undefined, vscode.ConfigurationTarget.WorkspaceFolder);
+      await workspace.refresh();
+    }
+  };
   command('editWikiDescription', async (node?: PageNode) => {
     const root = await chooseRoot(node?.root);
     if (!root) return;
-    requireConfig(root);
     const description = await vscode.window.showInputBox({
       title: 'Wiki description',
-      value: root.config!.wiki.description,
+      value: root.config?.wiki.description ?? root.look?.description ?? '',
     });
-    if (description !== undefined)
-      await updateWikiConfig(
-        workspace,
-        root,
-        (c) => void (c.wiki.description = description.trim()),
-      );
+    if (description !== undefined) await setWikiLook(root, 'description', description.trim());
   });
   command('setWikiIcon', async (node?: PageNode) => {
     const root = await chooseRoot(node?.root);
     if (!root) return;
-    requireConfig(root);
     const icons = [
       'book',
       'notebook',
@@ -834,19 +851,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
       [{ label: 'Default', id: '' }, ...icons.map((i) => ({ label: `$(${i}) ${i}`, id: i }))],
       { title: 'Wiki icon' },
     );
-    if (picked)
-      await updateWikiConfig(workspace, root, (c) => void (c.wiki.icon = picked.id || undefined));
+    if (picked) await setWikiLook(root, 'icon', picked.id);
   });
   command('setWikiColor', async (node?: PageNode) => {
     const root = await chooseRoot(node?.root);
     if (!root) return;
-    requireConfig(root);
     const picked = await vscode.window.showQuickPick(
       [{ label: 'Default', id: '' }, ...wikiColors.map((c) => ({ label: c, id: c }))],
       { title: 'Wiki color' },
     );
-    if (picked)
-      await updateWikiConfig(workspace, root, (c) => void (c.wiki.color = picked.id || undefined));
+    if (picked) await setWikiLook(root, 'color', picked.id);
   });
   command('openWikiSettings', async (node?: PageNode) => {
     const root = await chooseRoot(node?.root);
@@ -2030,10 +2044,17 @@ export async function activate(context: vscode.ExtensionContext): Promise<WikiSt
   });
   command('exportPdf', async (target?: unknown) => {
     const active = pageFrom(target);
-    const root = active ? workspace.rootFor(active) : await chooseRoot();
+    // A folder of the Wiki tree ({ root, prefix }) offers that section.
+    const section =
+      !active && target && typeof target === 'object' && 'prefix' in target
+        ? (target as { root?: string; prefix?: string })
+        : undefined;
+    const root = active ? workspace.rootFor(active) : await chooseRoot(section?.root);
     if (!root) return;
     const folder =
-      active && posix.dirname(active.path) !== '.' ? posix.dirname(active.path) : undefined;
+      active && posix.dirname(active.path) !== '.'
+        ? posix.dirname(active.path)
+        : section?.prefix?.replace(/\/$/, '') || undefined;
     const scope = await vscode.window.showQuickPick(
       [
         ...(active
